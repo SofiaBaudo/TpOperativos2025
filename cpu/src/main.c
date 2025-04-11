@@ -3,7 +3,7 @@
 //#define PUERTO 5555
 
 int main(int argc, char* argv[]) {
-printf("hola");
+printf("hola\n");
 t_log *logger;
 logger = iniciar_logger();
 log_info(logger, "Estoy en CPU");
