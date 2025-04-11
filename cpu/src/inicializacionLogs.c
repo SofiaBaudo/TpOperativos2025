@@ -1,10 +1,11 @@
 #include <inicializacionLogs.h>
+#include <stdio.h>
 
 t_log *iniciar_logger(void){
     t_log *nuevo_logger_CPU = log_create("archivoCPULog.log","LOGGER_CPU",1,LOG_LEVEL_INFO);
     if(!nuevo_logger_CPU){
         perror("No se pudo crear el logger");
-        EXIT(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
     return nuevo_logger_CPU;
 }
