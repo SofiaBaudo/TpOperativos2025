@@ -5,8 +5,11 @@
 int main(int argc, char* argv[]) {
 printf("hola\n");
 t_log *logger;
-logger = iniciar_logger();
-log_info(logger, "Estoy en CPU");
+logger = iniciar_logger("archivoCPULog.log","LOGGER_CPU");
+log_info(logger, "Estoy en CPU\n");
+destruir_logger(logger);
+
+printf("logger destruido\n");
 saludar("cpu");
 return 0;
 }
