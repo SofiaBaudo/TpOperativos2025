@@ -27,7 +27,7 @@ t_log *iniciar_logger(char* archivoLog, char* nombreLog){
         exit(EXIT_FAILURE);
     }
     return nuevo_logger;
-}
+} //EN REALIDAD LOS LOGS ES MEJOR IR DEFINIENDOLOS A CONVENIENCIA PORQUE TIENEN DIFERENTES NIVELES
 
 void destruir_logger(t_log *logger){
     log_destroy(logger);
