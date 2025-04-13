@@ -23,7 +23,7 @@ void leer_config(){ // Lee la config y guarda todos los values de las key (struc
     config_destroy(config); //destruye luego de guardarse los values
 }
 
-t_log* iniciar_logger(){
+t_log* iniciar_logger_memoria(){
 
     logger_memoria = log_create("memoria.log", "[Memoria]", true, LOG_LEVEL_TRACE);
     if (logger_memoria == NULL) {
@@ -36,7 +36,7 @@ t_log* iniciar_logger(){
 
 void inicializar_memoria() {
     leer_config(); // Lee la configuración de memoria y la guarda en memoria_config
-    iniciar_logger(); // Inicia el logger de memoria
+    iniciar_logger_memoria(); // Inicia el logger de memoria
 
     log_debug(logger_memoria, "Memoria inicializada correctamente"); //Utilizo log_debug en vez de log_info para q no se confundan con los logs obligatorios del tp.
 }
