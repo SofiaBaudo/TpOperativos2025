@@ -1,4 +1,4 @@
-#include <utils/hello.h>
+#include <utils/utils.h>
 
 int main(int argc, char* argv[]) {
 
@@ -8,3 +8,4 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+// Crear una funcion para printear hola

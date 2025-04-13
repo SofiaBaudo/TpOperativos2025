@@ -1,9 +1,5 @@
-#include <utils/hello.h>
+#include <utils/utils.h>
 
-
-void saludar(char* quien) {
-    printf("Hola desde %s!!\n", quien);
-}
 // FUNCIONES PARA LOS CONFIGS
 t_config *crear_config(char* direccion){
     t_config *nuevo_config = config_create(direccion); // se pasa la ruta del archivo .config
@@ -15,7 +11,7 @@ t_config *crear_config(char* direccion){
 }
 
 void destruir_config(t_config *config){
-config_destroy(config);
+	config_destroy(config);
 }
 
 // FUNCIONES PARA LOS LOGS

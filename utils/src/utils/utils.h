@@ -1,5 +1,5 @@
-#ifndef UTILS_HELLO_H_
-#define UTILS_HELLO_H_
+#ifndef UTILS_utils_H_
+#define UTILS_utils_H_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,14 +11,22 @@
 #include <netdb.h>
 #include <commons/config.h>
 #include <string.h> // para usar, por ejemplo, la funcion memset en iniciar conexion
-#include <unistd.h> // para funciones como por ejemplo close(linea 105 hello.c)
+#include <unistd.h> // para funciones como por ejemplo close(linea 105 utils.c)
 /**
 * @brief Imprime un saludo por consola
 * @param quien Módulo desde donde se llama a la función
 * @return No devuelve nada
 */
-typedef enum
+typedef enum 
 {
+	// Handshakes
+	HANDSHAKE_KERNEL,
+	HANDSHAKE_CPU,
+	HANDSHAKE_MEMORIA,
+	HANDSHAKE_FILESYSTEM,
+	HANDSHAKE_ACCEPTED,
+	HANDSHAKE_DENIED,
+	// etc
 	MENSAJE,
 	PAQUETE,
     HANDSHAKE,
@@ -39,7 +47,6 @@ typedef struct
 } t_paquete;
 
 
-void saludar(char* quien);
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);
 t_log *iniciar_logger(char* archivoLog, char* nombreLog);

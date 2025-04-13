@@ -2,6 +2,8 @@
     "files.associations": {
         "stdlib.h": "c",
         "log.h": "c",
-        "hello.h": "c"
+        "utils.h": "c",
+        "stdio.h": "c",
+        "list.h": "c"
     }
 }
