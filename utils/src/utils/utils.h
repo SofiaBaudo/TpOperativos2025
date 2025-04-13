@@ -12,12 +12,8 @@
 #include <commons/config.h>
 #include <string.h> // para usar, por ejemplo, la funcion memset en iniciar conexion
 #include <unistd.h> // para funciones como por ejemplo close(linea 105 utils.c)
-/**
-* @brief Imprime un saludo por consola
-* @param quien Módulo desde donde se llama a la función
-* @return No devuelve nada
-*/
-typedef enum 
+
+typedef enum op_code
 {
 	// Handshakes
 	HANDSHAKE_KERNEL,
@@ -52,7 +48,14 @@ void destruir_config(t_config *config);
 t_log *iniciar_logger(char* archivoLog, char* nombreLog);
 void destruir_logger(t_log *logger);
 int crear_conexion(char *ip, char* puerto);
-int iniciar_servidor(char *puerto,t_log *un_log, char *mensaje);
-int esperar_cliente(int socket_servidor, t_log *un_log);
+int iniciar_servidor(char *puerto);
+int esperar_cliente(int socket_servidor);
 int recibir_operacion(int socket_cliente);
+
+void enviar_entero(int socket_cliente, int numero);
+int recibir_entero(int fd_conexion);
+
+void enviar_op_code(int socket_cliente, op_code codigo_operacion);
+op_code recibir_op_code (int socket);
+
 #endif
