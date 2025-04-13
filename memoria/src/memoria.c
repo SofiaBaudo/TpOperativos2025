@@ -3,8 +3,6 @@
 #include "memoria.h"
 
 int main(int argc, char* argv[]) {
-    incializar_memoria();
-
-    
+    inicializar_memoria();
     return 0;
 }

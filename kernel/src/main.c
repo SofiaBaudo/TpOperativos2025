@@ -1,8 +1,7 @@
 #include <main.h>
 
 int main(int argc, char* argv[]) {
-     saludar("kernel\n");
-kernel_logger = log_create("kernel.log","LOG_MODULO_KERNEL",1,LOG_LEVEL_INFO);
+    kernel_logger = log_create("kernel.log","LOG_MODULO_KERNEL",1,LOG_LEVEL_INFO);
     if(!kernel_logger){
         perror("No se pudo crear el logger");
         exit(EXIT_FAILURE);

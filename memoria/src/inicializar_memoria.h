@@ -3,11 +3,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <commons/log.h>
 #include <commons/config.h>
 
-typedf struct memoria_config{
+typedef struct t_memoria_config{ //le pongo el t adelante para saber y diferenciar que es un type (struct)
     int PUERTO_ESCUCHA;
     int TAM_MEMORIA;
     int TAM_PAGINA;
@@ -16,12 +17,13 @@ typedf struct memoria_config{
     int RETARDO_MEMORIA;
     char* PATH_SWAPFILE;
     int RETARDO_SWAP;
-    char* LOG_LEVEL;
     char* DUMP_PATH;
-} memoria_config;
+} t_memoria_config;
 
-memoria_config* memoria_config;
+extern t_memoria_config memoria_config; // agrego el extern para que no de error de redefinicion
 
-t_log* logger_memoria;
+extern t_log* logger_memoria;
+
+void inicializar_memoria();
 
 #endif
