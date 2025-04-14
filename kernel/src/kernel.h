@@ -1,5 +1,6 @@
 #include <utils/utils.h>
 #include <stdio.h>
+#include <inicializarKernel.h>
 
 // VARIABLES GLOBALES
 
@@ -19,3 +20,9 @@ char *ALGORITMO_COLA_NEW;
 char *ALFA;
 char *TIEMPO_SUSPENSION;
 char *LOG_LEVEL;
+
+/*void inicializar_kernel();
+void inicializar_logs();
+void inicializar_configs();
+void imprimir_configs();
+*/
