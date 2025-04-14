@@ -1,6 +1,5 @@
-#include <utils/utils.h>
-#include <stdio.h>
 
+#include <k_vglobales.h> // usa las variables globales sin importar donde fueron declaradas
 void inicializar_kernel();
 void inicializar_logs();
 void inicializar_configs();

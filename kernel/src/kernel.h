@@ -1,12 +1,13 @@
 #include <utils/utils.h>
 #include <stdio.h>
+#include <k_vglobales.h>
 #include <inicializarKernel.h>
 
 // VARIABLES GLOBALES
 
-t_log *kernel_logger; // para los obligatorios
-t_log *kernel_debug_log; // para ir probando cosas
-t_config *config_kernel;
+ t_log *kernel_logger; // para los obligatorios
+ t_log *kernel_debug_log; // para ir probando cosas
+ t_config *config_kernel;
 
 //VARIABLES PARA LAS CONFIGS
 
@@ -20,6 +21,7 @@ char *ALGORITMO_COLA_NEW;
 char *ALFA;
 char *TIEMPO_SUSPENSION;
 char *LOG_LEVEL;
+
 
 /*void inicializar_kernel();
 void inicializar_logs();
