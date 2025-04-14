@@ -48,8 +48,8 @@ void destruir_config(t_config *config);
 t_log *iniciar_logger(char* archivoLog, char* nombreLog);
 void destruir_logger(t_log *logger);
 int crear_conexion(char *ip, char* puerto);
-int iniciar_servidor(char *puerto);
-int esperar_cliente(int socket_servidor);
+int iniciar_servidor(char *puerto, t_log *un_log, char *mensaje);
+int esperar_cliente(int socket_servidor, t_log *un_log, char *mensaje);
 int recibir_operacion(int socket_cliente);
 
 void enviar_entero(int socket_cliente, int numero);

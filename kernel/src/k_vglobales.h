@@ -19,3 +19,11 @@ extern char *ALGORITMO_COLA_NEW;
 extern char *ALFA;
 extern char *TIEMPO_SUSPENSION;
 extern char *LOG_LEVEL;
+
+// file descriptors
+
+extern int fd_kernel;
+extern int fd_memoria;
+extern int fd_cpu_interrupt;
+extern int fd_cpu_dispatch;
+extern int fd_io;

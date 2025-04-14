@@ -1,5 +1,6 @@
 #include <inicializarKernel.h>
 void inicializar_kernel(){
+    printf("Kernel inicializado");
 inicializar_logs();
 inicializar_configs();
 
@@ -20,8 +21,9 @@ void inicializar_logs(){
 
 void inicializar_configs(){
 config_kernel = crear_config("/home/utnso/tp-2025-1c-Sinergia-SO-13/kernel/kernel.config");
-//IP_MEMORIA = config_get_string_value(config_kernel,"IP_MEMORIA");
-    TIEMPO_SUSPENSION = config_get_string_value(config_kernel,"TIEMPO_SUSPENSION");
+IP_MEMORIA = config_get_string_value(config_kernel,"IP_MEMORIA");
+PUERTO_MEMORIA = config_get_string_value(config_kernel,"PUERTO_MEMORIA");
+TIEMPO_SUSPENSION = config_get_string_value(config_kernel,"TIEMPO_SUSPENSION");
     
 }
 

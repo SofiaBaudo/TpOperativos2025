@@ -55,7 +55,7 @@ int crear_conexion(char *ip, char* puerto)
 }
 
 // FUNCIONES PARA EL SERVIDOR 
-int iniciar_servidor(char *puerto)
+/*int iniciar_servidor(char *puerto)
 {
 	int socket_servidor;
 
@@ -81,16 +81,40 @@ int iniciar_servidor(char *puerto)
 	listen(socket_servidor, SOMAXCONN);
 
 	freeaddrinfo(servinfo);
+	
+	return socket_servidor;
+}*/
+int iniciar_servidor(char *puerto, t_log *un_log, char *mensaje)
+{
+	struct addrinfo hints, *servinfo; //*p;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	getaddrinfo(NULL, puerto, &hints, &servinfo);
+
+	// Creamos el socket de escucha del servidor
+ int socket_servidor = socket (servinfo->ai_family,
+								servinfo->ai_socktype,
+								servinfo->ai_protocol);
+	// Asociamos el socket a un puerto
+bind(socket_servidor,servinfo->ai_addr,servinfo->ai_addrlen);
+	// Escuchamos las conexiones entrantes
+listen(socket_servidor,SOMAXCONN);
+
+	freeaddrinfo(servinfo);
+	log_info(un_log, "SERVER: %s",mensaje);
 
 	return socket_servidor;
 }
-
-int esperar_cliente(int socket_servidor)
+int esperar_cliente(int socket_servidor, t_log *un_log, char *mensaje)
 {
-	int socket_cliente = accept(socket_servidor, NULL, NULL);;
+	int socket_cliente = accept(socket_servidor, NULL, NULL);
+	log_info(un_log,"Se conecto el cliente: %s",mensaje);
 	return socket_cliente;
 }
-
 
 int recibir_operacion(int socket_cliente)
 {

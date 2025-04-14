@@ -6,7 +6,7 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     char puerto[6]; // Buffer para almacenar el puerto como cadena (máximo 5 dígitos + '\0')
     sprintf(puerto, "%d", memoria_config.PUERTO_ESCUCHA); // Convierte el puerto a cadena.  A puerto le asigna el valor de memoria_config.puerto_escucha
 
-    int servidor_memoria = iniciar_servidor(puerto); // Pasa el puerto como cadena
+    int servidor_memoria = iniciar_servidor(puerto, logger_memoria, "Se ha iniciado el servidor de Memoria");
     if (servidor_memoria == -1) {
         log_error(logger_memoria, "Error al iniciar el servidor de memoria");
         exit(EXIT_FAILURE);
@@ -14,7 +14,7 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     log_debug(logger_memoria, "Servidor de memoria iniciado en el puerto %d", memoria_config.PUERTO_ESCUCHA); // Log de inicio del servidor
 
     while (1) {
-        int cliente = esperar_cliente(servidor_memoria);
+        int cliente = esperar_cliente(servidor_memoria, logger_memoria, "........."); // Espera a que un cliente se conecte
         if (cliente == -1) {
             log_error(logger_memoria, "Error al aceptar un cliente");
             continue;

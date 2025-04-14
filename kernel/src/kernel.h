@@ -9,6 +9,13 @@
  t_log *kernel_debug_log; // para ir probando cosas
  t_config *config_kernel;
 
+// file descriptors
+int fd_kernel;
+int fd_memoria;
+int fd_cpu_interrupt;
+int fd_cpu_dispatch;
+int fd_io;
+
 //VARIABLES PARA LAS CONFIGS
 
 char *IP_MEMORIA;
