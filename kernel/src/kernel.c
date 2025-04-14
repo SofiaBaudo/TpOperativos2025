@@ -11,6 +11,10 @@ int main(int argc, char* argv[]) {
 //int fd_kernel = iniciar_servidor()
     //Conectarse con Memoria
     fd_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
+
+    //Iniciar kernel como servidor
+    
+
     log_info(kernel_logger, "Conexion con Memoria exitoso");
     log_destroy(kernel_logger);
     log_destroy(kernel_debug_log);

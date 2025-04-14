@@ -86,6 +86,7 @@ int crear_conexion(char *ip, char* puerto)
 }*/
 int iniciar_servidor(char *puerto, t_log *un_log, char *mensaje)
 {
+	int socket_servidor;
 	struct addrinfo hints, *servinfo; //*p;
 
 	memset(&hints, 0, sizeof(hints));
@@ -96,9 +97,7 @@ int iniciar_servidor(char *puerto, t_log *un_log, char *mensaje)
 	getaddrinfo(NULL, puerto, &hints, &servinfo);
 
 	// Creamos el socket de escucha del servidor
- int socket_servidor = socket (servinfo->ai_family,
-								servinfo->ai_socktype,
-								servinfo->ai_protocol);
+ socket_servidor = socket (servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
 	// Asociamos el socket a un puerto
 bind(socket_servidor,servinfo->ai_addr,servinfo->ai_addrlen);
 	// Escuchamos las conexiones entrantes
