@@ -10,17 +10,15 @@ int main(int argc, char* argv[]) {
 // Iniciar kernel como servidor
 //int fd_kernel = iniciar_servidor()
     //Conectarse con Memoria
-    fd_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
+    //fd_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
 
     //Iniciar kernel como servidor
     
 
-    log_info(kernel_logger, "Conexion con Memoria exitoso");
-    log_destroy(kernel_logger);
-    log_destroy(kernel_debug_log);
-    config_destroy(config_kernel);
-  // Conectarse con CPU
-
-  // fd_cpu_dispatch = esperar_cliente(IP_CPU, )
+    //log_info(kernel_logger, "Conexion con Memoria exitoso");
+   terminarPrograma(); // destruye los configs y los loggers
+    printf("\n");
+    printf("Programa Finalizado");
+  
 }
 

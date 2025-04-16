@@ -1,6 +1,7 @@
 #include <utils/utils.h>
 #include <stdio.h>
 #include <k_vglobales.h>
+#include <finalizarKernel.h>
 #include <inicializarKernel.h>
 
 // VARIABLES GLOBALES
