@@ -5,27 +5,31 @@
 //Funcion de Inicializacion de CPU
 
 void inicializar_CPU(){
+    printf("CPU inicializado");
     inicializar_logs();
     inicializar_configs();
-    imprimir_configs();
+    printf("chau cpu"); 
+    //imprimir_configs();
+    destruir_config(cpu_config);
+ 
 }
 
 //Funcion de Inicializacion de Logs
 
 void inicializar_logs(){
-    cpu_logger = log_create("Cliente.log" , "CL_LOG", 1 , LOG_LEVEL_INFO);
-    if(cpu_logger == NULL)
+    cpu_logger = log_create("cpu.log" , "CL_LOG", 1 , LOG_LEVEL_INFO);
+    if(!cpu_logger)
     {
         perror("No se pudo crear el logger.");
         exit(EXIT_FAILURE);
     }
-    cpu_log_debug = log_create("Cliente.log" , "CL_LOG", 1 , LOG_LEVEL_TRACE);
+    cpu_log_debug = log_create("cpu.log" , "CL_LOG", 1 , LOG_LEVEL_TRACE);
     if(cpu_log_debug == NULL){
         perror("No se pudo crear el logger.");
         exit(EXIT_FAILURE);
     }
-    log_debug(cpu_logger, "Logger de CPU iniciado correctamente");
-    exit(EXIT_SUCCESS);
+    log_info(cpu_logger, "Logger de CPU iniciado correctamente");
+
 }
 
 //Funcion de Inicializacion de Configs
@@ -40,13 +44,12 @@ void inicializar_configs(){
     PUERTO_MEMORIA = config_get_string_value(cpu_config,"PUERTO_MEMORIA");
     PUERTO_KERNEL_DISPATCH = config_get_string_value(cpu_config,"PUERTO_KERNEL_DISPATCH");
     PUERTO_KERNEL_INTERRUPT = config_get_string_value(cpu_config,"PUERTO_KERNEL_INTERRUPT");
-    config_destroy(cpu_config);
-    exit(EXIT_SUCCESS);
+    //config_destroy(cpu_config);
+    //exit(EXIT_SUCCESS);
 }
 
 //Funcion de Imprimir de Configs
 
 void imprimir_configs(){
     log_info(cpu_logger, "CPU TLB: %s",REEMPLAZO_TLB);
-    
 }
