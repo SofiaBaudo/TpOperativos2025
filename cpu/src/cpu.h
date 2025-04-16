@@ -1,4 +1,3 @@
-#include <utils/utils.h>
-#include <stdio.h>
+//Incluir las librerias
 
-//int inicializarCPU();
+#include <variables_globales_cpu.h>
