@@ -55,35 +55,7 @@ int crear_conexion(char *ip, char* puerto)
 }
 
 // FUNCIONES PARA EL SERVIDOR 
-/*int iniciar_servidor(char *puerto)
-{
-	int socket_servidor;
 
-	struct addrinfo hints, *servinfo;
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
-
-	getaddrinfo(NULL, puerto, &hints, &servinfo);
-
-	// Creamos el socket de escucha del servidor
-	socket_servidor = socket(servinfo->ai_family,
-							 servinfo->ai_socktype,
-							 servinfo->ai_protocol);
-	// Permite que el socket se reutilice en caso de que haya cerrado un servidor previamente
-	// Pero podria tener 2 servidores escuchando en el mismo puerto OJO 
-	setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
-	// Asociamos el socket a un puerto
-	bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen);
-	// Escuchamos las conexiones entrantes
-	listen(socket_servidor, SOMAXCONN);
-
-	freeaddrinfo(servinfo);
-	
-	return socket_servidor;
-}*/
 int iniciar_servidor(char *puerto, t_log *un_log, char *mensaje)
 {
 	int socket_servidor;
