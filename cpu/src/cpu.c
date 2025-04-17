@@ -7,4 +7,5 @@ int main(int argc, char* argv[]){
     inicializar_CPU(identificador_cpu);
     log_info(cpu_logger,"inicializacion exitosa");
     log_destroy(cpu_logger);
+    config_destroy(cpu_config);
 }

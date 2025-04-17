@@ -3,8 +3,9 @@ void inicializar_kernel(){
     printf("Kernel inicializado");
     inicializar_logs();
     inicializar_configs();
-    fd_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
-    log_info(kernel_logger, "Conexion con Memoria exitoso");
+    conectarse_con_memoria();
+    //fd_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
+    //log_info(kernel_logger, "Conexion con Memoria exitoso");
 }
 
 void inicializar_logs(){
@@ -39,3 +40,16 @@ void imprimir_configs(){
     // falta hacer lo mismo con las demas variables globales del archivo kernel.config
     //hay que estudiar como manejar enteros con logs
 }
+
+/*void iniciar_conexion_kernel_memoria(int identificador_cpu){
+    int fd_conexion_kernel_dispatch = crear_conexion(PUERTO_KERNEL_DISPATCH, IP_MEMORIA);
+    enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU);                    //avisa que es CPU.
+    op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
+    if (respuesta == HANDSHAKE_ACCEPTED){
+        log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
+    }
+    else{
+        log_error(cpu_logger, "Error en la conexion con el kernel dispatch");
+        exit(EXIT_FAILURE);
+    }
+}*/

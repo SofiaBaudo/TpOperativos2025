@@ -2,15 +2,14 @@
 
 #include <utils/utils.h>
 #include <stdio.h>
-#include <inicializar_cpu.h>
 #include <commons/config.h>
 #include <commons/log.h>
 
 //Inicializacion Logs CPU
 
-t_log *cpu_logger;
-t_log *cpu_log_debug;
-t_config *cpu_config; 
+extern t_log *cpu_logger;
+extern t_log *cpu_log_debug;
+extern t_config*cpu_config; 
 
 //Variables Globales CPU
 

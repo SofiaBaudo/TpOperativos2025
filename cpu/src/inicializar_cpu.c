@@ -1,16 +1,16 @@
 //Incluir las librerias
 
-#include <variables_globales_cpu.h>
+#include <inicializar_cpu.h>
 
 //Funcion de Inicializacion de CPU
 
 void inicializar_CPU(int identificador_cpu){ //el identificador es porque puede haber varias CPU.
-    printf("CPU inicializado");
     inicializar_logs();
     inicializar_configs();
-    iniciar_conexion_kernel_dispatch(identificador_cpu);
-    iniciar_conexion_kernel_interrupt(identificador_cpu);
-    imprimir_configs();
+    //iniciar_conexion_kernel_dispatch(identificador_cpu);
+    //iniciar_conexion_kernel_interrupt(identificador_cpu);
+    iniciar_conexion_memoria_dispatch(identificador_cpu);
+    //imprimir_configs();
     destruir_config(cpu_config);
 }
 
@@ -29,7 +29,6 @@ void inicializar_logs(){
         exit(EXIT_FAILURE);
     }
     log_info(cpu_logger, "Logger de CPU iniciado correctamente");
-
 }
 
 //Funcion de Inicializacion de Configs
@@ -44,12 +43,12 @@ void inicializar_configs(){
     PUERTO_MEMORIA = config_get_string_value(cpu_config,"PUERTO_MEMORIA");
     PUERTO_KERNEL_DISPATCH = config_get_string_value(cpu_config,"PUERTO_KERNEL_DISPATCH");
     PUERTO_KERNEL_INTERRUPT = config_get_string_value(cpu_config,"PUERTO_KERNEL_INTERRUPT");
-    config_destroy(cpu_config);
-    exit(EXIT_SUCCESS);
 }
 
 //Funcion de Imprimir de Configs
-
-void imprimir_configs(){
-    log_info(cpu_logger, "CPU TLB: %s",REEMPLAZO_TLB);
+ 
+ void imprimir_configs(){
+   // log_info(cpu_logger, "CPU TLB: %s",REEMPLAZO_TLB);
 }
+ 
+
