@@ -1,5 +1,6 @@
 #include <utils/utils.h>
 #include <stdio.h>
+#include <pthread.h>
 
 // VARIABLES GLOBALES
 // el extern informa que existe una variable global que alguien del modulo declaro pero solamente tiene que ser usada

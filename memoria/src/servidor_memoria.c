@@ -55,5 +55,15 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
 
 //HACER FUNCIONES PARA MANEJAR LOS CLIENTES DE KERNEL Y CPU
 //manejar_cliente_kernel(cliente);
+void manejar_cliente_kernel(int cliente) {
+    
+    close(cliente);
+}
+
+
 
 //manejar_cliente_cpu(cliente);
+void manejar_cliente_cpu(int cliente) {
+    
+    close(cliente);
+}
