@@ -101,6 +101,18 @@ int recibir_operacion(int socket_cliente)
 
 // Funciones para identificarse cuando hay una conexion.
 
+struct pepito{
+	int id;
+	char nombre[20];
+}
+
+void enviar_pepito(int socket_cliente, struct pepito *pepito)
+{
+	pepito *pepito_a_enviar = malloc(sizeof(struct pepito));
+	
+
+}
+
 void enviar_entero(int socket_cliente, int numero)
 {
 	send(socket_cliente, &numero, sizeof(numero), MSG_WAITALL);
@@ -124,3 +136,49 @@ op_code recibir_op_code (int socket)
 	recv(socket, &codigo_operacion, sizeof(codigo_operacion), 0);
 	return codigo_operacion;
 }
+/*t_paquete *iniciar_paquete(int cod_op)
+{
+	t_paquete *paquete = malloc(sizeof(t_paquete));
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->codigo_operacion = cod_op;
+	paquete->buffer->size = 0;
+	paquete->buffer->stream = NULL;
+	return paquete;
+}
+void enviar_TID_PID(int tid, int pid, int socket_cliente, op_code codigo)
+{
+
+	t_paquete *paquete = iniciar_paquete(codigo);
+
+	paquete->buffer->size = sizeof(int) * 2; // Tamaño del buffer para el entero
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	int offset = 0;
+	memcpy(paquete->buffer->stream, &pid, sizeof(int));
+	offset += sizeof(int);
+	memcpy(paquete->buffer->stream + offset, &tid, sizeof(int));
+
+	enviar_paquete(paquete, socket_cliente);
+	eliminar_paquete(paquete);
+}
+
+t_list* recibir_paquete(int socket_cliente)
+{
+	int size;
+	int desplazamiento = 0;
+	void * buffer;
+	t_list* valores = list_create();
+	int tamanio;
+
+	buffer = recibir_buffer(&size, socket_cliente);
+	while(desplazamiento < size)
+	{
+		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		char* valor = malloc(tamanio);
+		memcpy(valor, buffer+desplazamiento, tamanio);
+		desplazamiento+=tamanio;
+		list_add(valores, valor);
+	}
+	free(buffer);
+	return valores;
+}*/
