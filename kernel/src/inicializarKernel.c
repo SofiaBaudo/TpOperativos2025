@@ -3,6 +3,8 @@ void inicializar_kernel(){
     printf("Kernel inicializado");
     inicializar_logs();
     inicializar_configs();
+    fd_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
+    log_info(kernel_logger, "Conexion con Memoria exitoso");
 }
 
 void inicializar_logs(){

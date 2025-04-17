@@ -2,8 +2,12 @@
 
 void inicializar_IO(){
     printf("IO inicializado");
+    
 inicializar_logs();
 inicializar_configs();
+fd_kernel = crear_conexion(IP_KERNEL, PUERTO_KERNEL);
+enviar_op_code(fd_kernel, HANDSHAKE_IO);//avisa que es IO.
+log_info(io_logger, "Conexion con Kernel exitoso");
 
 }
 

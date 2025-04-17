@@ -8,9 +8,9 @@
 
 //Inicializacion Logs CPU
 
-extern t_log* cpu_logger;
-extern t_log* cpu_log_debug;
-extern t_config* cpu_config; 
+t_log *cpu_logger;
+t_log *cpu_log_debug;
+t_config *cpu_config; 
 
 //Variables Globales CPU
 

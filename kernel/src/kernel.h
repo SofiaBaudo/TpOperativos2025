@@ -4,7 +4,7 @@
 #include <k_vglobales.h>
 #include <finalizarKernel.h>
 #include <inicializarKernel.h>
-
+#include <conexiones.h>
 // VARIABLES GLOBALES
 
  t_log *kernel_logger; // para los obligatorios
@@ -21,14 +21,14 @@ int fd_io;
 //VARIABLES PARA LAS CONFIGS
 
 char *IP_MEMORIA;
-int *PUERTO_MEMORIA;
-int *PUERTO_ESCUCHA_DISPATCH;
-int *PUERTO_ESCUCHA_INTERRUPT;
-int *PUERTO_ESCUCHA_IO;
+char *PUERTO_MEMORIA;
+char *PUERTO_ESCUCHA_DISPATCH;
+char *PUERTO_ESCUCHA_INTERRUPT;
+char *PUERTO_ESCUCHA_IO;
 char *ALGORITMO_CORTO_PLAZO;
 char *ALGORITMO_INGRESO_A_READY;
-int *ALFA;
-int *TIEMPO_SUSPENSION;
+char *ALFA;
+char *TIEMPO_SUSPENSION;
 char *LOG_LEVEL;
 
 

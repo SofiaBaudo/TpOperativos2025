@@ -101,27 +101,22 @@ int recibir_operacion(int socket_cliente)
 
 // Funciones para identificarse cuando hay una conexion.
 
-struct pepito{
-	int id;
-	char nombre[20];
-}
 
-void enviar_pepito(int socket_cliente, struct pepito *pepito)
+
+/*void enviar_pepito(int socket_cliente, struct pepito *pepito);
 {
 	pepito *pepito_a_enviar = malloc(sizeof(struct pepito));
-	
-
 }
-
+*/
 void enviar_entero(int socket_cliente, int numero)
 {
 	send(socket_cliente, &numero, sizeof(numero), MSG_WAITALL);
 }
 
-int recibir_entero(int fd_conexion)
-{
+
+int recibir_entero(int fd_conexion){
 	int entero;
-	recv(fd_conexion, &entero, sizeof(int), MSG_WAITALL);
+	recv(fd_conexion, &entero, sizeof(entero), MSG_WAITALL);
 	return entero;
 }
 

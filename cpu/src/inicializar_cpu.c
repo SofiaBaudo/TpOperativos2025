@@ -10,25 +10,9 @@ void inicializar_CPU(int identificador_cpu){ //el identificador es porque puede 
     inicializar_configs();
     iniciar_conexion_kernel_dispatch(identificador_cpu);
     iniciar_conexion_kernel_interrupt(identificador_cpu);
-    //imprimir_configs();
+    imprimir_configs();
     destruir_config(cpu_config);
- 
 }
-
-void iniciar_conexion_kernel_dispatch(int identificador_cpu){
-    int fd_conexion_kernel_dispatch = crear_conexion(PUERTO_KERNEL_DISPATCH, IP_MEMORIA);
-    enviar_op_code(fd_conexion_kernel_dispatch, CPU_HANDSHAKE);//avisa que es CPU.
-    op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch); //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
-    if (respuesta == HANDSHAKE_ACCEPTED){
-        log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
-    }
-    else{
-        log_error(cpu_logger, "Error en la conexion con el kernel dispatch");
-        exit(EXIT_FAILURE);
-    }
-}
-
-// TODO> Hacer la funcion de conexion con el kernel interrupt
 
 //Funcion de Inicializacion de Logs
 
@@ -60,8 +44,8 @@ void inicializar_configs(){
     PUERTO_MEMORIA = config_get_string_value(cpu_config,"PUERTO_MEMORIA");
     PUERTO_KERNEL_DISPATCH = config_get_string_value(cpu_config,"PUERTO_KERNEL_DISPATCH");
     PUERTO_KERNEL_INTERRUPT = config_get_string_value(cpu_config,"PUERTO_KERNEL_INTERRUPT");
-    //config_destroy(cpu_config);
-    //exit(EXIT_SUCCESS);
+    config_destroy(cpu_config);
+    exit(EXIT_SUCCESS);
 }
 
 //Funcion de Imprimir de Configs
