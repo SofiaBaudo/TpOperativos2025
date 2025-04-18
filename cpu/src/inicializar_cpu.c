@@ -11,7 +11,7 @@ void inicializar_CPU(int identificador_cpu){ //el identificador es porque puede 
     //iniciar_conexion_kernel_interrupt(identificador_cpu);
     iniciar_conexion_memoria_dispatch(identificador_cpu);
     //imprimir_configs();
-    destruir_config(cpu_config);
+    
 }
 
 //Funcion de Inicializacion de Logs
