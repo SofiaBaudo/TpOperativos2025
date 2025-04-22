@@ -7,9 +7,9 @@
 void inicializar_CPU(int identificador_cpu){ //el identificador es porque puede haber varias CPU.
     inicializar_logs();
     inicializar_configs();
-    //iniciar_conexion_kernel_dispatch(identificador_cpu);
+    iniciar_conexion_kernel_dispatch(identificador_cpu);
     //iniciar_conexion_kernel_interrupt(identificador_cpu);
-    iniciar_conexion_memoria_dispatch(identificador_cpu);
+    //iniciar_conexion_memoria_dispatch(identificador_cpu);
     //imprimir_configs();
     
 }
