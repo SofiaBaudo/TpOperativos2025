@@ -1,24 +1,27 @@
 #include <utils/utils.h>
 #include <io.h>
 
-struct NodoColasPeticiones{ //creo cola de peticiones donde se van a ir ejecutando 
-    int info;
-    Nodo *sgte;
-}
+/*struct NodoColasPeticiones{ //creo cola de peticiones donde se van a ir ejecutando 
+    struct peticion info;
+    NodoColasPeticiones *sgte;
+}*/
 
 int main(int argc, char* argv[]) {
 
-    NodoColasPeticiones *colaFin; 
-    NodoColasPeticiones *colaInicio;
+    //struct NodoColasPeticiones *colaFin; 
+    //struct NodoColasPeticiones *colaInicio;
 
     inicializar_IO();
+
     printf("\n");
     log_info(io_logger,"Estoy aca en IO");
+    printf("\n");
+    esperar_peticion();
     return 0;
 }
 
-bool colaVacia{
-    if(colaInicio->sgte == NULL){
+/*bool colaVacia{
+    if(colaInicio == NULL){
         return true;
     }
     return false;
@@ -30,6 +33,6 @@ void agregarPeticion{ //esto me parece que tendria que ir en kernel porque el es
     else{
         //agregar al final de la cola
     }
-}
+}*/
 
 

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <io_vglobales.h>
 #include <inicializarIO.h>
-
+#include <io_conexiones.h>
 //VARIABLES GLOBALES
 t_log *io_logger;
 t_log *io_debug_log;
