@@ -1,4 +1,5 @@
 #include "servidor_memoria.h"
+#include "instrucciones.h"
 
 //HACER LA CONEXION CON LOS OTROS MODULOS PARA QUE EL SERVIDOR NO SE QUEDE ESPERANDO
 
@@ -45,6 +46,22 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
             // manejar_cliente_cpu(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS
             break;
+        case GET_INSTRUCCION:  //(op_code) que indica:"Ey Memoria, pasame la próxima instrucción del proceso X en su Program Counter Y. Lo hace la CPU en su ciclo de instrucción (Fetch).
+            int pid, pc;
+            recv(cliente, &pid, sizeof(int), 0);
+            recv(cliente, &pc, sizeof(int), 0);
+            char* instruccion = obtener_instruccion(pid, pc);
+            log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion); //ESTO ES LOG OBLIGATORIO
+            enviar_mensaje(cliente, instruccion);
+            break;
+            
+        case SOLICITAR_ESPACIO: 
+            int tamanio;
+            recv(cliente, &tamanio, sizeof(int), 0);
+            bool hay_espacio = true;
+            send(cliente, &hay_espacio, sizeof(bool), 0);
+            break;
+        
         default:
             log_warning(logger_memoria, "No se pudo identificar al cliente; op_code: %d", cliente_id); //AVISA Q FUCNIONA MAL
             break;
@@ -52,6 +69,7 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
     close(cliente);
     return NULL;
 }
+ 
 
 //HACER FUNCIONES PARA MANEJAR LOS CLIENTES DE KERNEL Y CPU
 //manejar_cliente_kernel(cliente);

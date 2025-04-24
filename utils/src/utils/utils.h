@@ -24,7 +24,8 @@ typedef enum op_code
 	HANDSHAKE_CPU_INTERRUPT,
 	HANDSHAKE_ACCEPTED,
 	HANDSHAKE_DENIED,
-	// etc
+	GET_INSTRUCCION,
+    SOLICITAR_ESPACIO,
 	MENSAJE,
 	PAQUETE,
     HANDSHAKE,
@@ -59,5 +60,7 @@ int recibir_entero(int fd_conexion);
 
 void enviar_op_code(int socket_cliente, op_code codigo_operacion);
 op_code recibir_op_code (int socket);
+
+void enviar_mensaje(int socket, char* mensaje);
 
 #endif
