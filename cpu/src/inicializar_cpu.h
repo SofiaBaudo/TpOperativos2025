@@ -4,7 +4,7 @@
 #include <conexiones.h>
 
 void inicializar_logs();
-void inicializar_CPU();
+void inicializar_CPU(int id);
 void inicializar_configs();
 void imprimir_configs();
 //void iniciar_conexion_kernel_dispatch(int identificador_cpu);

@@ -45,40 +45,30 @@ void imprimir_configs();
 
 
 //aca copiar el typedef del estado
+/*
 struct rafaga{
    int duracion;
    char modulo[4];
-}
-
-
+};
 struct nodo_rafaga{
-   rafaga info;
-   nodo_rafaga -> sgte = NULL;
-}
+   struct rafaga info;
+   struct nodo_rafagasgte = NULL;
+};
 struct pcb{
    int pid=0;
    int pc=0;
    //despues terminar lo de las metricas de estado y la otra metrica
    //Estado estado;
    t_list *lista_de_rafagas;
-}
+};
 
 
 t_list *procesos;
 
-
 struct pcb* pcb = pcb_new(1);
-
-
 list_add(procesos, pcb);
 
-
 struct rafaga* rafaga = list_get(pcb->lista_de_rafagas, 0);
-
-
-
-
-
 
 struct pcb* pcb_new(int pid) {
    struct pcb* pcb = malloc(sizeof(struct pcb));
@@ -87,6 +77,5 @@ struct pcb* pcb_new(int pid) {
    pcb->lista_de_rafagas = list_create(); // crea la lista como vacia
    return pcb; // devuelve un puntero al pcb 
 }
-
-
+*/
 // podria armar algo parecido que devuelva la rafaga

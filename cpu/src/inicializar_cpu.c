@@ -4,10 +4,10 @@
 
 //Funcion de Inicializacion de CPU
 
-void inicializar_CPU(){ //el identificador es porque puede haber varias CPU.
+void inicializar_CPU(int id){ //el identificador es porque puede haber varias CPU.
     inicializar_logs();
     inicializar_configs();
-    inicializar_cpus();
+    inicializar(id);
     //iniciar_conexion_kernel_dispatch(identificador_cpu);
     //iniciar_conexion_kernel_interrupt(identificador_cpu);
     //iniciar_conexion_memoria_dispatch(identificador_cpu);

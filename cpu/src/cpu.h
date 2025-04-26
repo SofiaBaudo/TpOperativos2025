@@ -1,9 +1,6 @@
-//Incluir las librerias
 
 #include <variables_globales_cpu.h>
 #include <inicializar_cpu.h>
-
-
 
 //Inicializacion Logs CPU
 t_log *cpu_logger;
