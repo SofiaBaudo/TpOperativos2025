@@ -91,7 +91,9 @@ void* manejar_kernel_io(void *socket_io){
 
 void iniciar_conexion_kernel_memoria(){
     int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
+
     enviar_op_code(fd_kernel_memoria, HANDSHAKE_KERNEL);                    //avisa que es Kernel.
+
     op_code respuesta = recibir_op_code(fd_kernel_memoria);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
         log_info(kernel_logger, "Conexion con memoria establecida correctamente");
