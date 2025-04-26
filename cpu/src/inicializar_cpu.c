@@ -4,10 +4,11 @@
 
 //Funcion de Inicializacion de CPU
 
-void inicializar_CPU(int identificador_cpu){ //el identificador es porque puede haber varias CPU.
+void inicializar_CPU(){ //el identificador es porque puede haber varias CPU.
     inicializar_logs();
     inicializar_configs();
-    iniciar_conexion_kernel_dispatch(identificador_cpu);
+    inicializar_cpus();
+    //iniciar_conexion_kernel_dispatch(identificador_cpu);
     //iniciar_conexion_kernel_interrupt(identificador_cpu);
     //iniciar_conexion_memoria_dispatch(identificador_cpu);
     //imprimir_configs();
@@ -17,13 +18,13 @@ void inicializar_CPU(int identificador_cpu){ //el identificador es porque puede 
 //Funcion de Inicializacion de Logs
 
 void inicializar_logs(){
-    cpu_logger = log_create("cpu.log" , "CL_LOG", 1 , LOG_LEVEL_INFO);
+    cpu_logger = log_create("cpu.log" , "CPU", 1 , LOG_LEVEL_INFO);
     if(!cpu_logger)
     {
         perror("No se pudo crear el logger.");
         exit(EXIT_FAILURE);
     }
-    cpu_log_debug = log_create("cpu.log" , "CL_LOG", 1 , LOG_LEVEL_TRACE);
+    cpu_log_debug = log_create("cpu.log" , "CPU", 1 , LOG_LEVEL_TRACE);
     if(cpu_log_debug == NULL){
         perror("No se pudo crear el logger.");
         exit(EXIT_FAILURE);
@@ -50,5 +51,7 @@ void inicializar_configs(){
  void imprimir_configs(){
    // log_info(cpu_logger, "CPU TLB: %s",REEMPLAZO_TLB);
 }
+
+
  
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <commons/config.h>
 #include <commons/log.h>
+#include <pthread.h>
 
 //Inicializacion Logs CPU
 

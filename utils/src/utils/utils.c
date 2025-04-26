@@ -104,7 +104,6 @@ void enviar_entero(int socket_cliente, int numero)
 	send(socket_cliente, &numero, sizeof(numero), MSG_WAITALL);
 }
 
-
 int recibir_entero(int fd_conexion){
 	int entero;
 	recv(fd_conexion, &entero, sizeof(entero), MSG_WAITALL);
