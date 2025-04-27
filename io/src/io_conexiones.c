@@ -1,16 +1,8 @@
 #include <io_conexiones.h>
 
-
-/*struct peticion{
-   int tiempoEspera;
-   char descPeticion[100];
-};*/
-
-
 int tiempo_de_suspension = 0;
+
 //el request no sabria como se pasaria en parametro pongo asi para que tenga algo
-
-
 
 void esperar_peticion(){
     while (1){
@@ -21,13 +13,14 @@ void esperar_peticion(){
         enviar_op_code(fd_kernel,RAFAGA_ACEPTADA); //falta implementar que no se este ejecutando ninguna rafaga
         tiempo_de_suspension = recibir_entero(fd_kernel);
         if(tiempo_de_suspension>0){
-             ejecutarPeticion(tiempo_de_suspension) ;
+        ejecutarPeticion(tiempo_de_suspension) ;
         tiempo_de_suspension  = 0;
         }
        }
-
+       operacion = -1; //valor para que deje de estar en "RAFAGA_ACEPTADA"
     }
 }
+
 //el sistema esta bloqueado hasta que llega la peticion que lo saca de la suspension. 
 void ejecutarPeticion(int tiempo){
     printf("En proceso y recibi: %i ", tiempo);

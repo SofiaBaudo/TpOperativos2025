@@ -1,20 +1,17 @@
 #include <inicializarIO.h>
 
-void inicializar_IO(nombre){
-    printf("IO inicializado");
-    
+void inicializar_IO(char *nombre){
+printf("IO inicializado");
 inicializar_logs();
 inicializar_configs();
 fd_kernel = crear_conexion(IP_KERNEL, PUERTO_KERNEL);
 enviar_op_code(fd_kernel, HANDSHAKE_IO);//avisa que es IO.
-send(fd_kernel,&nombre,sizeof(nombre),0);
 int respuesta = recibir_op_code(fd_kernel);
 if(respuesta == HANDSHAKE_ACCEPTED){
 log_info(io_logger, "Conexion con Kernel exitosa");
- esperar_peticion();
+//send(fd_kernel,&nombre,sizeof(nombre),0);
+esperar_peticion();
 }
-
-
 }
 
 void inicializar_logs(){
@@ -23,13 +20,14 @@ void inicializar_logs(){
         perror("No se pudo crear el logger");
         exit(EXIT_FAILURE);
     }
-     /* kernel_debug_log = log_create("kernel.log","LOG_MODULO_KERNEL",1,LOG_LEVEL_TRACE); // TRACE ES EL NIVEL MAS ALTO DE TODOS
+    /* kernel_debug_log = log_create("kernel.log","LOG_MODULO_KERNEL",1,LOG_LEVEL_TRACE); // TRACE ES EL NIVEL MAS ALTO DE TODOS
     if(!kernel_logger){
         perror("No se pudo crear el logger");
         exit(EXIT_FAILURE);
     }
     */
 }
+
 void inicializar_configs(){
 config_io = crear_config("/home/utnso/tp-2025-1c-Sinergia-SO-13/io/io.config");
 IP_KERNEL = config_get_string_value(config_io,"IP_KERNEL");

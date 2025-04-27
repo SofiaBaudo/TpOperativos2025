@@ -49,7 +49,6 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
    return NULL;
 }
 
-
 void atender_kernel_io(){
   
    int servidor_kernel = iniciar_servidor(PUERTO_ESCUCHA_IO,kernel_logger,"El kernel se conecto y esta esperando al IO");
@@ -66,27 +65,33 @@ void atender_kernel_io(){
        }
       
    int *puntero_al_io= malloc(sizeof(*puntero_al_io));
-       *puntero_al_io = cliente_io;
-       pthread_t hilo_kernel_io;
+   //*puntero_al_io = cliente_io;
+   memcpy(puntero_al_io, &cliente_io, sizeof(int));
+   pthread_t hilo_kernel_io;
    pthread_create(&hilo_kernel_io,NULL,manejar_kernel_io,(void*)puntero_al_io); //Creamos el hilo
    pthread_detach(hilo_kernel_io);//El hilo se desacopla del hilo principal.
       
    }
    }
 
-
 void* manejar_kernel_io(void *socket_io){
    int io = *((int *)socket_io); // Desreferencio el puntero para obtener el socket del cliente
    free(socket_io);
    op_code io_id = recibir_op_code(io);
-   //hay que recibir el nombre de cada io
+ 
    // log_info(kernel_logger, "Valor recibido en io_id: %d", io_id); verificammos que el valor recibido sea el correcto
    switch (io_id)
    {       
        case HANDSHAKE_IO:
            //LOG_INFO : ES EL LOG OBLIGATORIO
+
            log_info(kernel_logger, "## IO Conectado - FD del socket: %d", io);
-           enviar_op_code(io, HANDSHAKE_ACCEPTED);
+           printf("\n");
+            enviar_op_code(io, HANDSHAKE_ACCEPTED);
+            //char *nombre;
+            //recv(io, &nombre, sizeof(nombre),0);
+            //printf("Nombre recibido: %s",nombre);
+            //log_info(kernel_logger,"se conecto el io con nombre; %s",nombre);
            solicitar_rafaga_de_io(3);
            solicitar_rafaga_de_io(5);
            break;

@@ -3,6 +3,7 @@
 #include <inicializar_cpu.h>
 
 //Inicializacion Logs CPU
+
 t_log *cpu_logger;
 t_log *cpu_log_debug;
 t_config *cpu_config; 

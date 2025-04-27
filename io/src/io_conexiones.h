@@ -2,4 +2,3 @@
 
 void esperar_peticion();
 void ejecutarPeticion(int tiempo);
-
