@@ -1,7 +1,6 @@
 #include <utils/utils.h>
 #include <stdio.h>
 #include <pthread.h>
-
 //VARIABLES GLOBALES
 extern t_log *io_logger;
 extern t_log *io_debug_log;

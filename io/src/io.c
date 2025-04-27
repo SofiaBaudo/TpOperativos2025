@@ -16,7 +16,6 @@ int main(int argc, char* argv[]) {
     printf("\n");
     log_info(io_logger,"Estoy aca en IO");
     printf("\n");
-    esperar_peticion();
     return 0;
 }
 

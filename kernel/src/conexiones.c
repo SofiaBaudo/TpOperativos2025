@@ -57,7 +57,6 @@ void atender_kernel_io(){
    }
    log_debug(kernel_logger, "Servidor de kernel para dispatch iniciado en el puerto %s", PUERTO_ESCUCHA_IO);// Log de inicio del servidor
    while (1) { // sigue ciclando mientras no se desconecte el cliente
-       // Aca esperan al cliente (CPU)
     cliente_io = esperar_cliente(servidor_kernel,kernel_logger,"IO"); //este es el socket que hay que utilizar para comunicarse
    if (cliente_io == -1) {
            log_error(kernel_logger, "Error al aceptar un cliente");
@@ -85,7 +84,8 @@ void* manejar_kernel_io(void *socket_io){
            //LOG_INFO : ES EL LOG OBLIGATORIO
            log_info(kernel_logger, "## IO Conectado - FD del socket: %d", io);
            enviar_op_code(io, HANDSHAKE_ACCEPTED);
-           //enviar_entero(cliente_io,3);
+           solicitar_rafaga_de_io(3);
+           solicitar_rafaga_de_io(5);
            break;
        default:
            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL
@@ -112,3 +112,13 @@ void iniciar_conexion_kernel_memoria(){
    }
 }
 
+void solicitar_rafaga_de_io(int duracion){
+    enviar_op_code(cliente_io,EJECUTAR_RAFAGA_IO); // solicita al io ejecutar una rafaga
+    op_code respuesta = recibir_op_code(cliente_io); // recibe la respuesta
+    if(respuesta == RAFAGA_ACEPTADA){
+        enviar_entero(cliente_io,duracion); // si hay una instancia de io disponible le manda la duracion de la rafaga
+    }
+    else{
+        // hay que ver esto
+    }
+} // esta funcion capaz estaria mejor que solo devuelva la respuesta pero para ir probandola la dejamos en void

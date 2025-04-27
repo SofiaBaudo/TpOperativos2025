@@ -7,7 +7,12 @@ inicializar_logs();
 inicializar_configs();
 fd_kernel = crear_conexion(IP_KERNEL, PUERTO_KERNEL);
 enviar_op_code(fd_kernel, HANDSHAKE_IO);//avisa que es IO.
-log_info(io_logger, "Conexion con Kernel exitoso");
+int respuesta = recibir_op_code(fd_kernel);
+if(respuesta == HANDSHAKE_ACCEPTED){
+log_info(io_logger, "Conexion con Kernel exitosa");
+ esperar_peticion();
+}
+
 
 }
 

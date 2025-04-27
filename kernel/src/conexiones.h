@@ -13,4 +13,4 @@ void *manejar_kernel_io(void *socket_io);
 void iniciar_conexion_kernel_memoria();
 //void atender_kernel_interrupt();
 //void atender_kernel_io();
-
+void solicitar_rafaga_de_io(int duracion);
