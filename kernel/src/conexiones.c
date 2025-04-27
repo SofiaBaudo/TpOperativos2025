@@ -79,6 +79,7 @@ void* manejar_kernel_io(void *socket_io){
    int io = *((int *)socket_io); // Desreferencio el puntero para obtener el socket del cliente
    free(socket_io);
    op_code io_id = recibir_op_code(io);
+   //hay que recibir el nombre de cada io
    // log_info(kernel_logger, "Valor recibido en io_id: %d", io_id); verificammos que el valor recibido sea el correcto
    switch (io_id)
    {       
