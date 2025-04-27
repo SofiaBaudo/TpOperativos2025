@@ -62,13 +62,13 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
             send(cliente, &hay_espacio, sizeof(bool), 0);
             log_info(logger_memoria, "## PID: <PID> - Solicitud de espacio de tamaño: %d", tamanio);
             break;
-        case PROCESOS_CREADOS: //op_code que indica: "Ey Memoria, dame la lista de procesos creados"
+      /*  case PROCESOS_CREADOS: //op_code que indica: "Ey Memoria, dame la lista de procesos creados"
             int pid;
             recv(cliente, &pid, sizeof(int), 0);
             int tamanio = tamanio_particion_por_pid(pid); // Obtener el tamaño de la partición
             log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tamanio); //ESTO ES LOG OBLIGATORIO
             enviar_mensaje(cliente, "OK");
-            break;    
+       */     break;    
         default:
             log_warning(logger_memoria, "No se pudo identificar al cliente; op_code: %d", cliente_id); //AVISA Q FUCNIONA MAL
             break;

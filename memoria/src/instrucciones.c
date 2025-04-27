@@ -1,6 +1,11 @@
 #include "instrucciones.h"
 
 t_list* procesos;
+//t_log* memoria_logger = NULL;
+
+//memoria_logger = log_create("memoria.log", "MEMORIA", 1, LOG_LEVEL_INFO);
+// Inicializa el logger de memoria
+
 
 void iniciar_lista_procesos() { //guarda a todos los procesos que están en memoria con sus instrucciones.
     procesos = list_create();
