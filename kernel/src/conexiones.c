@@ -34,11 +34,13 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
    op_code dispatch_id = recibir_op_code(dispatch); // !!!!!!!!!!DESPUES VER DE UNIFICAR LA FUNCION Q HIZO JERE EN EL UTILS DE RECIBIR CON UN CODE_OP PERO QUE SEA OP_CODE!!!!!!!!!!!!!!!!
    switch (dispatch_id)
    {
-       case HANDSHAKE_CPU:
+       case HANDSHAKE_CPU_DISPATCH:
            //LOG_INFO : ES EL LOG OBLIGATORIO
            log_info(kernel_logger, "## CPU-DISPATCH Conectado - FD del socket: %d", dispatch);
            enviar_op_code(dispatch, HANDSHAKE_ACCEPTED);
            break;
+           //case HANDSHAKE_CPU_INTERRUPT:
+           //
        default:
            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", dispatch); //AVISA Q FUCNIONA MAL
            break;
@@ -95,7 +97,7 @@ void* manejar_kernel_io(void *socket_io){
 }
 
 
-void iniciar_conexion_kernel_memoria(){
+op_code iniciar_conexion_kernel_memoria(){
    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
 
 
@@ -105,11 +107,13 @@ void iniciar_conexion_kernel_memoria(){
    op_code respuesta = recibir_op_code(fd_kernel_memoria);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
    if (respuesta == HANDSHAKE_ACCEPTED){
        log_info(kernel_logger, "Conexion con memoria establecida correctamente");
+       return respuesta;
    }
    else{
        log_error(kernel_logger, "Error en la conexion con memoria");
        exit(EXIT_FAILURE);
    }
+   
 }
 
 void solicitar_rafaga_de_io(int duracion){
