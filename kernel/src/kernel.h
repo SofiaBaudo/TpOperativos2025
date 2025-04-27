@@ -5,6 +5,7 @@
 #include <finalizarKernel.h>
 #include <inicializarKernel.h>
 #include <conexiones.h>
+#include <planificacion.h>
 // VARIABLES GLOBALES
 
 

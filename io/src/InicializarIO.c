@@ -1,12 +1,13 @@
 #include <inicializarIO.h>
 
-void inicializar_IO(){
+void inicializar_IO(nombre){
     printf("IO inicializado");
     
 inicializar_logs();
 inicializar_configs();
 fd_kernel = crear_conexion(IP_KERNEL, PUERTO_KERNEL);
 enviar_op_code(fd_kernel, HANDSHAKE_IO);//avisa que es IO.
+send(fd_kernel,&nombre,sizeof(nombre),0);
 int respuesta = recibir_op_code(fd_kernel);
 if(respuesta == HANDSHAKE_ACCEPTED){
 log_info(io_logger, "Conexion con Kernel exitosa");

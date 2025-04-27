@@ -18,3 +18,4 @@ extern int fd_io;
 extern char *IP_KERNEL;
 extern char *PUERTO_KERNEL;
 extern char *LOG_LEVEL;
+
