@@ -1,4 +1,4 @@
-//Inicializacion de las funciones de inicializar_cpu.c
+//Inicializacion de las funciones de 
 
 #include <variables_globales_cpu.h>
 #include <conexiones.h>

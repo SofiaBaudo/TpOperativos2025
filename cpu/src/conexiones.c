@@ -5,7 +5,7 @@
 
 void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
     int fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
-    enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU);                    //avisa que es CPU.
+    enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU_DISPATCH);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
         log_info(log, "Conexion con el kernel dispatch establecida correctamente");
@@ -17,6 +17,7 @@ void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
     }
     close(fd_conexion_kernel_dispatch);
 }
+
 //void iniciar_conexion_kernel_interrupt(int identificador_cpu){
 //    int fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_interrupt);
 //    enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU);                    //avisa que es CPU.
@@ -29,6 +30,7 @@ void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
 //        exit(EXIT_FAILURE);
 //    }
 //}
+
 void iniciar_conexion_memoria_dispatch(int identificador_cpu){
     int fd_conexion_dispatch_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
     enviar_op_code(fd_conexion_dispatch_memoria, HANDSHAKE_CPU);                  //avisa que es CPU.

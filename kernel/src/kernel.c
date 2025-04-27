@@ -6,8 +6,8 @@ int main(int argc, char* argv[]) { //argc es la cantidad de argumentos y argv qu
 
 
    inicializar_kernel();
-   //atender_kernel_dispatch();
-   atender_kernel_io();
+   atender_kernel_dispatch();
+  //atender_kernel_io();
   
   /*pcb = crear_proceso(2);
   procesos = list_create();

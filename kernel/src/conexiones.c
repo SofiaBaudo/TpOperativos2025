@@ -18,20 +18,19 @@ void atender_kernel_dispatch(){
                log_error(kernel_logger, "Error al aceptar un cliente");
                continue;
            }
-          
        int *puntero_al_dispatch = malloc(sizeof(*puntero_al_dispatch));
-       *puntero_al_dispatch = cliente_dispatch;
+       memcpy(puntero_al_dispatch, &cliente_dispatch, sizeof(int));
+       //*puntero_al_dispatch = cliente_dispatch;
        pthread_t hilo_kernel_dispatch;
        pthread_create(&hilo_kernel_dispatch,NULL,manejar_kernel_dispatch,(void*)puntero_al_dispatch); //Creamos el hilo
        pthread_detach(hilo_kernel_dispatch);//El hilo se desacopla del hilo principal.
    }
 }
-
-
 void* manejar_kernel_dispatch(void *socket_dispatch){
    int dispatch = *((int *)socket_dispatch); // Desreferencio el puntero para obtener el socket del cliente
    free(socket_dispatch);
    op_code dispatch_id = recibir_op_code(dispatch); // !!!!!!!!!!DESPUES VER DE UNIFICAR LA FUNCION Q HIZO JERE EN EL UTILS DE RECIBIR CON UN CODE_OP PERO QUE SEA OP_CODE!!!!!!!!!!!!!!!!
+   log_info(kernel_logger,"el dispatch es %d" ,dispatch);
    switch (dispatch_id)
    {
        case HANDSHAKE_CPU_DISPATCH:
@@ -40,12 +39,10 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            enviar_op_code(dispatch, HANDSHAKE_ACCEPTED);
            break;
            //case HANDSHAKE_CPU_INTERRUPT:
-           //
        default:
            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", dispatch); //AVISA Q FUCNIONA MAL
            break;
    }
- 
    return NULL;
 }
 
