@@ -37,6 +37,19 @@ typedef enum op_code
 	RAFAGA_ACEPTADA
 }op_code;
 
+// Enum de Instrucciones
+typedef enum instruccion
+{
+	NOOP,
+	WRITE,
+	READ,
+	GOTO,
+	IO,
+	INIT_PROC,
+	DUMP_MEMORY,
+	EXIT,
+}instruccion;
+
 typedef struct
 {
 	int size;
