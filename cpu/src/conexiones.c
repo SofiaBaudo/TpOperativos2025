@@ -4,7 +4,7 @@
 // Funcion Iniciar Conexion Kernel
 
 void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
-    int fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
+    fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
     enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU_DISPATCH);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
@@ -32,7 +32,7 @@ void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
 //}
 
 void iniciar_conexion_memoria_dispatch(int identificador_cpu){
-    int fd_conexion_dispatch_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
+    fd_conexion_dispatch_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
     enviar_op_code(fd_conexion_dispatch_memoria, HANDSHAKE_CPU);                  //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_dispatch_memoria);            //recibe un entero que devuelve el kernel cuando la conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){

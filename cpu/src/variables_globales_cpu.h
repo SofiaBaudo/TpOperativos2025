@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <commons/config.h>
 #include <commons/log.h>
+#include <commons/string.h>
+#include <commons/collections/list.h>
 #include <pthread.h>
 
 //Inicializacion Logs CPU
@@ -13,6 +15,10 @@ extern t_log *cpu_log_debug;
 extern t_config*cpu_config; 
 
 //Variables Globales CPU
+
+extern int fd_conexion_dispatch_memoria;
+extern int fd_conexion_kernel_dispatch;
+
 
 extern char* IP_MEMORIA;
 extern char* IP_KERNEL;
