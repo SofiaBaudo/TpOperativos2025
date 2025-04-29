@@ -39,6 +39,8 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            enviar_op_code(dispatch, HANDSHAKE_ACCEPTED);
            break;
            //case HANDSHAKE_CPU_INTERRUPT:
+           //case INIT_PROC:
+           //manejar_procesos();
        default:
            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", dispatch); //AVISA Q FUCNIONA MAL
            break;
@@ -89,8 +91,6 @@ void* manejar_kernel_io(void *socket_io){
             //recv(io, &nombre, sizeof(nombre),0);
             //printf("Nombre recibido: %s",nombre);
             //log_info(kernel_logger,"se conecto el io con nombre; %s",nombre);
-           solicitar_rafaga_de_io(3);
-           solicitar_rafaga_de_io(5);
            break;
        default:
            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL
@@ -100,16 +100,17 @@ void* manejar_kernel_io(void *socket_io){
 }
 
 
-op_code iniciar_conexion_kernel_memoria(){
+op_code iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
 
 
-   enviar_op_code(fd_kernel_memoria, HANDSHAKE_KERNEL);                    //avisa que es Kernel.
+   enviar_op_code(fd_kernel_memoria, HANDSHAKE_KERNEL); //avisa que es Kernel.
 
 
-   op_code respuesta = recibir_op_code(fd_kernel_memoria);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
+   op_code respuesta = recibir_op_code(fd_kernel_memoria); //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
    if (respuesta == HANDSHAKE_ACCEPTED){
        log_info(kernel_logger, "Conexion con memoria establecida correctamente");
+       //aca tendriamos que pedir iniciar cierto proceso
        return respuesta;
    }
    else{

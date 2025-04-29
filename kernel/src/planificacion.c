@@ -3,10 +3,6 @@
 t_list* procesos = NULL;
 t_list* colaEstados[7]={NULL};
 
-
-
-
-
 struct pcb *pcb;
 
 void crear_proceso(int pid) {
@@ -41,3 +37,25 @@ int buscar_en_lista(t_list *lista, int pid) {
     return -1;
 }
 
+/*
+funcion planificador de largo plazo (recibe lista de procesos (¿ o un proceso?) , el algoritmo a usar(?), )
+    
+    si la cola new esta vacia
+        inicializar conexion con kernel meoria ( pedir a memoria permiso para inicializar el proceso) y devuelve un op_code
+            si la respuesta de memoria es true
+                quito el proceso de la cola new.
+                coloco el proceso en la cola ready (pasar_a_ready)   
+            si la respuesta es false
+            wait(FINALIZACION_DE_PROCESO)
+            El signal se haria cuando el mismo planificador de largo plazo manda otro proceso a EXIT
+
+    si la cola new no esta vacia
+        mientras 
+            
+*/ 
+
+//funcion para pasar a ready que recibe un proceso
+void manejar_proceso(struct pcb *proceso){
+    //crear_proceso();
+    //planificador de largo plazo
+}
