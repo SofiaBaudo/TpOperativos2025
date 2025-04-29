@@ -116,7 +116,7 @@ op_code iniciar_conexion_kernel_memoria(){
        log_error(kernel_logger, "Error en la conexion con memoria");
        exit(EXIT_FAILURE);
    }
-   
+   close(fd_kernel_memoria);
 }
 
 void solicitar_rafaga_de_io(int duracion){

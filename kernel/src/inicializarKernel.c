@@ -3,8 +3,8 @@ void inicializar_kernel(){
     printf("Kernel inicializado");
     inicializar_logs();
     inicializar_configs();
+    inicializar_colas_de_estados();
     //iniciar_conexion_kernel_memoria();
-    
 }
 
 void inicializar_logs(){
@@ -40,4 +40,8 @@ void imprimir_configs(){
     //hay que estudiar como manejar enteros con logs
 }
 
-
+void inicializar_colas_de_estados(){
+    for(int i = 0; i < 7; i++) {
+    colaEstados[i] = list_create(); // Crea una nueva lista para cada estado
+}
+}

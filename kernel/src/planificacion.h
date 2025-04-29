@@ -7,7 +7,7 @@ typedef enum{
   READY,//1
   BLOCKED,//2
   EXEC,//3
-  EXIT,//4
+  EXIT_ESTADO,//4
   READY_SUSPEND,//5
   BLOCKED_SUSPEND//6
 } Estado;
@@ -17,6 +17,7 @@ struct rafaga{
   int duracion;
   char modulo[4];
 };
+
 /*struct nodo_rafaga{
   struct rafaga info;
   struct nodo_rafaga *sgte = NULL;
@@ -39,8 +40,8 @@ struct pcb{
 //extern t_list *procesos;
 
 
-struct pcb* crear_proceso(int pid);
-
+void crear_proceso(int pid);
+int buscar_en_lista(t_list *lista,int pid);
 
 
 
