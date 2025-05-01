@@ -111,7 +111,7 @@ op_code iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proces
    if (respuesta == HANDSHAKE_ACCEPTED){
        log_info(kernel_logger, "Conexion con memoria establecida correctamente");
        //aca tendriamos que pedir iniciar cierto proceso
-       return respuesta;
+       return respuesta; // en realidad tendriamos que devolver si se puede o no iniciar cierto proceso
    }
    else{
        log_error(kernel_logger, "Error en la conexion con memoria");

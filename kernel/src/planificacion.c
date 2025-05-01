@@ -32,7 +32,7 @@ int buscar_en_lista(t_list *lista, int pid) {
         pos++;
     }
 
-    list_iterator_destroy(aux); // destruyo el iterador creado.
+    list_iterator_destroy(aux); // destruyo el iterador creado por mas que no haya encontrado el proceso que queriamos.
     printf("El proceso con PID %d no se encuentra en la lista\n", pid);
     return -1;
 }
