@@ -9,4 +9,3 @@ int main(int argc, char* argv[]){
     //log_destroy(cpu_logger);
     //config_destroy(cpu_config);
 }
-//tiene un ciclo de instruccion

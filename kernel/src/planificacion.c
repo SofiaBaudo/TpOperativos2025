@@ -5,11 +5,11 @@ t_list* colaEstados[7]={NULL};
 
 struct pcb *pcb;
 
-void crear_proceso(int pid) {
+void crear_proceso(int pid) { // tambien tiene que recibir el tamanio y el path
   struct pcb* pcb = malloc(sizeof(struct pcb));
-  pcb -> pid = pid;
+  pcb -> pid = pid; //ver lo de la variable global
   pcb -> pc = 0;
-  pcb -> estado = NEW;
+  pcb -> estado = NEW; // seguramente no sirva mucho
   pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
   list_add(colaEstados[NEW],pcb);
   return; 
@@ -38,24 +38,37 @@ int buscar_en_lista(t_list *lista, int pid) {
 }
 
 /*
-funcion planificador de largo plazo (recibe lista de procesos (¿ o un proceso?) , el algoritmo a usar(?), )
-    
-    si la cola new esta vacia
-        inicializar conexion con kernel meoria ( pedir a memoria permiso para inicializar el proceso) y devuelve un op_code
-            si la respuesta de memoria es true
-                quito el proceso de la cola new.
-                coloco el proceso en la cola ready (pasar_a_ready)   
-            si la respuesta es false
-            wait(FINALIZACION_DE_PROCESO)
-            El signal se haria cuando el mismo planificador de largo plazo manda otro proceso a EXIT
+funcion planificador de largo plazo (recibe lista de procesos ()
 
-    si la cola new no esta vacia
-        mientras 
+
+    if(ALGORITMO_INGRESO_A_READY == FIFO){
+        planificador_largo_plazo_fifo()
+    }
+    else{
+        if(){
+            el de mas chico primero
+        }
+        else{
+            exit
+        }
+    }
+
+     
             
 */ 
 
-//funcion para pasar a ready que recibe un proceso
-void manejar_proceso(struct pcb *proceso){
-    //crear_proceso();
-    //planificador de largo plazo
+/*
+planificador_largo_plazo_fifo(){
+   readline conviene hacerlo aca 
+
+   si la cola de new NO esta vacia agarro el primer elemento y se lo mando a memoria para ver si lo puedo inicializar 
 }
+
+
+*/
+
+/*
+planificador_proceso_mas_chico_primero(){
+    
+}
+//funcion para pasar a ready que recibe un proceso

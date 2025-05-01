@@ -4,7 +4,7 @@ void inicializar_kernel(){
     inicializar_logs();
     inicializar_configs();
     inicializar_colas_de_estados();
-    //iniciar_conexion_kernel_memoria();
+   
 }
 
 void inicializar_logs(){

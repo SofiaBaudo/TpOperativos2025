@@ -1,3 +1,5 @@
+//Incluir las librerias
+
 #include <variables_globales_cpu.h>
 #include <inicializar_cpu.h>
 
@@ -11,8 +13,6 @@ t_config *cpu_config;
 
 int fd_conexion_dispatch_memoria;
 int fd_conexion_kernel_dispatch;
-
-
 char* IP_MEMORIA;
 char* IP_KERNEL;
 char* REEMPLAZO_TLB;

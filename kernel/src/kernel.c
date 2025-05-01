@@ -5,11 +5,14 @@
 int main(int argc, char* argv[]){
 
  //argc es la cantidad de argumentos y argv que contiene cada argumento
-
+  
 
    inicializar_kernel();
-   //atender_kernel_dispatch();
-   //atender_kernel_io();
+   // aca hay que crear un proceso con los parametros creados
+   //hilo para el plani de largo plazo
+   //hilo para el plani de corto plazo
+   //hilo para el plani de mediano plazo
+  
   
  
 

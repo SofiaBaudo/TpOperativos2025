@@ -1,13 +1,12 @@
-//Incluimos las librerias
+//Incluimos las librerias.
 
 #include <instrucciones.h>
 
-//Fase fecth (Buscar proxima instruccion a realizar)(Primer Fase del Ciclo de Instruccion)
+//Fase fecth (Buscar proxima instruccion a realizar)(Primer Fase del Ciclo de Instruccion).
 
 char* fetch(int pc){
-    //Mando confirmacion de cpu a memoria, espero la instruccion a realizar de memoria
+    //Mando confirmacion de cpu a memoria, espero la instruccion a realizar de memoria.
     send(fd_conexion_dispatch_memoria,&pc,sizeof(int),0);
-    char* instruccion_recibida;
     recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(instruccion),0);
     return instruccion_recibida;
 }
@@ -15,10 +14,11 @@ char* fetch(int pc){
 //Fase Decode (Interpretar proxima ejecucion a ejecutar)(Segunda Fase del Ciclo de Instruccion)
 
 void decode(char* instruccion_recibida){
+    //Decodifico las instrucciones
     instruccion instruccion;
-    char **obtenerInsPartes = string_split(instruccion_recibida, " ");
-    int longitudIns = obtenerLongitud(obtenerInsPartes);
-    char *parametros[longitudIns-1]; //agarro la cola de obtenerIns que tiene los parametros. 
+    obtenerInsPartes = string_split(instruccion_recibida, " ");
+    longitudIns = obtenerLongitud(obtenerInsPartes);
+    parametros[longitudIns-1]; //Agarro el string de obtenerIns que tiene los parametros. 
     for(int i = 1; i< longitudIns; i++){
         parametros[i-1] = obtenerInsPartes[i];
     }
@@ -26,63 +26,82 @@ void decode(char* instruccion_recibida){
     instruccion.parametros[0] = parametros[0];
     instruccion.parametros[1] = parametros[1];
     instruccion.parametros[2] = parametros[2];
-
-    char* traduccionNecesaria[] = {"WRITE", "READ"};
     if(estaContenido(traduccionNecesaria, instruccion.nombreIns, 2)){
-    //Llamar a la MMMU para que lo traduzca
+    //Llamar a la MMMU para que lo traduzca.
     }   
 }
 
-//Fase Execute (Ejecutar la instruccion)(Tercera Fase del Ciclo de Instruccion)
+//Fase Execute (Ejecutar la instruccion)(Tercera Fase del Ciclo de Instruccion).
 
 void execute(instruccion instruccion_recibida){
-    char *nombre_instruccion = instruccion_recibida.nombreIns;
-    char *syscalls[] = {"IO","INIT_PROC","DUMP_MEMORY","EXIT"};
+    nombre_instruccion = instruccion_recibida.nombreIns;
     if(estaContenido(syscalls, nombre_instruccion ,4)){
-    //Hacer funcion que las envie al kernel
+    //Hacer funcion que las envie al kernel.
     }
     //No se puede hacer un switch con valores no enteros. 
     if(strcmp(nombre_instruccion , "NOOP") == 0){
-        //Ejecuto noop
+        //Ejecuto Noop.
         instruccion_noop();
     }
     else if(strcmp(nombre_instruccion , "WRITE") == 0){
-        //ejecutar write
+        //Ejecuto Write.
+        instruccion_write();
     }
     else if(strcmp(nombre_instruccion , "READ") == 0){
-        //ejecutar read
+        //Ejecuto Read.
+        instruccion_read();
     }
     else if(strcmp(nombre_instruccion , "GOTO") == 0){
-        //ejecutar goto
+        //Ejecuto Go To.
+        instruccion_goto();
     }
-
 }
+
+//Ejecucion Noop.
 
 void instruccion_noop(void){
-    //No hace nada, no se debe poner nada aca (Solo tiempo para dirrecionar memoria)
+    //No hace nada, no se debe poner nada aca (Solo tiempo para dirrecionar memoria).
 }
+
+//Ejecucion Write.
 
 void instruccion_write(){
-    //Acceder a memoria y escribir
+    //Acceder a memoria y escribir.
 }
+
+//Ejecucion Read.
 
 void instruccion_read(){
-    //Acceder a memoria y leer
+    //Acceder a memoria y leer.
 }
+
+//Ejecucion Go to.
 
 void instruccion_goto(){
-    //Actualizar por parametro el IP/PC n go to
+    //Actualizar por parametro el IP/PC n go to.
 }
 
+//Chequear Interrupcion
+
+void check_interrupt(){
+    //
+}
+
+//Obtengo la Longitud de la Instruccion.
+
 int obtenerLongitud(char **obtenerInsPartes){
-    int contador = 0;
+    contador = 0;
+    //Hago bucle para ver Longitud.
     for(int i = 0; i < 4; i++){ //asumo 4 --> [opcode, param1, param2, NULL]
         contador = contador +1;
     }
     return contador;
 }
 
-bool estaContenido(char **array, char* valor, int tam){
+//Reviso si esta contenido el valor en el Vector.
+
+bool estaContenido(char* array, char* valor, int tam){
+    //Hago bucle para revisar si el valor esta en el vector.
     for(int i = 0; i < tam; i++){
         if(array[i] == valor){
             return true;
@@ -90,6 +109,8 @@ bool estaContenido(char **array, char* valor, int tam){
     }
     return false;
 }
+
+//Me comunico con el Kernel para obtenerr el PC/IP y el PID.
 
 void obtenerDelKernelPcPid(t_log* log, int pid, int pc){
     recv(fd_conexion_kernel_dispatch, &pid, sizeof(pid),0);

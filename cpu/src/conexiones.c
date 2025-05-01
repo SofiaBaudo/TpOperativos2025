@@ -1,6 +1,7 @@
 //Incluir las librerias
 
 #include <conexiones.h>
+
 // Funcion Iniciar Conexion Kernel
 
 void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
@@ -31,6 +32,8 @@ void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
 //    }
 //}
 
+//Iniciar conexion Memoria
+
 void iniciar_conexion_memoria_dispatch(int identificador_cpu){
     fd_conexion_dispatch_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
     enviar_op_code(fd_conexion_dispatch_memoria, HANDSHAKE_CPU);                  //avisa que es CPU.
@@ -43,11 +46,13 @@ void iniciar_conexion_memoria_dispatch(int identificador_cpu){
         exit(EXIT_FAILURE);
     }
 }
+
+//Inicializar las CPUs pedidas por el Config
+
 void inicializar(int id){    
     t_log* logger;
     char archivo_log_cpu[50];
     sprintf(archivo_log_cpu, "cpu_%d.log", id);
-
     char nombre_cpu[200];
     sprintf(nombre_cpu, "cpu_%d", id);
     logger = log_create(archivo_log_cpu, nombre_cpu, true, LOG_LEVEL_INFO);
@@ -59,6 +64,9 @@ void inicializar(int id){
     iniciar_conexion_kernel_dispatch(id, logger);
     log_destroy(logger);
 }
+
+//Inicializar el enviar id de la CPU
+
 void enviar_id(int fd_conexion, int identificador_cpu){
     send(fd_conexion, &identificador_cpu, sizeof(identificador_cpu),0);
 }

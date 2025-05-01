@@ -4,14 +4,13 @@
 
 //Funcion de Inicializacion de CPU
 
-void inicializar_CPU(int id){ //el identificador es porque puede haber varias CPU.
+void inicializar_CPU(int id){
     inicializar_logs();
     inicializar_configs();
     inicializar(id);
     //iniciar_conexion_kernel_dispatch(identificador_cpu);
     //iniciar_conexion_kernel_interrupt(identificador_cpu);
     //iniciar_conexion_memoria_dispatch(identificador_cpu);
-    //imprimir_configs();
 }
 
 //Funcion de Inicializacion de Logs
@@ -44,13 +43,3 @@ void inicializar_configs(){
     PUERTO_KERNEL_DISPATCH = config_get_string_value(cpu_config,"PUERTO_KERNEL_DISPATCH");
     PUERTO_KERNEL_INTERRUPT = config_get_string_value(cpu_config,"PUERTO_KERNEL_INTERRUPT");
 }
-
-//Funcion de Imprimir de Configs
- 
- void imprimir_configs(){
-   // log_info(cpu_logger, "CPU TLB: %s",REEMPLAZO_TLB);
-}
-
-
- 
-

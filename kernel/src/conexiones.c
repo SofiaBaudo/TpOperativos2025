@@ -37,10 +37,10 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            //LOG_INFO : ES EL LOG OBLIGATORIO
            log_info(kernel_logger, "## CPU-DISPATCH Conectado - FD del socket: %d", dispatch);
            enviar_op_code(dispatch, HANDSHAKE_ACCEPTED);
+           //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
            break;
            //case HANDSHAKE_CPU_INTERRUPT:
-           //case INIT_PROC:
-           //manejar_procesos();
+          
        default:
            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", dispatch); //AVISA Q FUCNIONA MAL
            break;
@@ -100,7 +100,7 @@ void* manejar_kernel_io(void *socket_io){
 }
 
 
-op_code iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
+int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
 
 
@@ -110,16 +110,14 @@ op_code iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proces
    op_code respuesta = recibir_op_code(fd_kernel_memoria); //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
    if (respuesta == HANDSHAKE_ACCEPTED){
        log_info(kernel_logger, "Conexion con memoria establecida correctamente");
-       //aca tendriamos que pedir iniciar cierto proceso
-       return respuesta; // en realidad tendriamos que devolver si se puede o no iniciar cierto proceso
+       return fd_kernel_memoria; // en realidad tendriamos que devolver si se puede o no iniciar cierto proceso
    }
    else{
        log_error(kernel_logger, "Error en la conexion con memoria");
        exit(EXIT_FAILURE);
    }
-   close(fd_kernel_memoria);
 }
-
+//aca hay que hacer una funcion que cierre la conexion con memoria cuando yo quiera, haciendo un close del socket fdkernelmemoria 
 void solicitar_rafaga_de_io(int duracion){
     enviar_op_code(cliente_io,EJECUTAR_RAFAGA_IO); // solicita al io ejecutar una rafaga
     op_code respuesta = recibir_op_code(cliente_io); // recibe la respuesta
