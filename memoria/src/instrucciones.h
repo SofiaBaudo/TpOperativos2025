@@ -11,33 +11,24 @@
 #include "servidor_memoria.h"
 #include "inicializar_memoria.h"
 
-
-//extern t_log* memoria_logger;
+typedef struct {
+    op_code codigo;
+    char** parametros;
+    int cantidad_parametros;
+} t_instruccion;
 
 typedef struct {
-   int pid;
-   t_list* instrucciones;
-} t_proceso;
+    int pid;
+    t_list* instrucciones;
+} t_proceso_instrucciones;
 
+t_list* cargar_instrucciones_desde_archivo(char* path);
+t_instruccion* obtener_instruccion(int pid, int pc);
+void registrar_instrucciones_proceso(int pid, char* path);
+void iniciar_lista_procesos_instrucciones();
 
-void iniciar_lista_procesos();
-void cargar_instrucciones_proceso(int pid, char* path);
-char* obtener_instruccion(int pid, int pc);
-void manejar_proceso(int pid);
+//tengo q destruir el proceso? al terinar? void destruir_proceso_instrucciones(int pid);
+//void destruir_instruccion(t_instruccion* instr);
 
 
 #endif
-
-
-//crear funcion de manejar procesos y agregar a un caso del handshake!!!!!!
-
-/*void manejar_proceso(int socket){
-   int pid;
-   recv(socket, &pid, sizeof(int), 0);
-   log_info(memoria_logger, "## PID: %d - Proceso Creado - Tamaño: <TAMAÑO>", pid); //ESTO ES LOG OBLIGATORIO
-   enviar_mensaje(socket, "OK");
-}
-*/
-
-
-

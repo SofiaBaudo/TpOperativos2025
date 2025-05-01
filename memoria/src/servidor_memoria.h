@@ -9,4 +9,5 @@
 void iniciar_servidor_memoria();
 void *manejar_cliente(void *socketCliente); //los hilos piden que la funcion sea void*, por eso puse el *
 
+
 #endif
