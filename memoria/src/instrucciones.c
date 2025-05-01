@@ -82,12 +82,41 @@ void registrar_instrucciones_proceso(int pid, char* path_archivo) {
 
 //Busca la instrucción número pc (program counter) del proceso con PID pid.
 //Devuelve el puntero a la instrucción que necesita la CPU ejecutar.
-
+/*
 t_instruccion* obtener_instruccion(int pid, int pc) {
     for (int i = 0; i < list_size(procesos_instrucciones); i++) {
         t_proceso_instrucciones* p = list_get(procesos_instrucciones, i);
         if (p->pid == pid) {
             return list_get(p->instrucciones, pc);
+        }
+    }
+    return NULL;
+}*/
+
+t_instruccion* obtener_instruccion(int pid, int pc) {
+//Recorre la lista global procesos_instrucciones.
+    for (int i = 0; i < list_size(procesos_instrucciones); i++) {
+        t_proceso_instrucciones* p = list_get(procesos_instrucciones, i);
+//Busca el proceso con el pid correcto        
+        if (p->pid == pid) {
+        //Obtiene la instrucción número pc
+            t_instruccion* instr = list_get(p->instrucciones, pc);
+
+            // Construir string con parámetros: cadena con los parámetros (para log)
+            char parametros[256] = {0};
+            for (int j = 0; j < instr->cantidad_parametros; j++) {
+                strcat(parametros, instr->parametros[j]);
+                if (j < instr->cantidad_parametros - 1)
+                    strcat(parametros, " ");
+            }
+
+            // Obtiene nombre del enum (instrucción)
+            const char* nombres[] = { "NOOP", "WRITE", "READ", "GOTO", "IO", "INIT_PROC", "DUMP_MEMORY", "EXIT" };
+            //Loguear la instrucción obtenida
+            log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s %s", //LOG OBLIGATORIO
+                     pid, pc, nombres[instr->codigo], parametros);
+
+            return instr;
         }
     }
     return NULL;
