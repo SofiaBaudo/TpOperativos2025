@@ -67,7 +67,7 @@ funcion planificador de largo plazo ()
 /*void planificador_proceso_mas_chico_primero(){
     otro readline aca
     el proceso ingresa
-    se consulta a la memoria si puede inicializarse o no (es un if)
+    se consulta a la memoria si puede inicializarse o no (es agarrar la respuesta y despues un if)
     caso positivo
         cambiar de estado
     caso negativo
