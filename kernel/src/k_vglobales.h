@@ -39,3 +39,4 @@ extern int cliente_io;
 extern t_list *procesos; 
 extern struct pcb *pcb;
 extern t_list *colaEstados[7];
+extern int identificador_del_proceso;

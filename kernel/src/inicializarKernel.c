@@ -1,6 +1,7 @@
 #include <inicializarKernel.h>
 void inicializar_kernel(){
-    printf("Kernel inicializado");
+  printf("Kernel inicializado");
+    printf("\n");
     inicializar_logs();
     inicializar_configs();
     inicializar_colas_de_estados();

@@ -1,5 +1,8 @@
 #include <k_vglobales.h>
 #include <commons/collections/list.h>
+#include <commons/string.h>
+
+
 
 
 typedef enum{
@@ -35,19 +38,13 @@ struct pcb{
 };
 
 
-//struct rafaga* rafaga = list_get(pcb->lista_de_rafagas, 0);
-
-
-//extern struct pcb *pcb;
-//extern t_list *procesos;
-
-
-void crear_proceso(int pid);
+void crear_proceso(int tamanio, char *ruta_archivo);
 int buscar_en_lista(t_list *lista,int pid);
-
-
-
-
+void planificador_largo_plazo_fifo();
+struct pcb *seleccionar_proceso_segun_fifo();
+ char *cambiar_a_string(Estado estado);
+void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
+//struct pcb *seleccionar_proceso_segun_tamanio_mas_chico_en_memoria();
 
 // podria armar algo parecido que devuelva la rafaga
 

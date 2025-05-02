@@ -1,17 +1,24 @@
 #include <planificacion.h>
+#include <readline/readline.h>
+#include <string.h>
+
 
 t_list* procesos = NULL;
 t_list* colaEstados[7]={NULL};
-
+int identificador_del_proceso = 0;
 struct pcb *pcb;
 
-void crear_proceso(int pid) { // tambien tiene que recibir el tamanio y el path
+void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
   struct pcb* pcb = malloc(sizeof(struct pcb));
-  pcb -> pid = pid; //ver lo de la variable global
+  pcb -> pid = identificador_del_proceso; //ver lo de la variable global
   pcb -> pc = 0;
-  pcb -> estado = NEW; // seguramente no sirva mucho
+  pcb -> tamanio = tamanio;
+  pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
+  //pcb -> estado = NEW; // seguramente no sirva mucho
   pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
   list_add(colaEstados[NEW],pcb);
+  log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
+  identificador_del_proceso++;
   return; 
 }
 
@@ -38,7 +45,7 @@ int buscar_en_lista(t_list *lista, int pid) {
 }
 
 /*
-funcion planificador de largo plazo (recibe lista de procesos ()
+funcion planificador de largo plazo ()
 
 
     if(ALGORITMO_INGRESO_A_READY == FIFO){
@@ -46,7 +53,7 @@ funcion planificador de largo plazo (recibe lista de procesos ()
     }
     else{
         if(){
-            el de mas chico primero
+            el de mas chico primero es por tamanio
         }
         else{
             exit
@@ -57,18 +64,84 @@ funcion planificador de largo plazo (recibe lista de procesos ()
             
 */ 
 
-/*
-planificador_largo_plazo_fifo(){
-   readline conviene hacerlo aca 
 
-   si la cola de new NO esta vacia agarro el primer elemento y se lo mando a memoria para ver si lo puedo inicializar 
-}
+void planificador_largo_plazo_fifo(){
+    /*readline conviene hacerlo aca 
+    si la cola de new NO esta vacia agarro el primer elemento y se lo mando a memoria para ver si lo puedo inicializar*/ 
+    /*Si la respuesta es positiva, se pasará el proceso al estado READY y se sigue la misma lógica con el proceso que sigue. 
+    Si la respuesta es negativa (ya que la Memoria no tiene espacio suficiente para inicializarlo) 
+    se deberá esperar la finalización de otro proceso para volver a intentar inicializarlo. 
+    
+    En cambio, si un proceso llega a esta cola y 
+    ya hay otros esperando se debe tener en cuenta el algoritmo definido y 
+    verificar si corresponde o no su ingreso. 
+
+    */
 
 
-*/
-
-/*
-planificador_proceso_mas_chico_primero(){
+char *line;
+printf("Se esta esperando un enter por pantalla");
+    do {
+        line = readline("");
+    } while (strlen(line) != 0); // si la longitud es mayor a 0 quiere decir que no se ingreso solo un enter
+    free(line);  
+    log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
+    /*if(ColaEstados[NEW] != NULL){
+       struct pcb *pcb_aux = seleccionar_proceso_segun_fifo(); 
+       bool respuesta = consultarMemoria (pcb_aux) //(Adentro de la funcion, vamos a manejar un op_code)
+       if (respuesta == true){
+            CambiarEstado(pcb_aux,NEW,READY);
+            list_add(colaEstados[READY],pcb_aux);
+       }
+            
+       caso negativo
+        (vamos a utilizar un semaforo para que espere a que termine otro proceso y hay que hacer un signal cuando hagamos la funcion de finalizar proceso)
+        
+    }
+     */   
     
 }
+
+struct pcb *seleccionar_proceso_segun_fifo(){
+    struct pcb *aux;
+    
+    aux =list_remove(colaEstados[NEW],0); //como el list add agrerga al final, sacamos del principio para no romper el comportamiento de la cola
+    return aux;
+}
+
+ char *cambiar_a_string(Estado estado) {
+     char* nombres_estados[] = { 
+        "NEW",
+        "READY",
+        "BLOCKED",
+        "EXEC",
+        "EXIT_ESTADO",
+        "READY_SUSPEND",
+        "BLOCKED_SUSPEND"
+    };
+
+    if (estado < 0 || estado > BLOCKED_SUSPEND) {
+        return "ESTADO_DESCONOCIDO";
+    }
+
+    return nombres_estados[estado];
+}
+
+void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
+    char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
+    char *string_estado_anterior = cambiar_a_string(estadoAnterior);
+    log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",pcb->pid,string_estado_anterior,string_estado_nuevo);
+    list_add(colaEstados[estadoNuevo],pcb);
+}
+
+/*struct pcb *seleccionar_proceso_segun_tamanio_mas_chico_en_memoria(){
+    
+}
+
+
+planificador_proceso_mas_chico_primero(){
+    otro readline aca
+}
 //funcion para pasar a ready que recibe un proceso
+*/
+
