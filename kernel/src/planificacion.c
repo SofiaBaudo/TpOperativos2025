@@ -64,10 +64,21 @@ funcion planificador de largo plazo ()
             
 */ 
 
-
+/*void planificador_proceso_mas_chico_primero(){
+    otro readline aca
+    el proceso ingresa
+    se consulta a la memoria si puede inicializarse o no (es un if)
+    caso positivo
+        cambiar de estado
+    caso negativo
+        se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
+        este ordenando por tamaño (utilizar list_add_sorted)
+    
+    }*/
+    
 void planificador_largo_plazo_fifo(){
     /*readline conviene hacerlo aca 
-    si la cola de new NO esta vacia agarro el primer elemento y se lo mando a memoria para ver si lo puedo inicializar*/ 
+    si la cola de new esta vacia agarro el primer elemento y se lo mando a memoria para ver si lo puedo inicializar*/ 
     /*Si la respuesta es positiva, se pasará el proceso al estado READY y se sigue la misma lógica con el proceso que sigue. 
     Si la respuesta es negativa (ya que la Memoria no tiene espacio suficiente para inicializarlo) 
     se deberá esperar la finalización de otro proceso para volver a intentar inicializarlo. 
@@ -86,23 +97,26 @@ printf("Se esta esperando un enter por pantalla");
     } while (strlen(line) != 0); // si la longitud es mayor a 0 quiere decir que no se ingreso solo un enter
     free(line);  
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
-    /*if(ColaEstados[NEW] != NULL){
-       struct pcb *pcb_aux = seleccionar_proceso_segun_fifo(); 
+    
+    /*if(list_size(colaEstados[NEW])==1)){ que el proceso que se creo sea el unico que esta en new
+        struct pcb *pcb_aux = agarrar_el_primer_proceso(); 
        bool respuesta = consultarMemoria (pcb_aux) //(Adentro de la funcion, vamos a manejar un op_code)
        if (respuesta == true){
-            CambiarEstado(pcb_aux,NEW,READY);
-            list_add(colaEstados[READY],pcb_aux);
+            cambiarEstado(pcb_aux,NEW,READY);
+            SIGNAL(INGRESO_DEL_PRIMERO)
        }
-            
-       caso negativo
-        (vamos a utilizar un semaforo para que espere a que termine otro proceso y hay que hacer un signal cuando hagamos la funcion de finalizar proceso)
+       else{
+        aca va un semaforo, esperando para entrar a memoria
         
+       }     
+    } else{ //la cola no esta vacia
+    wait(INGRESO_DEL_PRIMERO)
     }
      */   
     
 }
 
-struct pcb *seleccionar_proceso_segun_fifo(){
+struct pcb *agarrar_el_primer_proceso(){
     struct pcb *aux;
     
     aux =list_remove(colaEstados[NEW],0); //como el list add agrerga al final, sacamos del principio para no romper el comportamiento de la cola
@@ -134,14 +148,25 @@ void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
     list_add(colaEstados[estadoNuevo],pcb);
 }
 
-/*struct pcb *seleccionar_proceso_segun_tamanio_mas_chico_en_memoria(){
+/* En este algoritmo se va a priorizar a los procesos más chicos, por lo tanto, 
+al llegar un nuevo proceso a NEW, independientemente de si hay o no procesos esperando, 
+vamos a consultarle a la memoria si dispone del espacio requerido para iniciar el nuevo proceso y 
+en caso afirmativo, se transiciona el proceso a READY. 
+Caso contrario, se encolará para seguir esperando junto al resto de los procesos que no pueden ingresar 
+por tamaño.
+Al liberarse espacio en la memoria, 
+se deberá validar si se pueden ingresar procesos a READY ordenándolos por tamaño de manera ascendente.
+ */
+
+//int seleccionar_proceso_segun_tamanio_mas_chico_en_memoria(t_list *lista){
+ 
+
+
     
-}
 
 
-planificador_proceso_mas_chico_primero(){
-    otro readline aca
-}
-//funcion para pasar a ready que recibe un proceso
-*/
+
+
+
+
 
