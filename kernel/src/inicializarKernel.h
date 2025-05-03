@@ -6,4 +6,4 @@ void inicializar_logs();
 void inicializar_configs();
 void imprimir_configs();
 void inicializar_colas_de_estados();
-void inicializar_lista_de_ios();
+void inicializar_listas_de_ios_y_cpus();

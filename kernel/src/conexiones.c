@@ -3,7 +3,7 @@
 //sacamos los close porque se recibe mas de un io y mas de una cpu
 
 t_list *ios_conectados = NULL; // variable global
-
+t_list *cpus_conectadas = NULL;
 
 
 
@@ -40,6 +40,11 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            //LOG_INFO : ES EL LOG OBLIGATORIO
            log_info(kernel_logger, "## CPU-DISPATCH Conectado - FD del socket: %d", dispatch);
            enviar_op_code(dispatch, HANDSHAKE_ACCEPTED);
+           int *id = malloc(sizeof(int));
+           recv(dispatch,id,sizeof(int),0);
+           log_debug(kernel_debug_log,"Se conecto la cpu con id %i",*id);
+           list_add(cpus_conectadas,id);
+           log_debug(kernel_debug_log,"Se agrego a la lista la cpu con id: %i ", *id); //%i espera un entero
            //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
            break;
            //case HANDSHAKE_CPU_INTERRUPT:
@@ -95,7 +100,7 @@ void* manejar_kernel_io(void *socket_io){
 
             char *nombre = malloc(longitud_nombre + 1); // +1 por el /0 
             recv(io, nombre, longitud_nombre, 0);       
-            log_info(kernel_logger,"se conecto el io con nombre; %s",nombre);
+            log_info(kernel_logger,"se conecto el io con nombre; %s",nombre); // %s espera un puntero a char
             list_add(ios_conectados,nombre);
             log_debug(kernel_debug_log,"Se agrego el io %s a la lista",nombre);
             break;

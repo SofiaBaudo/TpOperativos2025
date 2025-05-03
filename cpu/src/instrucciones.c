@@ -1,3 +1,5 @@
+/*
+
 //Incluimos las librerias.
 
 #include <instrucciones.h>
@@ -12,6 +14,7 @@ char* fetch(int pc){
 }
 
 //Fase Decode (Interpretar proxima ejecucion a ejecutar)(Segunda Fase del Ciclo de Instruccion)
+
 
 void decode(char* instruccion_recibida){
     //Decodifico las instrucciones
@@ -30,6 +33,7 @@ void decode(char* instruccion_recibida){
     //Llamar a la MMMU para que lo traduzca.
     }   
 }
+
 
 //Fase Execute (Ejecutar la instruccion)(Tercera Fase del Ciclo de Instruccion).
 
@@ -57,9 +61,10 @@ void execute(instruccion instruccion_recibida){
     }
 }
 
-//MMU la canti de niveles es variable
-//hay un loop infinito con los go to
-// /Ejecucion Noop.
+//MMU la cantidad de niveles es variable
+//Hay un loop infinito con los go to
+
+//Ejecucion Noop.
 
 void instruccion_noop(void){
     //No hace nada, no se debe poner nada aca (Solo tiempo para dirrecionar memoria).
@@ -80,7 +85,7 @@ void instruccion_read(){
 //Ejecucion Go to.
 
 void instruccion_goto(){
-    //Actualizar por parametro el IP/PC n go to.
+    //Actualizar por parametro el IP/PC go to.
 }
 
 //Chequear Interrupcion
@@ -122,3 +127,5 @@ void obtenerDelKernelPcPid(t_log* log, int pid, int pc){
     }
     log_info(log, "## PID: <PID> - FETCH - Program Counter: <%d>", pc);
 }
+
+*/

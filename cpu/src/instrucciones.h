@@ -5,15 +5,15 @@
 //Inicializacion de las funciones
 
 char* fetch(int pc);
-void decode(char* instruccion_recibida);
+//void decode(char* instruccion_recibida);
 void execute(instruccion instruccion_recibida);
 void instruccion_noop(void);
 void instruccion_write();
 void instruccion_read();
 void instruccion_goto();
 void check_interrupt();
-int obtenerLongitud(char **obtenerInsPartes);
-bool estaContenido(char **array, char* valor, int tam);
+int obtenerLongitud(char* obtenerInsPartes);
+bool estaContenido(char* array, char* valor, int tam);
 void obtenerDelKernelPcPid(t_log* log, int pid, int pc);
 
 //Declaracion Variables Globales

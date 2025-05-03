@@ -5,7 +5,7 @@ void inicializar_kernel(){
     inicializar_logs();
     inicializar_configs();
     inicializar_colas_de_estados();
-    inicializar_lista_de_ios();
+    inicializar_listas_de_ios_y_cpus();
 }
 
 void inicializar_logs(){
@@ -47,6 +47,7 @@ void inicializar_colas_de_estados(){
 }
 }
 
-void inicializar_lista_de_ios(){
+void inicializar_listas_de_ios_y_cpus(){
     ios_conectados = list_create();
+    cpus_conectadas = list_create();
 }

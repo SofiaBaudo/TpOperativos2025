@@ -59,9 +59,6 @@ funcion planificador de largo plazo ()
             exit
         }
     }
-
-     
-            
 */ 
 
 /*void planificador_proceso_mas_chico_primero(){

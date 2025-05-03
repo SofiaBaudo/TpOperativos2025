@@ -29,16 +29,3 @@ extern char* PUERTO_KERNEL_INTERRUPT;
 extern int ENTRADAS_TLB;
 extern int ENTRADAS_CACHE;
 extern int RETARDO_CACHE;
-
-//Declaracion Variables Globales
-
-extern char* instruccion_recibida;
-extern char* obtenerInsPartes;
-extern int longitudIns;
-extern char* parametros;
-extern char* traduccionNecesaria[] = {"WRITE", "READ"};
-extern char* nombre_instruccion;
-extern char* syscalls[] = {"IO","INIT_PROC","DUMP_MEMORY","EXIT"};
-extern int contador;
-extern int pid;
-extern int pc;
