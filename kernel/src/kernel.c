@@ -8,8 +8,7 @@ int main(int argc, char* argv[]){
   
 
    inicializar_kernel();
-
-  atender_kernel_dispatch();
+  
 
 // ¿wait y signal para que espere a que se cree un proceso?
    // aca hay que crear un proceso con los parametros ingresados en el json

@@ -41,8 +41,10 @@ struct pcb{
 void crear_proceso(int tamanio, char *ruta_archivo);
 int buscar_en_lista(t_list *lista,int pid);
 void planificador_largo_plazo_fifo();
-struct pcb *agarrar_el_primer_proceso();
+struct pcb *agarrar_el_primer_proceso(t_list *lista);
 char *cambiar_a_string(Estado estado);
+bool menor_por_tamanio(void* a, void* b);
+void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparador)(void *, void *));
 void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 //struct pcb *seleccionar_proceso_segun_tamanio_mas_chico_en_memoria();
 

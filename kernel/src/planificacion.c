@@ -17,8 +17,10 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   //pcb -> estado = NEW; // seguramente no sirva mucho
   pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
   list_add(colaEstados[NEW],pcb);
+  //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
   identificador_del_proceso++; //hay que agregar un mutex para que no puedan incrementar la variable global dos hilos diferentes
+  
   return; 
 }
 
@@ -44,6 +46,34 @@ int buscar_en_lista(t_list *lista, int pid) {
     return -1;
 }
 
+bool menor_por_tamanio(void* a, void* b) {
+    
+    struct pcb* p1 = (struct pcb*) a;
+    struct pcb* p2 = (struct pcb*) b;
+    return p1->tamanio < p2->tamanio;
+}
+
+void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparador)(void *, void *)) {
+    list_add_sorted(lista, proceso, comparador);
+}
+
+
+
+
+/*void planificador_proceso_mas_chico_primero(){
+    otro readline aca
+    el proceso ingresa
+    semaforo que espera a que se cree un proceso nuevo
+    se consulta a la memoria si puede inicializarse o no (es agarrar la respuesta y despues un if)
+    caso positivo
+        cambiar de estado
+    caso negativo
+        se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
+        este ordenando por tamanio (utilizar list_add_sorted)
+    
+    }*/
+       
+
 /*
 funcion planificador de largo plazo ()
 
@@ -61,17 +91,6 @@ funcion planificador de largo plazo ()
     }
 */ 
 
-/*void planificador_proceso_mas_chico_primero(){
-    otro readline aca
-    el proceso ingresa
-    se consulta a la memoria si puede inicializarse o no (es agarrar la respuesta y despues un if)
-    caso positivo
-        cambiar de estado
-    caso negativo
-        se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
-        este ordenando por tamanio (utilizar list_add_sorted)
-    
-    }*/
 
 
 void planificador_largo_plazo_fifo(){
@@ -85,7 +104,7 @@ printf("Se esta esperando un enter por pantalla");
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     
     /*if(list_size(colaEstados[NEW])==1)){ que el proceso que se creo sea el unico que esta en new
-        struct pcb *pcb_aux = agarrar_el_primer_proceso(); 
+        struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); 
        bool respuesta = consultarMemoria (pcb_aux) //(Adentro de la funcion, vamos a manejar un op_code)
        if (respuesta == true){
             cambiarEstado(pcb_aux,NEW,READY);
@@ -102,10 +121,9 @@ printf("Se esta esperando un enter por pantalla");
     
 }
 
-struct pcb *agarrar_el_primer_proceso(){
+struct pcb *agarrar_el_primer_proceso(t_list *lista){
     struct pcb *aux;
-    
-    aux =list_remove(colaEstados[NEW],0); //como el list add agrerga al final, sacamos del principio para no romper el comportamiento de la cola
+    aux =list_remove(lista,0); //como el list add agrerga al final, sacamos del principio para no romper el comportamiento de la cola
     return aux;
 }
 
