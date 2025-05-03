@@ -9,7 +9,9 @@ enviar_op_code(fd_kernel, HANDSHAKE_IO);//avisa que es IO.
 int respuesta = recibir_op_code(fd_kernel);
 if(respuesta == HANDSHAKE_ACCEPTED){
 log_info(io_logger, "Conexion con Kernel exitosa");
-//send(fd_kernel,&nombre,sizeof(nombre),0);
+int longitud_nombre = strlen(nombre);
+send(fd_kernel, &longitud_nombre,sizeof(int),0); //le manda primero la longitud para que el kernel sepa cuanto espacio reservar
+send(fd_kernel,nombre,longitud_nombre,0); //sin el & porque ya es un puntero
 esperar_peticion();
 }
 }

@@ -18,7 +18,7 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
   list_add(colaEstados[NEW],pcb);
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
-  identificador_del_proceso++;
+  identificador_del_proceso++; //hay que agregar un mutex para que no puedan incrementar la variable global dos hilos diferentes
   return; 
 }
 
@@ -72,24 +72,13 @@ funcion planificador de largo plazo ()
         cambiar de estado
     caso negativo
         se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
-        este ordenando por tamaño (utilizar list_add_sorted)
+        este ordenando por tamanio (utilizar list_add_sorted)
     
     }*/
-    
+
+
 void planificador_largo_plazo_fifo(){
-    /*readline conviene hacerlo aca 
-    si la cola de new esta vacia agarro el primer elemento y se lo mando a memoria para ver si lo puedo inicializar*/ 
-    /*Si la respuesta es positiva, se pasará el proceso al estado READY y se sigue la misma lógica con el proceso que sigue. 
-    Si la respuesta es negativa (ya que la Memoria no tiene espacio suficiente para inicializarlo) 
-    se deberá esperar la finalización de otro proceso para volver a intentar inicializarlo. 
     
-    En cambio, si un proceso llega a esta cola y 
-    ya hay otros esperando se debe tener en cuenta el algoritmo definido y 
-    verificar si corresponde o no su ingreso. 
-
-    */
-
-
 char *line;
 printf("Se esta esperando un enter por pantalla");
     do {

@@ -5,7 +5,7 @@ void inicializar_kernel(){
     inicializar_logs();
     inicializar_configs();
     inicializar_colas_de_estados();
-   
+    inicializar_lista_de_ios();
 }
 
 void inicializar_logs(){
@@ -45,4 +45,8 @@ void inicializar_colas_de_estados(){
     for(int i = 0; i < 7; i++) {
     colaEstados[i] = list_create(); // Crea una nueva lista para cada estado
 }
+}
+
+void inicializar_lista_de_ios(){
+    ios_conectados = list_create();
 }

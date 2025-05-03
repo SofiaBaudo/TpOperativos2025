@@ -16,17 +16,17 @@ char* fetch(int pc){
 void decode(char* instruccion_recibida){
     //Decodifico las instrucciones
     instruccion instruccion;
-    obtenerInsPartes = string_split(instruccion_recibida, " ");
+    obtenerInsPartes = string_split(instruccion_recibida, " "); //te recibe el string tal como es si no lo encuentra
     longitudIns = obtenerLongitud(obtenerInsPartes);
     parametros[longitudIns-1]; //Agarro el string de obtenerIns que tiene los parametros. 
-    for(int i = 1; i< longitudIns; i++){
-        parametros[i-1] = obtenerInsPartes[i];
+    for(int i = 1; i< longitudIns; i++){ // hardcodear el tema de las instrucciones 
+        parametros[i-1] = obtenerInsPartes[i]; // hacer un t_instruccion
     }
     instruccion.nombreIns = obtenerInsPartes[0];
     instruccion.parametros[0] = parametros[0];
     instruccion.parametros[1] = parametros[1];
     instruccion.parametros[2] = parametros[2];
-    if(estaContenido(traduccionNecesaria, instruccion.nombreIns, 2)){
+    if(estaContenido(traduccionNecesaria, instruccion.nombreIns, 2)){ //hacer un if en vez array 
     //Llamar a la MMMU para que lo traduzca.
     }   
 }
@@ -35,7 +35,7 @@ void decode(char* instruccion_recibida){
 
 void execute(instruccion instruccion_recibida){
     nombre_instruccion = instruccion_recibida.nombreIns;
-    if(estaContenido(syscalls, nombre_instruccion ,4)){
+    if(estaContenido(syscalls, nombre_instruccion ,4)){ //hacer un if en vez de array
     //Hacer funcion que las envie al kernel.
     }
     //No se puede hacer un switch con valores no enteros. 
@@ -57,7 +57,9 @@ void execute(instruccion instruccion_recibida){
     }
 }
 
-//Ejecucion Noop.
+//MMU la canti de niveles es variable
+//hay un loop infinito con los go to
+// /Ejecucion Noop.
 
 void instruccion_noop(void){
     //No hace nada, no se debe poner nada aca (Solo tiempo para dirrecionar memoria).
@@ -118,5 +120,5 @@ void obtenerDelKernelPcPid(t_log* log, int pid, int pc){
     if(pc < 0){
         log_error(log, "El program Counter no puede ser negativo");
     }
-    log_info(log, "## PID: <PID> - FETCH - Program Counter: <%d>", pc );
+    log_info(log, "## PID: <PID> - FETCH - Program Counter: <%d>", pc);
 }

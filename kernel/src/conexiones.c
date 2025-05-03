@@ -1,7 +1,10 @@
 #include <conexiones.h>
 
-
 //sacamos los close porque se recibe mas de un io y mas de una cpu
+
+t_list *ios_conectados = NULL; // variable global
+
+
 
 
 void atender_kernel_dispatch(){
@@ -84,21 +87,24 @@ void* manejar_kernel_io(void *socket_io){
        case HANDSHAKE_IO:
            //LOG_INFO : ES EL LOG OBLIGATORIO
 
-           log_info(kernel_logger, "## IO Conectado - FD del socket: %d", io);
-           printf("\n");
+            log_info(kernel_logger, "## IO Conectado - FD del socket: %d", io);
+            printf("\n");
             enviar_op_code(io, HANDSHAKE_ACCEPTED);
-            //char *nombre;
-            //recv(io, &nombre, sizeof(nombre),0);
-            //printf("Nombre recibido: %s",nombre);
-            //log_info(kernel_logger,"se conecto el io con nombre; %s",nombre);
-           break;
-       default:
+            int longitud_nombre;
+            recv(io, &longitud_nombre, sizeof(int), 0); // el io le manda de antemano la longitud del nombre para que el kernel sepa cuanto espacio reservar
+
+            char *nombre = malloc(longitud_nombre + 1); // +1 por el /0 
+            recv(io, nombre, longitud_nombre, 0);       
+            log_info(kernel_logger,"se conecto el io con nombre; %s",nombre);
+            list_add(ios_conectados,nombre);
+            log_debug(kernel_debug_log,"Se agrego el io %s a la lista",nombre);
+            break;
+            default:
            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL
            break;
    }
    return NULL;
 }
-
 
 int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);

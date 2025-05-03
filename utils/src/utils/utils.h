@@ -54,6 +54,7 @@ typedef enum op_code
 }op_code;
 
 // Enum de Instrucciones
+
 typedef enum instruccion
 {
 	NOOP,
