@@ -29,3 +29,9 @@ extern char* PUERTO_KERNEL_INTERRUPT;
 extern int ENTRADAS_TLB;
 extern int ENTRADAS_CACHE;
 extern int RETARDO_CACHE;
+
+typedef struct{
+    char* opcode;
+    char* param1;
+    char* param2;
+}t_instruccion;
