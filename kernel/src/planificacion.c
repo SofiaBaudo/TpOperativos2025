@@ -94,7 +94,7 @@ void planificador_proceso_mas_chico_primero(){
 
 
 
-void planificador_largo_plazo_fifo(){
+void *planificador_largo_plazo_fifo(){
     
 char *line;
 printf("Se esta esperando un enter por pantalla");
@@ -104,7 +104,7 @@ printf("Se esta esperando un enter por pantalla");
     free(line);  
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     
-    if(list_size(colaEstados[NEW])==1){ que el proceso que se creo sea el unico que esta en new
+    if(list_size(colaEstados[NEW])==1){ //que el proceso que se creo sea el unico que esta en new
         struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); 
         int tamanio = pcb_aux->tamanio;
         int socket = iniciar_conexion_con_memoria();
