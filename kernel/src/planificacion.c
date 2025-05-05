@@ -104,23 +104,25 @@ printf("Se esta esperando un enter por pantalla");
     free(line);  
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     
-    /*if(list_size(colaEstados[NEW])==1)){ que el proceso que se creo sea el unico que esta en new
+    if(list_size(colaEstados[NEW])==1){ que el proceso que se creo sea el unico que esta en new
         struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); 
-       bool respuesta = consultarMemoria (pcb_aux) //(Adentro de la funcion, vamos a manejar un op_code)
+        int tamanio = pcb_aux->tamanio;
+        int socket = iniciar_conexion_con_memoria();
+       bool respuesta = solicitar_permiso_a_memoria(socket,tamanio) //(Adentro de la funcion, vamos a manejar un op_code)
+       cerrar_conexion(socket);
        if (respuesta == true){
             cambiarEstado(pcb_aux,NEW,READY);
-            SIGNAL(INGRESO_DEL_PRIMERO)
+            //SIGNAL(INGRESO_DEL_PRIMERO)
        }
        else{
-        aca va un semaforo, esperando para entrar a memoria
+        log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
+        //aca va un semaforo, esperando para entrar a memoria
         
        }     
     } else{ //la cola no esta vacia
-    wait(INGRESO_DEL_PRIMERO)
+    //wait(INGRESO_DEL_PRIMERO)
     }
-     */   
-    
-}
+    }
 
 struct pcb *agarrar_el_primer_proceso(t_list *lista){
     struct pcb *aux;

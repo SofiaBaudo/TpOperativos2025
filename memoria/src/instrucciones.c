@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 
+/*
 t_list* procesos_instrucciones;
 
 void iniciar_lista_procesos_instrucciones() {
@@ -15,7 +16,7 @@ void iniciar_lista_procesos_instrucciones() {
 }
 
 //Convierte el nombre de la instrucción (un string) en el valor correspondiente del enum instruccion.
-instruccion string_a_instruccion(char* str) {
+t_instruccion string_a_instruccion(char* str) {
     if (strcmp(str, "NOOP") == 0) return NOOP;
     if (strcmp(str, "WRITE") == 0) return WRITE;
     if (strcmp(str, "READ") == 0) return READ;
@@ -29,7 +30,7 @@ instruccion string_a_instruccion(char* str) {
 
 //Convierte una línea completa del pseudocódigo, como "READ 10 20", en una estructura t_instruccion con: el enum correspondiente (por ejemplo: READ) una lista de los parámetros como strings (["10", "20"])la cantidad de parámetros (2)
 
-t_instruccion* parsear_linea(char* linea) {
+t_instruccion* analizar_linea(char* linea) {
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     char* linea_copia = strdup(linea);
 
@@ -46,7 +47,8 @@ t_instruccion* parsear_linea(char* linea) {
     free(linea_copia);
     return instr;
 }
-
+*/
+/*
 //Lee línea por línea un archivo de pseudocódigo (ej: "proceso1") y convierte cada línea en una t_instruccion, agregándolas a una lista.
 //Devuelve un t_list* con todas las instrucciones del proceso, ya parseadas.
 t_list* cargar_instrucciones_desde_archivo(char* path_archivo) {
@@ -62,24 +64,24 @@ t_list* cargar_instrucciones_desde_archivo(char* path_archivo) {
 
     while (getline(&linea, &len, archivo) != -1) {
         linea[strcspn(linea, "\n")] = 0;
-        list_add(instrucciones, parsear_linea(linea));
+        list_add(instrucciones, analizar_linea(linea));
     }
 
     free(linea);
     fclose(archivo);
     return instrucciones;
 }
-
+*/
 //Guarda la lista de instrucciones de un proceso en una estructura junto con su PID, y lo agrega a una lista global (procesos_instrucciones).
 //se usa cuando la Memoria crea un nuevo proceso.
-
+/*
 void registrar_instrucciones_proceso(int pid, char* path_archivo) {
     t_proceso_instrucciones* nuevo = malloc(sizeof(t_proceso_instrucciones));
     nuevo->pid = pid;
     nuevo->instrucciones = cargar_instrucciones_desde_archivo(path_archivo);
     list_add(procesos_instrucciones, nuevo);
 }
-
+*/
 //Busca la instrucción número pc (program counter) del proceso con PID pid.
 //Devuelve el puntero a la instrucción que necesita la CPU ejecutar.
 /*
@@ -92,7 +94,7 @@ t_instruccion* obtener_instruccion(int pid, int pc) {
     }
     return NULL;
 }*/
-
+/*
 t_instruccion* obtener_instruccion(int pid, int pc) {
 //Recorre la lista global procesos_instrucciones.
     for (int i = 0; i < list_size(procesos_instrucciones); i++) {
@@ -120,11 +122,11 @@ t_instruccion* obtener_instruccion(int pid, int pc) {
         }
     }
     return NULL;
-}
+}*/
 
 //Libera toda la memoria usada por una sola t_instruccion
 //cuando se quiere limpiar memoria, cuando finaliza un proceso
-
+/*
 void destruir_instruccion(t_instruccion* instr) {
     for (int i = 0; i < instr->cantidad_parametros; i++) {
         free(instr->parametros[i]);
@@ -132,18 +134,19 @@ void destruir_instruccion(t_instruccion* instr) {
     free(instr->parametros);
     free(instr);
 }
-
+*/
 //Busca el proceso con ese pid en la lista global, libera cada instrucción de su lista, libera la estructura del proceso, lo saca de la lista global procesos_instrucciones
 //Se usa al destruir un proceso (cuando pasa a EXIT creo)
-
+/*
 void destruir_proceso_instrucciones(int pid) {
     for (int i = 0; i < list_size(procesos_instrucciones); i++) {
         t_proceso_instrucciones* p = list_get(procesos_instrucciones, i);
         if (p->pid == pid) {
-            list_destroy_and_destroy_elements(p->instrucciones, (void*)destruir_instruccion);
+           // list_destroy_and_destroy_elements(p->instrucciones, (void*)destruir_instruccion);
             list_remove(procesos_instrucciones, i);
             free(p);
             return;
         }
     }
 }
+*/

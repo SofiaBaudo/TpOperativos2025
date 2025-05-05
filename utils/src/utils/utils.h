@@ -37,25 +37,21 @@ typedef enum op_code
 	RAFAGA_ACEPTADA,
 
 	//enums para conexion kernel_memoria
-	SOLICITAR_INICIO_DE_PROCESO,
-	RESPUESTA_POSITIVA_INICIO_PROCESO,
-	RESPUESTA_NEGATIVA_INICIO_PROCESO,
 	FINALIZAR_PROCESO,
 	FINALIZACION_CONFIRMADA,
 	SUSPENDER_PROCESO,
 	SUSPENSION_CONFIRMADA,
+	SOLICITAR_ESPACIO_MEMORIA,
+	HAY_ESPACIO_EN_MEMORIA,
+	NO_HAY_ESPACIO_EN_MEMORIA,
 
 	//enums memoria con cpu
 	SOLCITAR_INSTRUCCION,
 	RESPUESTA_INSTRUCCION
-
-	
-
 }op_code;
 
-// Enum de Instrucciones
-
-/*typedef enum instruccion
+//Enum de Instrucciones
+typedef enum t_instruccion
 {
 	NOOP,
 	WRITE,
@@ -65,8 +61,7 @@ typedef enum op_code
 	INIT_PROC,
 	DUMP_MEMORY,
 	EXIT,
-}instruccion;
-*/
+}t_instruccion;
 
 typedef struct
 {
@@ -97,5 +92,6 @@ void enviar_op_code(int socket_cliente, op_code codigo_operacion);
 op_code recibir_op_code (int socket);
 
 void enviar_mensaje(int socket, char* mensaje);
+
 
 #endif

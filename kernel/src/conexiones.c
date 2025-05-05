@@ -142,5 +142,24 @@ void solicitar_rafaga_de_io(int duracion){
     }
     else{
         // hay que ver esto
-    }
+    
 } // esta funcion capaz estaria mejor que solo devuelva la respuesta pero para ir probandola la dejamos en void
+}
+
+bool solicitar_permiso_a_memoria(int socket,int tamanio){
+    op_code respuesta;
+    enviar_entero(socket, tamanio);
+    respuesta = recibir_op_code(socket);
+    if(respuesta == HAY_ESPACIO_EN_MEMORIA){
+        return true;
+    }
+    else{
+        if(respuesta == NO_HAY_ESPACIO_EN_MEMORIA){
+            return false;
+        }
+        else{
+            return false;
+        }
+    }
+   
+}

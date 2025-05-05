@@ -10,13 +10,14 @@
 #include "utils/utils.h"
 #include "servidor_memoria.h"
 #include "inicializar_memoria.h"
-
+/*
 typedef struct {
     op_code codigo;
     char** parametros;
     int cantidad_parametros;
-} t_instruccion;
-
+}t_instruccion;
+*/
+/*
 typedef struct {
     int pid;
     t_list* instrucciones;
@@ -30,5 +31,8 @@ void iniciar_lista_procesos_instrucciones();
 //tengo q destruir el proceso? al terinar? void destruir_proceso_instrucciones(int pid);
 //void destruir_instruccion(t_instruccion* instr);
 
+
+#endif
+*/
 
 #endif

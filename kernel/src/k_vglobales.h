@@ -44,3 +44,4 @@ extern int identificador_del_proceso;
 // lista de ios
 extern t_list *ios_conectados;
 extern t_list *cpus_conectadas;
+

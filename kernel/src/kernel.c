@@ -8,6 +8,12 @@ int main(int argc, char* argv[]){
   
 
    inicializar_kernel();
+   crear_proceso(3,"proceso1");
+   crear_proceso(28,"proceso2");
+   
+   pthread_t hilo_plani_largo_plazo;
+   pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
+   pthread_detach(hilo_plani_largo_plazo);//El hilo se desacopla del hilo principal.
 
 
 // ¿wait y signal para que espere a que se cree un proceso?

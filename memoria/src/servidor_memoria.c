@@ -1,6 +1,8 @@
 #include "servidor_memoria.h"
 #include "instrucciones.h"
 
+int tamanio_disponible_en_memoria = 30;
+
 //HACER LA CONEXION CON LOS OTROS MODULOS PARA QUE EL SERVIDOR NO SE QUEDE ESPERANDO
 
 void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender peticiones
@@ -39,6 +41,9 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
             //LOG_INFO : ES EL LOG OBLIGATORIO
             log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", cliente);
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
+            int tamanio = recibir_entero(cliente);
+            op_code respuesta = verificar_si_hay_espacio(tamanio);
+            enviar_op_code(cliente,respuesta);
             // manejar_cliente_kernel(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS. 
             break;
         case HANDSHAKE_CPU:
@@ -52,4 +57,14 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
     }
     close(cliente);
     return NULL;
+}
+
+op_code verificar_si_hay_espacio(int tamanio){
+    if(tamanio>tamanio_disponible_en_memoria){
+        return NO_HAY_ESPACIO_EN_MEMORIA;
+    }
+    else{
+        tamanio_disponible_en_memoria-=tamanio;
+        return HAY_ESPACIO_EN_MEMORIA_;
+    }
 }
