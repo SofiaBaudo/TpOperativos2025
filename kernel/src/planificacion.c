@@ -20,7 +20,6 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
   identificador_del_proceso++; //hay que agregar un mutex para que no puedan incrementar la variable global dos hilos diferentes
-  
   return; 
 }
 
@@ -95,7 +94,8 @@ void planificador_proceso_mas_chico_primero(){
 
 
 void *planificador_largo_plazo_fifo(){
-    
+ 
+   
 char *line;
 printf("Se esta esperando un enter por pantalla");
     do {
@@ -107,9 +107,10 @@ printf("Se esta esperando un enter por pantalla");
     if(list_size(colaEstados[NEW])==1){ //que el proceso que se creo sea el unico que esta en new
         struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); 
         int tamanio = pcb_aux->tamanio;
-        int socket = iniciar_conexion_con_memoria();
-       bool respuesta = solicitar_permiso_a_memoria(socket,tamanio) //(Adentro de la funcion, vamos a manejar un op_code)
+        int socket = iniciar_conexion_kernel_memoria();
+       bool respuesta = solicitar_permiso_a_memoria(socket,tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
        cerrar_conexion(socket);
+       log_debug(kernel_debug_log,"Conexion con memoria cerrada");
        if (respuesta == true){
             cambiarEstado(pcb_aux,NEW,READY);
             //SIGNAL(INGRESO_DEL_PRIMERO)
@@ -122,6 +123,7 @@ printf("Se esta esperando un enter por pantalla");
     } else{ //la cola no esta vacia
     //wait(INGRESO_DEL_PRIMERO)
     }
+    return NULL;
     }
 
 struct pcb *agarrar_el_primer_proceso(t_list *lista){

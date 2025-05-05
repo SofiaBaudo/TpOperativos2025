@@ -65,6 +65,6 @@ op_code verificar_si_hay_espacio(int tamanio){
     }
     else{
         tamanio_disponible_en_memoria-=tamanio;
-        return HAY_ESPACIO_EN_MEMORIA_;
+        return HAY_ESPACIO_EN_MEMORIA;
     }
 }
