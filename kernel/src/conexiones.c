@@ -129,6 +129,11 @@ int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso co
    }
 }
 //aca hay que hacer una funcion que cierre la conexion con memoria cuando yo quiera, haciendo un close del socket fdkernelmemoria 
+
+void cerrar_conexion(int socket){
+    close (socket);
+}
+
 void solicitar_rafaga_de_io(int duracion){
     enviar_op_code(cliente_io,EJECUTAR_RAFAGA_IO); // solicita al io ejecutar una rafaga
     op_code respuesta = recibir_op_code(cliente_io); // recibe la respuesta

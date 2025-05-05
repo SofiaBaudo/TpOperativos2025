@@ -13,5 +13,6 @@ void atender_kernel_io();
 void *manejar_kernel_io(void *socket_io);
 int iniciar_conexion_kernel_memoria();
 //void atender_kernel_interrupt();
-//void atender_kernel_io();
+void cerrar_conexion(int socket);
+
 void solicitar_rafaga_de_io(int duracion);

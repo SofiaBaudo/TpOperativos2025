@@ -60,20 +60,6 @@ void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparad
 
 
 
-/*void planificador_proceso_mas_chico_primero(){
-    otro readline aca
-    el proceso ingresa
-    semaforo que espera a que se cree un proceso nuevo
-    se consulta a la memoria si puede inicializarse o no (es agarrar la respuesta y despues un if)
-    caso positivo
-        cambiar de estado
-    caso negativo
-        se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
-        este ordenando por tamanio (utilizar list_add_sorted)
-    
-    }*/
-       
-
 /*
 funcion planificador de largo plazo ()
 
@@ -89,7 +75,22 @@ funcion planificador de largo plazo ()
             exit
         }
     }
-*/ 
+
+
+void planificador_proceso_mas_chico_primero(){
+    otro readline aca
+    el proceso ingresa
+    semaforo que espera a que se cree un proceso nuevo
+    se consulta a la memoria si puede inicializarse o no (es agarrar la respuesta y despues un if)
+    caso positivo
+        cambiar de estado
+    caso negativo
+        se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
+        este ordenando por tamanio (utilizar list_add_sorted)
+    
+    }*/
+       
+
 
 
 
