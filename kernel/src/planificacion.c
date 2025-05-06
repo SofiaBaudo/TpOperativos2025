@@ -85,7 +85,6 @@ void planificador_proceso_mas_chico_primero(){
     caso negativo
         se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
         este ordenando por tamanio (utilizar list_add_sorted)
-    
     }*/
        
 void esperar_enter_por_pantalla(){
@@ -164,21 +163,44 @@ void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
     list_add(colaEstados[estadoNuevo],pcb);
 }
 
-/* En este algoritmo se va a priorizar a los procesos más chicos, por lo tanto, 
+/* En este algoritmo se va a priorizar a los procesos mas chicos, por lo tanto, 
 al llegar un nuevo proceso a NEW, independientemente de si hay o no procesos esperando, 
 vamos a consultarle a la memoria si dispone del espacio requerido para iniciar el nuevo proceso y 
 en caso afirmativo, se transiciona el proceso a READY. 
-Caso contrario, se encolará para seguir esperando junto al resto de los procesos que no pueden ingresar 
-por tamaño.
+Caso contrario, se encolara para seguir esperando junto al resto de los procesos que no pueden ingresar 
+por tamanio.
 Al liberarse espacio en la memoria, 
-se deberá validar si se pueden ingresar procesos a READY ordenándolos por tamaño de manera ascendente.
+se debera validar si se pueden ingresar procesos a READY ordenandolos por tamanio de manera ascendente.
  */
 
 //int seleccionar_proceso_segun_tamanio_mas_chico_en_memoria(t_list *lista){
  
+/*
 
+Una vez seleccionado el proceso a ejecutar, se lo transicionara al estado EXEC y 
+se enviara a uno de los modulos CPU (conectados y libres) el PID y el PC a ejecutar a traves del 
+puerto de dispatch, quedando a la espera de recibir dicho PID despues de la ejecucion 
+junto con un motivo por el cual fue devuelto.
+En caso que el algoritmo requiera desalojar al proceso en ejecucion, 
+se enviará una interrupcion a traves de la conexión de interrupt para forzar el desalojo del mismo.
+Al recibir el PID del proceso en ejecución, en caso de que el motivo de devolución implique replanificar, 
+se seleccionará el siguiente proceso a ejecutar según indique el algoritmo. 
+Durante este período la CPU se quedará esperando.
+.
 
+*/
+
+void planificador_corto_plazo_fifo(){
     
+    /*si no hay nada en ready, semaforo para que espere
+    una vez que llega algo, agarra el primer proceso que haya.
+    una vez que agarra el proceso, lo transiciona a la cola de execute.
+    mandar PID y PC a CPU, ya sea que este libre o conectada.
+    
+    
+    */
+
+}   
 
 
 
