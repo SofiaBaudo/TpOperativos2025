@@ -19,7 +19,9 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   list_add(colaEstados[NEW],pcb);
   //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
-  identificador_del_proceso++; //hay que agregar un mutex para que no puedan incrementar la variable global dos hilos diferentes
+  pthread_mutex_lock(&mx_identificador_del_proceso);
+  identificador_del_proceso++; 
+  pthread_mutex_unlock(&mx_identificador_del_proceso);
   return; 
 }
 
@@ -56,9 +58,6 @@ void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparad
     list_add_sorted(lista, proceso, comparador);
 }
 
-
-
-
 /*
 funcion planificador de largo plazo ()
 
@@ -89,42 +88,50 @@ void planificador_proceso_mas_chico_primero(){
     
     }*/
        
-
-
-
-
-void *planificador_largo_plazo_fifo(){
- 
-   
-char *line;
+void esperar_enter_por_pantalla(){
+    char *line;
 printf("Se esta esperando un enter por pantalla");
     do {
         line = readline("");
     } while (strlen(line) != 0); // si la longitud es mayor a 0 quiere decir que no se ingreso solo un enter
     free(line);  
+}
+
+/*
+Funcion: Recibir Proceso ()
+    recibo informacion de CPU.
+    creo proceso con informacion recibida
+    envio proceso a planificador de largo plazo.
+*/
+
+
+void *planificador_largo_plazo_fifo(){
+    esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     
     if(list_size(colaEstados[NEW])==1){ //que el proceso que se creo sea el unico que esta en new
         struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); 
         int tamanio = pcb_aux->tamanio;
         int socket = iniciar_conexion_kernel_memoria();
-       bool respuesta = solicitar_permiso_a_memoria(socket,tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
-       cerrar_conexion(socket);
-       log_debug(kernel_debug_log,"Conexion con memoria cerrada");
-       if (respuesta == true){
-            cambiarEstado(pcb_aux,NEW,READY);
-            //SIGNAL(INGRESO_DEL_PRIMERO)
-       }
-       else{
-        log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
-        //aca va un semaforo, esperando para entrar a memoria
-        
+        bool respuesta = solicitar_permiso_a_memoria(socket,tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
+        cerrar_conexion(socket);
+        log_debug(kernel_debug_log,"Conexion con memoria cerrada");
+        if (respuesta == true){
+                cambiarEstado(pcb_aux,NEW,READY);
+                //sem_post(&INGRESO_DEL_PRIMERO); //avisar que el proceso que estaba segundo puede solicitar su ingreso
+        }
+        else{
+            log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
+            //aca va un semaforo, esperando para entrar a memoria una vez que termine otro proceso.
+            //sem_post(&INGRESO_DEL_PRIMERO);
        }     
-    } else{ //la cola no esta vacia
-    //wait(INGRESO_DEL_PRIMERO)
+    } else{ //hay mas de un proceso
+    //sem_wait(&INGRESO_DEL_PRIMERO);
     }
     return NULL;
     }
+
+
 
 struct pcb *agarrar_el_primer_proceso(t_list *lista){
     struct pcb *aux;

@@ -1,6 +1,8 @@
 #include <utils/utils.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <semaphore.h>
+
 
 
 // VARIABLES GLOBALES
@@ -45,3 +47,7 @@ extern int identificador_del_proceso;
 extern t_list *ios_conectados;
 extern t_list *cpus_conectadas;
 
+//Semaforos y Mutex
+
+extern pthread_mutex_t mx_identificador_del_proceso;
+extern sem_t INGRESO_DEL_PRIMERO;

@@ -6,6 +6,7 @@ void inicializar_kernel(){
     inicializar_configs();
     inicializar_colas_de_estados();
     inicializar_listas_de_ios_y_cpus();
+    inicializar_sincronizacion();
 }
 
 void inicializar_logs(){
