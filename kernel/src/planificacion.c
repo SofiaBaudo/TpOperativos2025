@@ -16,7 +16,8 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
   //pcb -> estado = NEW; // seguramente no sirva mucho
   pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
-  list_add(colaEstados[NEW],pcb);
+  list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+  sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
   //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
   pthread_mutex_lock(&mx_identificador_del_proceso);
@@ -108,15 +109,22 @@ void *planificador_largo_plazo_fifo(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     
+    sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
+    //semaforo para "proteger" la cola new
     if(list_size(colaEstados[NEW])==1){ //que el proceso que se creo sea el unico que esta en new
-        struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); 
-        int tamanio = pcb_aux->tamanio;
+       t_list *aux = colaEstados[NEW];
+        struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
+        int tamanio = proceso->tamanio;
+        //post del semaforo que protege new
         int socket = iniciar_conexion_kernel_memoria();
         bool respuesta = solicitar_permiso_a_memoria(socket,tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
         cerrar_conexion(socket);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
+            //semaforo
+            struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); //una vez que tenemos la confirmacion de memoria lo sacamos de la lista
                 cambiarEstado(pcb_aux,NEW,READY);
+                sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW);
                 //sem_post(&INGRESO_DEL_PRIMERO); //avisar que el proceso que estaba segundo puede solicitar su ingreso
         }
         else{
@@ -125,7 +133,7 @@ void *planificador_largo_plazo_fifo(){
             //sem_post(&INGRESO_DEL_PRIMERO);
        }     
     } else{ //hay mas de un proceso
-    //sem_wait(&INGRESO_DEL_PRIMERO);
+    log_debug(kernel_debug_log,"Hay mas de un proceso en new");
     }
     return NULL;
     }
