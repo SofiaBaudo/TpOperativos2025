@@ -124,13 +124,14 @@ void *planificador_largo_plazo_fifo(){
             //semaforo
             struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); //una vez que tenemos la confirmacion de memoria lo sacamos de la lista
                 cambiarEstado(pcb_aux,NEW,READY);
+                //post semaforo
                 sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW);
                 //sem_post(&INGRESO_DEL_PRIMERO); //avisar que el proceso que estaba segundo puede solicitar su ingreso
         }
         else{
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
             //aca va un semaforo, esperando para entrar a memoria una vez que termine otro proceso.
-            //sem_post(&INGRESO_DEL_PRIMERO);
+            //sem_post(&INGRESO_DEL_PRIMERO); creo que este no iria
        }     
     } else{ //hay mas de un proceso
     log_debug(kernel_debug_log,"Hay mas de un proceso en new");
