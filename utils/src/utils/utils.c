@@ -127,3 +127,4 @@ void enviar_mensaje(int socket_cliente, char* mensaje) {
     send(socket_cliente, &longitud, sizeof(int), 0); // no se si esta bien pero es para que el receptor sepa cuantos bytes debe leer la longitud del mensaje
     send(socket_cliente, mensaje, longitud, 0); 
 }
+

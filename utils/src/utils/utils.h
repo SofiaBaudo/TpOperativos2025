@@ -75,6 +75,18 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
+typedef struct {
+    int size; // Tamaño del payload
+    int offset; // Desplazamiento dentro del payload
+    void* stream; // Payload
+} t_buffer_proceso;
+
+typedef struct {
+    op_code codigo_operacion;
+    t_buffer_proceso* buffer;
+} t_paquete_proceso;
+
+
 
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);

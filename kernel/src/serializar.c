@@ -28,7 +28,7 @@ return buffer;
 
 
 
-t_paquete_proceso *crear_paquete(op_code codigo, struct pcb *proceso, int un_socket){
+void crear_y_enviar_paquete(op_code codigo, struct pcb *proceso, int un_socket){
 t_paquete_proceso* paquete = malloc(sizeof(t_paquete));
 paquete -> codigo_operacion = codigo;
 paquete -> buffer = crear_buffer_proceso(proceso);
@@ -44,10 +44,11 @@ paquete->buffer->offset += sizeof(int);
 memcpy(a_enviar + paquete->buffer->offset, paquete->buffer->stream, paquete->buffer->size);
 
 send(un_socket, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(int), 0);
-return paquete;
-//free(a_enviar);
-//free(paquete->buffer->stream);
-//free(paquete->buffer->size);
-//free(paquete->buffer);
-//free(paquete);
+
+free(a_enviar);
+free(paquete->buffer->stream);
+free(paquete->buffer->size);
+free(paquete->buffer);
+free(paquete);
+return;
 }
