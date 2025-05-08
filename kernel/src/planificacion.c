@@ -16,7 +16,9 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
   //pcb -> estado = NEW; // seguramente no sirva mucho
   pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
+  pthread_mutex_lock(&mx_agregar_a_cola_new); //CONSULTAR EN SOPORTE. 
   list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+  pthread_mutex_unlock(&mx_agregar_a_cola_new);
   sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
   //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
@@ -108,25 +110,24 @@ Funcion: Recibir Proceso ()
 void *planificador_largo_plazo_fifo(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
-    
     sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
-    //semaforo para "proteger" la cola new
+    sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
+    sem_wait(&USAR_COLA_NEW);
     if(list_size(colaEstados[NEW])==1){ //que el proceso que se creo sea el unico que esta en new
        t_list *aux = colaEstados[NEW];
         struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
         int tamanio = proceso->tamanio;
-        //post del semaforo que protege new
+        sem_post(&USAR_COLA_NEW);
         int socket = iniciar_conexion_kernel_memoria();
         bool respuesta = solicitar_permiso_a_memoria(socket,tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
         cerrar_conexion(socket);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
-            //semaforo
+            sem_wait(&USAR_COLA_NEW);   
             struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); //una vez que tenemos la confirmacion de memoria lo sacamos de la lista
                 cambiarEstado(pcb_aux,NEW,READY);
-                //post semaforo
-                sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW);
-                //sem_post(&INGRESO_DEL_PRIMERO); //avisar que el proceso que estaba segundo puede solicitar su ingreso
+                sem_post(&USAR_COLA_NEW);
+                pthread_mutex_unlock(&mx_avisar_que_entro_el_primero);
         }
         else{
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
@@ -134,12 +135,11 @@ void *planificador_largo_plazo_fifo(){
             //sem_post(&INGRESO_DEL_PRIMERO); creo que este no iria
        }     
     } else{ //hay mas de un proceso
-    log_debug(kernel_debug_log,"Hay mas de un proceso en new");
+    pthread_mutex_lock(&mx_avisar_que_entro_el_primero);
+    sem_post(&INGRESO_DEL_PRIMERO);
     }
     return NULL;
     }
-
-
 
 struct pcb *agarrar_el_primer_proceso(t_list *lista){
     struct pcb *aux;

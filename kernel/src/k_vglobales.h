@@ -50,5 +50,8 @@ extern t_list *cpus_conectadas;
 //Semaforos y Mutex
 
 extern pthread_mutex_t mx_identificador_del_proceso;
+extern pthread_mutex_t mx_agregar_a_cola_new;
+extern pthread_mutex_t mx_avisar_que_entro_el_primero;
 extern sem_t INGRESO_DEL_PRIMERO;
 extern sem_t CANTIDAD_DE_PROCESOS_EN_NEW;
+extern sem_t USAR_COLA_NEW;
