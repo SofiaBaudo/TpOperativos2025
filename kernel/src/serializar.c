@@ -5,7 +5,7 @@
 t_buffer_proceso *crear_buffer_proceso(struct pcb *proceso){
 t_buffer_proceso* buffer = malloc(sizeof(t_buffer_proceso));
 int longitud = strlen(proceso->ruta_del_archivo_de_pseudocodigo);
-buffer->size = 3*sizeof(int)+ sizeof(longitud); //pid,pc,tamanio en memoria + la longitud del archivo de pseudocodigo
+buffer->size = 4*sizeof(int)+ longitud; //pid,pc,tamanio en memoria + la longitud del archivo de pseudocodigo
 buffer->offset = 0;
 buffer->stream = malloc(buffer->size);
 
@@ -21,7 +21,7 @@ buffer->offset += sizeof(int);
 memcpy(buffer->stream + buffer->offset, &longitud, sizeof(int));
 buffer->offset += sizeof(int);
 
-memcpy(buffer->stream + buffer->offset, &proceso->ruta_del_archivo_de_pseudocodigo, longitud);
+memcpy(buffer->stream + buffer->offset, proceso->ruta_del_archivo_de_pseudocodigo, longitud);
 //free(proceso->ruta_del_archivo_de_pseudocodigo);
 return buffer;
 }
@@ -29,7 +29,7 @@ return buffer;
 
 
 void crear_y_enviar_paquete(op_code codigo, struct pcb *proceso, int un_socket){
-t_paquete_proceso* paquete = malloc(sizeof(t_paquete));
+t_paquete_proceso* paquete = malloc(sizeof(t_paquete_proceso));
 paquete -> codigo_operacion = codigo;
 paquete -> buffer = crear_buffer_proceso(proceso);
 
@@ -47,7 +47,6 @@ send(un_socket, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(int),
 
 free(a_enviar);
 free(paquete->buffer->stream);
-free(paquete->buffer->size);
 free(paquete->buffer);
 free(paquete);
 return;
