@@ -3,7 +3,6 @@
 
 #include <instrucciones.h>
 
-
 //Me comunico con el Kernel para obtenerr el PC/IP y el PID.
 
 void obtenerDelKernelPcPid(int pid, int pc){
@@ -116,4 +115,3 @@ void mandar_syscall(t_instruccion instruccion){
 void check_interrupt(){
     log_info(logger," ## Llega interrupción al puerto Interrupt");
 }
-

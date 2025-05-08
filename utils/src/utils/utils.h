@@ -51,7 +51,7 @@ typedef enum op_code
 }op_code;
 
 //Enum de Instrucciones
-typedef enum t_instruccion
+/*typedef enum t_instruccion
 {
 	NOOP,
 	WRITE,
@@ -61,7 +61,7 @@ typedef enum t_instruccion
 	INIT_PROC,
 	DUMP_MEMORY,
 	EXIT,
-}t_instruccion;
+}t_instruccion;*/
 
 typedef struct
 {
