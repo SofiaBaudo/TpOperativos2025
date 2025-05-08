@@ -31,7 +31,7 @@ struct pcb{
   int pid;
   int pc;
   //despues terminar lo de las metricas de estado y la otra metrica
-  Estado estado;
+  //Estado estado;
   t_list *lista_de_rafagas;
   int tamanio;
   char *ruta_del_archivo_de_pseudocodigo; // a chequear
