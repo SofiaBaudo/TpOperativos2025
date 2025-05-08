@@ -47,12 +47,9 @@ typedef enum op_code
 
 	//enums memoria con cpu
 	SOLCITAR_INSTRUCCION,
-	RESPUESTA_INSTRUCCION
-}op_code;
+	RESPUESTA_INSTRUCCION,
 
-//Enum de Instrucciones
-/*typedef enum t_instruccion
-{
+	//enums instrucciones
 	NOOP,
 	WRITE,
 	READ,
@@ -61,7 +58,10 @@ typedef enum op_code
 	INIT_PROC,
 	DUMP_MEMORY,
 	EXIT,
-}t_instruccion;*/
+
+}op_code;
+
+
 
 typedef struct
 {
