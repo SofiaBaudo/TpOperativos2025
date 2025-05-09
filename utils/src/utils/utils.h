@@ -57,8 +57,7 @@ typedef enum op_code
 	IO,
 	INIT_PROC,
 	DUMP_MEMORY,
-	EXIT,
-
+	EXIT
 }op_code;
 
 
