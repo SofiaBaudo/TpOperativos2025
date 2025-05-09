@@ -110,6 +110,7 @@ Funcion: Recibir Proceso ()
 void *planificador_largo_plazo_fifo(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
+    while(1){
     sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
     sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
     sem_wait(&USAR_COLA_NEW);
@@ -127,16 +128,18 @@ void *planificador_largo_plazo_fifo(){
             struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); //una vez que tenemos la confirmacion de memoria lo sacamos de la lista
                 cambiarEstado(pcb_aux,NEW,READY);
                 sem_post(&USAR_COLA_NEW);
-                pthread_mutex_unlock(&mx_avisar_que_entro_el_primero);
+                sem_post(&INGRESO_DEL_PRIMERO);
+                //pthread_mutex_unlock(&mx_avisar_que_entro_el_primero);
         }
         else{
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
             //aca va un semaforo, esperando para entrar a memoria una vez que termine otro proceso.
             //sem_post(&INGRESO_DEL_PRIMERO); 
-       }     
+       }
+        }     
     //} else{ //hay mas de un proceso
-    pthread_mutex_lock(&mx_avisar_que_entro_el_primero);
-    sem_post(&INGRESO_DEL_PRIMERO);
+    //pthread_mutex_lock(&mx_avisar_que_entro_el_primero);
+    //sem_post(&INGRESO_DEL_PRIMERO);
     //}
     return NULL;
     }
