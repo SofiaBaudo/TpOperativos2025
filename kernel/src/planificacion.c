@@ -113,7 +113,7 @@ void *planificador_largo_plazo_fifo(){
     while(1){
     sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
     sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
-    sem_wait(&USAR_COLA_NEW);
+    sem_wait(&USAR_COLA_NEW); // es una variable global asi que la protegemos (mejor un mx)
        t_list *aux = colaEstados[NEW];
         struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
         int tamanio = proceso->tamanio;
@@ -123,7 +123,7 @@ void *planificador_largo_plazo_fifo(){
         cerrar_conexion(socket);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
-            sem_wait(&USAR_COLA_NEW);   
+            sem_wait(&USAR_COLA_NEW);   //productor-consumidor
             struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); //una vez que tenemos la confirmacion de memoria lo sacamos de la lista
                 cambiarEstado(pcb_aux,NEW,READY);
                 sem_post(&USAR_COLA_NEW);

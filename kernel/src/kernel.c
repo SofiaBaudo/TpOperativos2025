@@ -9,9 +9,10 @@ int main(int argc, char* argv[]){
   
    inicializar_kernel();
    //atender_kernel_dispatch();
-   crear_proceso(35,"f1");
-   crear_proceso(2,"f");
+   crear_proceso(5,"f1");
+   crear_proceso(35,"f");
    crear_proceso(2,"f3");
+   //hilos para cpus e ios. Ios se pueden agregar durante la ejecucion y las cpus son fijas
    pthread_t hilo_plani_largo_plazo;
    pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
    pthread_join(hilo_plani_largo_plazo,NULL);

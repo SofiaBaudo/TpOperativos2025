@@ -5,7 +5,7 @@
 t_buffer_proceso *crear_buffer_proceso(struct pcb *proceso){
 t_buffer_proceso* buffer = malloc(sizeof(t_buffer_proceso));
 int longitud = strlen(proceso->ruta_del_archivo_de_pseudocodigo);
-buffer->size = 4*sizeof(int)+ longitud; //pid,pc,tamanio en memoria + la longitud del archivo de pseudocodigo
+buffer->size = 4*sizeof(int)+ longitud; //pid,pc,tamanio en memoria,tamanio del archivo + la longitud del archivo de pseudocodigo
 buffer->offset = 0; // como el fseek de archivos
 buffer->stream = malloc(buffer->size); //guarda el tamaño del buffer en stream.
 
