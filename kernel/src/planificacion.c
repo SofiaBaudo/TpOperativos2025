@@ -114,7 +114,6 @@ void *planificador_largo_plazo_fifo(){
     sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
     sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
     sem_wait(&USAR_COLA_NEW);
-    //if(list_size(colaEstados[NEW])==1){ //que el proceso que se creo sea el unico que esta en new
        t_list *aux = colaEstados[NEW];
         struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
         int tamanio = proceso->tamanio;
@@ -129,18 +128,14 @@ void *planificador_largo_plazo_fifo(){
                 cambiarEstado(pcb_aux,NEW,READY);
                 sem_post(&USAR_COLA_NEW);
                 sem_post(&INGRESO_DEL_PRIMERO);
-                //pthread_mutex_unlock(&mx_avisar_que_entro_el_primero);
-        }
+              }   
         else{
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
             //aca va un semaforo, esperando para entrar a memoria una vez que termine otro proceso.
             //sem_post(&INGRESO_DEL_PRIMERO); 
        }
-        }     
-    //} else{ //hay mas de un proceso
-    //pthread_mutex_lock(&mx_avisar_que_entro_el_primero);
-    //sem_post(&INGRESO_DEL_PRIMERO);
-    //}
+          } 
+    
     return NULL;
     }
 
