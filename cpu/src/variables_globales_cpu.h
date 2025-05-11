@@ -2,6 +2,7 @@
 #define VARIABLES_GLOBALES_CPU_H
 
 // Incluir las librerías
+
 #include <utils/utils.h>
 #include <stdio.h>
 #include <commons/config.h>
@@ -11,6 +12,7 @@
 #include <pthread.h>
 
 // Inicialización Logs CPU
+
 extern t_log *cpu_logger;
 extern t_log *cpu_log_debug;
 extern t_config *cpu_config; 
@@ -20,6 +22,7 @@ extern t_log *logger;
 
 extern int fd_conexion_dispatch_memoria;
 extern int fd_conexion_kernel_dispatch;
+extern int fd_conexion_kernel_interrupt;
 extern char* IP_MEMORIA;
 extern char* IP_KERNEL;
 extern char* REEMPLAZO_TLB;
