@@ -3,9 +3,20 @@
 
 #include <instrucciones.h>
 
-//Me comunico con el Kernel para obtenerr el PC/IP y el PID.
+//Me comunico con el Kernel para obtener el PC/IP y el PID.
+
+void ejecutar_instrucciones(void){
+    t_instruccion instru;
+    char *instruccionEntera;
+    obtenerDelKernelPcPid(pid, pc);
+    instruccionEntera = fetch(pc);
+    instru = decode(instruccionEntera);
+    execute(instru);
+    check_interrupt();
+}
 
 void obtenerDelKernelPcPid(int pid, int pc){
+    //Serializar
     recv(fd_conexion_kernel_dispatch, &pid, sizeof(pid),0);
     recv(fd_conexion_kernel_dispatch, &pc, sizeof(pc),0);
     if(pc < 0){
@@ -26,7 +37,7 @@ char* fetch(int pc){
 
 //Fase Decode (Interpretar proxima ejecucion a ejecutar)(Segunda Fase del Ciclo de Instruccion)
 
-void decode(char* instruccion_recibida){
+t_instruccion decode(char* instruccion_recibida){
     //Decodifico las instrucciones
     t_instruccion instruccion;
     obtenerInsPartes = string_split(instruccion_recibida, " "); //te recibe el string tal como es si no lo encuentra
@@ -36,7 +47,8 @@ void decode(char* instruccion_recibida){
     if(strcmp(instruccion.opcode, "WRITE") == 0 || strcmp(instruccion.opcode, "READ") == 0){ //hacer un if en vez array 
     //Llamar a la MMMU para que lo traduzca.
     //hardcodeemos un valor ahora para la prueba, porque se hace en el prox checkpoint
-    }   
+    } 
+    return instruccion;  
 } 
 
 //Fase Execute (Ejecutar la instruccion)(Tercera Fase del Ciclo de Instruccion).
@@ -107,11 +119,23 @@ void instruccion_goto(char *parametro){
 //Ejecucion Syscalls
 
 void mandar_syscall(t_instruccion instruccion){
+    //Hay que serializar
     send(fd_conexion_kernel_dispatch, &instruccion, sizeof(t_instruccion),0);
 }
 
 //Chequear Interrupcion
 
-void check_interrupt(){
-    log_info(logger," ## Llega interrupción al puerto Interrupt");
+void check_interrupt(void){
+    int pid_interrupcion=0;
+    recv(fd_conexion_kernel_interrupt, &pid_interrupcion,sizeof(int),0);
+    log_info(logger," ## Llega interrupción al puerto Interrupt <%d>", pid_interrupcion);
+    if(pid_interrupcion != 0){ //recibio una instruccion
+        //Hay que Serializar 
+        send(fd_conexion_kernel_interrupt, &pid, sizeof(int),0);
+        send(fd_conexion_kernel_interrupt, &pc, sizeof(int),0);
+        log_info(logger, "SI hay interrupcion");
+    }
+    else{
+        log_info(logger, "NO hay interrupcion");
+    }
 }

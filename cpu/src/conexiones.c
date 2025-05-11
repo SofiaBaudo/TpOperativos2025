@@ -4,7 +4,7 @@
 
 // Funcion Iniciar Conexion Kernel
 
-void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
+void* iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
     fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
     enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU_DISPATCH);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
@@ -19,18 +19,21 @@ void iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
     close(fd_conexion_kernel_dispatch);
 }
 
-//void iniciar_conexion_kernel_interrupt(int identificador_cpu){
-//    int fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_interrupt);
-//    enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU);                    //avisa que es CPU.
-//    op_code respuesta = recibir_op_code(fd_conexion_kernel_interrupt);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
-//    if (respuesta == HANDSHAKE_ACCEPTED){
-//        log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
-//    }
-//    else{
-//        log_error(cpu_logger, "Error en la conexion con el kernel dispatch");
-//        exit(EXIT_FAILURE);
-//    }
-//}
+//Iniciar conexion Kernel
+
+void iniciar_conexion_kernel_interrupt(int identificador_cpu){
+    fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_INTERRUPT);
+    enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU);                    //avisa que es CPU.
+    op_code respuesta = recibir_op_code(fd_conexion_kernel_interrupt);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
+    if (respuesta == HANDSHAKE_ACCEPTED){
+        log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
+        enviar_id(fd_conexion_kernel_dispatch, identificador_cpu);
+    }
+   else{
+        log_error(cpu_logger, "Error en la conexion con el kernel dispatch");
+        exit(EXIT_FAILURE);
+    }
+}
 
 //Iniciar conexion Memoria
 
