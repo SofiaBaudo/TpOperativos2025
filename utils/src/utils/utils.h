@@ -60,8 +60,6 @@ typedef enum op_code
 	EXIT*/
 }op_code;
 
-
-
 typedef struct
 {
 	int size;
@@ -85,8 +83,6 @@ typedef struct {
     t_buffer_proceso* buffer;
 } t_paquete_proceso;
 
-
-
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);
 t_log *iniciar_logger(char* archivoLog, char* nombreLog);
@@ -103,6 +99,5 @@ void enviar_op_code(int socket_cliente, op_code codigo_operacion);
 op_code recibir_op_code (int socket);
 
 void enviar_mensaje(int socket, char* mensaje);
-
 
 #endif
