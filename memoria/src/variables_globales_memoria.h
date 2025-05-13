@@ -19,3 +19,13 @@ extern char* PATH_SWAPHILE;
 extern char* LOG_LEVEL;
 extern char* DUMP_PATH;
 extern char* PATH_INSTRUCCIONES;
+
+struct{
+    int pid;
+    int cant_acceso_tabla_pagina;
+    int instrucciones_solicitadas;
+    int bajadas_swap;
+    int cant_subidas_memoria_principal;
+    int cant_lecturas_memoria;
+    int cant_escrituras_memoria;
+}listado_metricas;

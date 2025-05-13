@@ -81,7 +81,7 @@ void execute(t_instruccion instruccion){
     }
     else{
         //ERROR
-        log_error(logger, "Error en la Sintaxis o en el ingreso de la Instruccion, Ingrese de nuevo:");
+        log_error(logger, "Error en la Sintaxis o en el ingreso de la Instruccion");
     }
 }
 

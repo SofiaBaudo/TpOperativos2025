@@ -1,1 +1,7 @@
 //hacer instrucciones random
+
+//instrucciones de ejemplo
+
+READ 10 20
+
+
