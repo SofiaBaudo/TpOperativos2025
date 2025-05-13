@@ -49,8 +49,8 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
         case HANDSHAKE_CPU:
             log_debug(logger_memoria, "Se conecto CPU");
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
-            // manejar_cliente_cpu(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS
-            break;   
+            manejar_cpu(cpu);
+            break;
         default:
             log_warning(logger_memoria, "No se pudo identificar al cliente; op_code: %d", cliente_id); //AVISA Q FUCNIONA MAL
             break;

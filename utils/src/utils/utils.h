@@ -50,14 +50,14 @@ typedef enum op_code
 	RESPUESTA_INSTRUCCION,
 
 	//enums instrucciones
-	NOOP,
+	/*NOOP,
 	WRITE,
 	READ,
 	GOTO,
 	IO,
 	INIT_PROC,
 	DUMP_MEMORY,
-	EXIT
+	EXIT*/
 }op_code;
 
 

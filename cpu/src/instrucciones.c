@@ -26,11 +26,14 @@ void obtenerDelKernelPcPid(int pid, int pc){
 
 //Fase fetch (Buscar proxima instruccion a realizar)(Primer Fase del Ciclo de Instruccion).
 
-char* fetch(int pc){
+char* fetch(int pc,int pid){
     //Mando confirmacion de cpu a memoria, espero la instruccion a realizar de memoria.
     //LOG OBLIGATORIO
     log_info(logger, "## PID: <PID> - FETCH - Program Counter: <%d>", pc);
+    send(fd_conexion_dispatch_memoria,&cpu,sizeof(int),0);
     send(fd_conexion_dispatch_memoria,&pc,sizeof(int),0);
+    send(fd_conexion_dispatch_memoria,&pid,sizeof(int),0);
+    //Ver con Sofi Mandar PID y CPU
     recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(t_instruccion),0);
     return instruccion_recibida;
 }

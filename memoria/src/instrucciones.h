@@ -10,13 +10,14 @@
 #include "utils/utils.h"
 #include "servidor_memoria.h"
 #include "inicializar_memoria.h"
-/*
+
+
 typedef struct {
     op_code codigo;
     char** parametros;
     int cantidad_parametros;
 }t_instruccion;
-*/
+
 /*
 typedef struct {
     int pid;

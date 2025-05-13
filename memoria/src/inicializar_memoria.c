@@ -19,7 +19,6 @@ void leer_config(){ // Lee la config y guarda todos los values de las key (struc
     memoria_config.PATH_SWAPFILE = strdup(config_get_string_value(config, "PATH_SWAPFILE"));
     memoria_config.RETARDO_SWAP = config_get_int_value(config, "RETARDO_SWAP");
     memoria_config.DUMP_PATH = strdup(config_get_string_value(config, "DUMP_PATH"));
-
     config_destroy(config); //destruye luego de guardarse los values
 }
 

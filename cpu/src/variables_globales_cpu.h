@@ -45,9 +45,9 @@ extern int pid;
 extern int pc;
 
 typedef struct {
-    char* opcode;
-    char* param1;
-    char* param2;
+    char* opcode; //codigo de instruccion
+    char* param1; 
+    char* param2; 
 } t_instruccion;
 
 #endif
