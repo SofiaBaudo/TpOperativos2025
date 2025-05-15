@@ -16,9 +16,9 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
   //pcb -> estado = NEW; // seguramente no sirva mucho
   pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
-  pthread_mutex_lock(&mx_agregar_a_cola_new); //CONSULTAR EN SOPORTE. 
+  pthread_mutex_lock(&mx_usar_cola_new); //CONSULTAR EN SOPORTE. 
   list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
-  pthread_mutex_unlock(&mx_agregar_a_cola_new);
+  pthread_mutex_unlock(&mx_usar_cola_new);
   sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
   //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
@@ -31,7 +31,7 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
 int buscar_en_lista(t_list *lista, int pid) {
    
     if (!lista) {
-        printf("La lista no tiene ningún proceso\n");
+        printf("La lista no tiene ningan proceso\n");
         return -1;
     }
  t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
@@ -113,21 +113,22 @@ void *planificador_largo_plazo_fifo(){
     while(1){
     sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
     sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
-    sem_wait(&USAR_COLA_NEW); // es una variable global asi que la protegemos (mejor un mx)
+    pthread_mutex_lock(&mx_usar_cola_new); // es una variable global asi que la protegemos (mejor un mx)
        t_list *aux = colaEstados[NEW];
         struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
         int tamanio = proceso->tamanio;
-        sem_post(&USAR_COLA_NEW);
+         pthread_mutex_unlock(&mx_usar_cola_new);
         int socket = iniciar_conexion_kernel_memoria();
         bool respuesta = solicitar_permiso_a_memoria(socket,tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
         cerrar_conexion(socket);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
-            sem_wait(&USAR_COLA_NEW);   //productor-consumidor
+             pthread_mutex_lock(&mx_usar_cola_new);   //productor-consumidor
             struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[NEW]); //una vez que tenemos la confirmacion de memoria lo sacamos de la lista
                 cambiarEstado(pcb_aux,NEW,READY);
-                sem_post(&USAR_COLA_NEW);
+                pthread_mutex_unlock(&mx_usar_cola_new);
                 sem_post(&INGRESO_DEL_PRIMERO);
+                sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
               }   
         else{
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
@@ -183,22 +184,56 @@ se debera validar si se pueden ingresar procesos a READY ordenandolos por tamani
 //int seleccionar_proceso_segun_tamanio_mas_chico_en_memoria(t_list *lista){
  
 /*
-
+(EJECUCION)
 Una vez seleccionado el proceso a ejecutar, se lo transicionara al estado EXEC y 
 se enviara a uno de los modulos CPU (conectados y libres) el PID y el PC a ejecutar a traves del 
 puerto de dispatch, quedando a la espera de recibir dicho PID despues de la ejecucion 
 junto con un motivo por el cual fue devuelto.
 En caso que el algoritmo requiera desalojar al proceso en ejecucion, 
-se enviará una interrupcion a traves de la conexión de interrupt para forzar el desalojo del mismo.
-Al recibir el PID del proceso en ejecución, en caso de que el motivo de devolución implique replanificar, 
-se seleccionará el siguiente proceso a ejecutar según indique el algoritmo. 
-Durante este período la CPU se quedará esperando.
-.
+se enviara una interrupcion a traves de la conexion de interrupt para forzar el desalojo del mismo.
+Al recibir el PID del proceso en ejecucion, en caso de que el motivo de devolucion implique replanificar, 
+se seleccionara el siguiente proceso a ejecutar segun indique el algoritmo. 
+Durante este período la CPU se quedara esperando.
+
+
+(MEMORIA)
+En este apartado solamente se tendra la instruccion DUMP_MEMORY. 
+Esta syscall le solicita a la memoria, junto al PID que lo solicita, que haga un Dump del proceso.
+Esta syscall bloqueara al proceso que la invoca hasta que el modulo memoria confirme la finalizacion de la operacion, 
+en caso de error, el proceso se enviara a EXIT. Caso contrario, se desbloquea normalmente pasando a READY.
+
+
+(ENTRADA/SALIDA)
+El modulo Kernel administra los distintos dispositivos de IO que se conecten a el. 
+momento de que un modulo de IO se conecte al Kernel, este ultimo debera identificarlo por medio de su nombre, 
+en este punto el Kernel debera conocer todos los madulos de IO conectados, que procesos estan ejecutando IO en cada modulo y 
+todos los procesos que estan esperando una IO determinada.
+Para la utilizacian de estos madulos existira la syscall “IO” que recibira dos parametros: 
+el nombre de la entrada/salida a usar y la cantidad de milisegundos que debera usarla. 
+Primero se debera validar que la IO solicitada exista en el sistema, si no existe ninguna IO en el sistema con el nombre solicitado, el proceso se debera enviar a EXIT. 
+En caso de que si exista al menos una instancia de IO, aun si la misma se encuentre ocupada, el kernel debera pasar el proceso al estado BLOCKED y agregarlo a la cola de bloqueados por la IO solicitada, 
+en caso de que el kernel tenga una instancia de esta IO libre, debera enviarle al modulo correspondiente el PID y el tiempo por el cual debe bloquearse. 
+Al momento que se conecte una nueva IO o se reciba el desbloqueo por medio de una de ellas, se debera verificar si hay procesos encolados para dicha IO y enviarlo a la misma. 
+Al momento de recibir un mensaje de una IO se debera verificar que el mismo sea una confirmacian de fin de IO, en caso afirmativo, se debera validar si hay mas procesos esperando realizar dicha IO. En caso de que el mensaje corresponda a una desconexian de la IO, el proceso que estaba ejecutando en dicha IO, se debera pasar al estado EXIT.
 
 */
 
 void planificador_corto_plazo_fifo(){
-    
+  
+    while(1){
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
+        sem_wait(&INGRESO_DEL_PRIMERO_READY);
+        log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
+        //lock semaforo
+        struct pcb *aux = agarrar_el_primer_proceso(colaEstados[READY]);
+        cambiarEstado(aux,READY,EXEC);
+        //unlock
+        // PROCESO DE ENVIADO DE PID Y PC A CPU
+        //ESPERAR DEVOLUCION DE PID Y PC CON MOTIVO
+        //VER SI HAY QUE DESALOJAR Y FORZAR DESALOJO SI ES NECESARIO
+    }
+
+
     /*si no hay nada en ready, semaforo para que espere
     una vez que llega algo, agarra el primer proceso que haya.
     una vez que agarra el proceso, lo transiciona a la cola de execute.
