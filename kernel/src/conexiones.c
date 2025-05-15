@@ -1,3 +1,4 @@
+
 #include <conexiones.h>
 
 //sacamos los close porque se recibe mas de un io y mas de una cpu
@@ -93,14 +94,18 @@ void* manejar_kernel_io(void *socket_io){
             log_info(kernel_logger, "## IO Conectado - FD del socket: %d", io);
             printf("\n");
             enviar_op_code(io, HANDSHAKE_ACCEPTED);
-            int longitud_nombre;
+            /*int longitud_nombre;
             recv(io, &longitud_nombre, sizeof(int), 0); // el io le manda de antemano la longitud del nombre para que el kernel sepa cuanto espacio reservar
 
             char *nombre = malloc(longitud_nombre + 1); // +1 por el /0 
-            recv(io, nombre, longitud_nombre, 0);       
+            recv(io, nombre, longitud_nombre, 0);*/   
+            t_paquete *paquete = recibir_paquete(io); 
+            char *nombre = deserializar_nombre_io(paquete);
+            log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
             log_info(kernel_logger,"se conecto el io con nombre; %s",nombre); // %s espera un puntero a char
             list_add(ios_conectados,nombre);
             log_debug(kernel_debug_log,"Se agrego el io %s a la lista",nombre);
+       
             break;
             default:
            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL

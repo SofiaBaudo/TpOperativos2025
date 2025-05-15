@@ -94,6 +94,7 @@ void enviar_mensaje(int socket, char* mensaje);
 t_buffer *crear_buffer();
 t_buffer *crear_buffer_io_nombre(char *nombre);
 void crear_paquete(op_code codigo, t_buffer *buffer, int socket);
-t_paquete* recibir_paquete(op_code codigo, t_buffer *buffer, int socket);
+t_paquete* recibir_paquete(int socket);
+char *deserializar_nombre_io(t_paquete *paquete);
 
 #endif

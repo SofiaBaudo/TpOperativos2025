@@ -145,7 +145,7 @@ t_buffer *crear_buffer_io_nombre(char *nombre){
 
 	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, nombre, sizeof(int));
+	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
 	
 	buffer_aux -> stream = buffer_aux-> stream;
 	return buffer_aux;
@@ -176,7 +176,7 @@ void crear_paquete(op_code codigo, t_buffer *buffer, int socket){
 	free(paquete);
 }
 
-t_paquete* recibir_paquete(op_code codigo, t_buffer *buffer, int socket){
+t_paquete* recibir_paquete(int socket){
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->buffer = malloc(sizeof(t_buffer));
 
@@ -188,4 +188,17 @@ t_paquete* recibir_paquete(op_code codigo, t_buffer *buffer, int socket){
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	recv(socket, paquete->buffer->stream, paquete->buffer->size, 0);
 	return paquete;
+}
+
+char *deserializar_nombre_io(t_paquete *paquete){
+	   		void *stream = paquete->buffer->stream;
+            int longitud;
+            memcpy(&longitud,stream,sizeof(int));
+            stream+=sizeof(int);
+            char *nombre = malloc(longitud+1);
+            memcpy(nombre,stream,longitud);
+			free(paquete->buffer->stream);
+            free(paquete->buffer);
+            free(paquete);
+			return nombre;
 }
