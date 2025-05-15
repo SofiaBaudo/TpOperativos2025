@@ -13,7 +13,7 @@ void esperar_peticion(){
         enviar_op_code(fd_kernel,RAFAGA_ACEPTADA); //falta implementar que no se este ejecutando ninguna rafaga
         tiempo_de_suspension = recibir_entero(fd_kernel);
         if(tiempo_de_suspension>0){
-        ejecutarPeticion(tiempo_de_suspension) ;
+        ejecutarPeticion(tiempo_de_suspension);
         tiempo_de_suspension  = 0;
         }
        }

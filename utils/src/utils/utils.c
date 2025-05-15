@@ -167,7 +167,7 @@ void crear_paquete(op_code codigo, t_buffer *buffer, int socket){
 	paquete->buffer->offset += sizeof(int);
 	memcpy((char *)a_enviar + paquete->buffer->offset, paquete->buffer->stream, paquete->buffer->size);
 	//enviamos con send()
-	send(socket, (char *)a_enviar, buffer-> size + sizeof(op_code) + sizeof(int),0);
+	send(socket,(char*)a_enviar, buffer-> size + sizeof(op_code) + sizeof(int),0);
 	
 	//liberamos la memoria
 	free(a_enviar);
