@@ -55,6 +55,50 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
    return NULL;
 }
 
+void atender_kernel_interrupt(){
+   int servidor_kernel_interrupt = iniciar_servidor(PUERTO_ESCUCHA_INTERRUPT,kernel_logger,"El kernel se conecto y esta esperando al interrupt");
+   if (servidor_kernel_interrupt == -1) {
+       log_error(kernel_logger, "Error al iniciar el servidor de kernel");
+       exit(EXIT_FAILURE);
+   }
+   log_debug(kernel_logger, "Servidor de kernel para interrupt iniciado en el puerto %s", PUERTO_ESCUCHA_INTERRUPT);// Log de inicio del servidor
+   while (1) { // sigue ciclando mientras no se desconecte el cliente
+       // Aca esperan al cliente (CPU)
+       int cliente_interrupt = esperar_cliente(servidor_kernel_interrupt,kernel_logger,"CPU_INTERRUPT");
+       if (cliente_interrupt == -1) {
+               log_error(kernel_logger, "Error al aceptar un cliente");
+               continue;
+           }
+       int *puntero_al_interrupt = malloc(sizeof(*puntero_al_interrupt));
+       memcpy(puntero_al_interrupt, &cliente_interrupt, sizeof(int));
+       //*puntero_al_dispatch = cliente_dispatch;
+       pthread_t hilo_kernel_interrupt;
+       pthread_create(&hilo_kernel_interrupt,NULL,manejar_kernel_interrupt,(void*)puntero_al_interrupt); //Creamos el hilo
+       pthread_detach(hilo_kernel_interrupt);//El hilo se desacopla del hilo principal.
+   }
+}
+
+void* manejar_kernel_interrupt(void *socket_interrupt){
+   int interrupt = *((int *)socket_interrupt); // Desreferencio el puntero para obtener el socket del cliente
+   free(socket_interrupt);
+   op_code interrupt_id = recibir_op_code(interrupt); // !!!!!!!!!!DESPUES VER DE UNIFICAR LA FUNCION Q HIZO JERE EN EL UTILS DE RECIBIR CON UN CODE_OP PERO QUE SEA OP_CODE!!!!!!!!!!!!!!!!
+   log_info(kernel_logger,"el interrupt es %d" ,interrupt);
+   switch (interrupt_id)
+   {
+       case HANDSHAKE_CPU_INTERRUPT:
+           //LOG_INFO : ES EL LOG OBLIGATORIO
+           log_info(kernel_logger, "## CPU-INTERRUPT Conectado - FD del socket: %d", interrupt);
+           enviar_op_code(interrupt, HANDSHAKE_ACCEPTED);    
+    
+           //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
+           break;        
+           default:
+           log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", interrupt); //AVISA Q FUCNIONA MAL
+           break;
+   }
+   return NULL;
+}
+
 void atender_kernel_io(){
   
    int servidor_kernel = iniciar_servidor(PUERTO_ESCUCHA_IO,kernel_logger,"El kernel se conecto y esta esperando al IO");
