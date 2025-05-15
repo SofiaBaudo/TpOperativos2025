@@ -35,7 +35,7 @@ typedef enum op_code
 	//enums para kernel
 	EJECUTAR_RAFAGA_IO,
 	RAFAGA_ACEPTADA,
-
+	IO_NOMBRE,
 	//enums para conexion kernel_memoria
 	FINALIZAR_PROCESO,
 	FINALIZACION_CONFIRMADA,
@@ -63,6 +63,7 @@ typedef enum op_code
 typedef struct
 {
 	int size;
+	int offset;
 	void* stream;
 } t_buffer;
 
@@ -72,16 +73,6 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
-typedef struct {
-    int size; // Tamaño del payload
-    int offset; // Desplazamiento dentro del payload
-    void* stream; // Payload
-} t_buffer_proceso;
-
-typedef struct {
-    op_code codigo_operacion;
-    t_buffer_proceso* buffer;
-} t_paquete_proceso;
 
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);
@@ -99,5 +90,10 @@ void enviar_op_code(int socket_cliente, op_code codigo_operacion);
 op_code recibir_op_code (int socket);
 
 void enviar_mensaje(int socket, char* mensaje);
+
+t_buffer *crear_buffer();
+t_buffer *crear_buffer_io_nombre(char *nombre);
+void crear_paquete(op_code codigo, t_buffer *buffer, int socket);
+t_paquete* recibir_paquete(op_code codigo, t_buffer *buffer, int socket);
 
 #endif

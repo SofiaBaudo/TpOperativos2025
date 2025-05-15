@@ -1,5 +1,7 @@
 #include <utils/utils.h>
 
+
+
 // FUNCIONES PARA LOS CONFIGS
 t_config *crear_config(char* direccion){
     t_config *nuevo_config = config_create(direccion); // se pasa la ruta del archivo .config
@@ -69,7 +71,7 @@ int iniciar_servidor(char *puerto, t_log *un_log, char *mensaje)
 	getaddrinfo(NULL, puerto, &hints, &servinfo);
 
 	// Creamos el socket de escucha del servidor
- socket_servidor = socket (servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+ 	socket_servidor = socket (servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
 	// Asociamos el socket a un puerto
 		bind(socket_servidor,servinfo->ai_addr,servinfo->ai_addrlen);
 	// Escuchamos las conexiones entrantes
@@ -80,6 +82,7 @@ int iniciar_servidor(char *puerto, t_log *un_log, char *mensaje)
 
 	return socket_servidor;
 }
+
 int esperar_cliente(int socket_servidor, t_log *un_log, char *mensaje)
 {
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
@@ -128,3 +131,61 @@ void enviar_mensaje(int socket_cliente, char* mensaje) {
     send(socket_cliente, mensaje, longitud, 0); 
 }
 
+t_buffer *crear_buffer(){
+	t_buffer *buffer_aux = malloc (sizeof(t_buffer));
+	return buffer_aux;
+}
+
+t_buffer *crear_buffer_io_nombre(char *nombre){
+	t_buffer *buffer_aux = crear_buffer();
+	int longitud = strlen(nombre);
+	buffer_aux->size = sizeof(int) + longitud;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, nombre, sizeof(int));
+	
+	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+}
+
+void crear_paquete(op_code codigo, t_buffer *buffer, int socket){
+	
+	//llenamos el paquete con el buffer
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->codigo_operacion = codigo; // Podemos usar una constante por operación
+	paquete->buffer = buffer; // Nuestro buffer de antes.
+	//armamos el stream a enviar
+	void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code)+sizeof(int)); // el tamanio que hay que reservar segun el buffer + el tamanio del op_code + el tamanio del buffer
+	paquete->buffer->offset = 0;
+	
+	memcpy((char *)a_enviar + paquete->buffer->offset, &(paquete->codigo_operacion), sizeof(op_code));
+	paquete->buffer->offset += sizeof(op_code);
+	memcpy((char *)a_enviar + paquete->buffer->offset, &(paquete->buffer->size), sizeof(int)); // el tamanio del buffer
+	paquete->buffer->offset += sizeof(int);
+	memcpy((char *)a_enviar + paquete->buffer->offset, paquete->buffer->stream, paquete->buffer->size);
+	//enviamos con send()
+	send(socket, (char *)a_enviar, buffer-> size + sizeof(op_code) + sizeof(int),0);
+	
+	//liberamos la memoria
+	free(a_enviar);
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+}
+
+t_paquete* recibir_paquete(op_code codigo, t_buffer *buffer, int socket){
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->buffer = malloc(sizeof(t_buffer));
+
+	// Primero recibimos el codigo de operacion
+	recv(socket, &paquete->codigo_operacion, sizeof(paquete->codigo_operacion), 0);
+
+	// Después ya podemos recibir el buffer. Primero su tamaño seguido del contenido
+	recv(socket, &(paquete->buffer->size), sizeof(int), 0);
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	recv(socket, paquete->buffer->stream, paquete->buffer->size, 0);
+	return paquete;
+}
