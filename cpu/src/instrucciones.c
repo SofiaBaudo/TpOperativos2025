@@ -30,8 +30,9 @@ void* ejecutar_instrucciones(void* arg){
 
 void obtenerDelKernelPcPid(int pid, int pc){
     //Serializar
-    recv(fd_conexion_kernel_dispatch, &pid, sizeof(pid),0);
-    recv(fd_conexion_kernel_dispatch, &pc, sizeof(pc),0);
+    t_paquete *paquete = recibir_paquete(fd_conexion_kernel_dispatch);
+     pid = deserializar_pid(paquete); 
+     pc = deserializar_pc(paquete);
     if(pc < 0){
     log_error(logger, "El program Counter no puede ser negativo");
     }

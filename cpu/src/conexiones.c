@@ -71,9 +71,6 @@ void inicializar(int id){
     }
     log_info(logger, "Iniciando CPU %d", id);
     iniciar_conexion_kernel_dispatch(id, logger);
-    t_paquete *paquete = recibir_paquete(fd_conexion_kernel_dispatch);
-  int pc = deserializar_pc(paquete);
-    log_info(logger,"EL pc recibido es: %i",pc);
     log_destroy(logger);
 }
 

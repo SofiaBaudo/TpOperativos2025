@@ -45,9 +45,6 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            list_add(cpus_conectadas,id);
            log_debug(kernel_debug_log,"Se agrego a la lista la cpu con id: %i ", *id); //%i espera un entero
            //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
-            t_buffer *buffer_aux = crear_buffer_cpu(1,3);
-            crear_paquete(ENVIO_PID_Y_PC,buffer_aux,dispatch);
-            log_debug(kernel_debug_log,"Paquete enviado");
            break;
            //case HANDSHAKE_CPU_INTERRUPT:
           
