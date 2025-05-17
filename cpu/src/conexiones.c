@@ -25,7 +25,7 @@ void* iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
 void* iniciar_conexion_kernel_interrupt(void *arg){
     int identificador_cpu = *(int *)arg;
     fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_INTERRUPT);
-    enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU);                    //avisa que es CPU.
+    enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU_INTERRUPT);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_interrupt);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
         log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");

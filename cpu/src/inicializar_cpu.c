@@ -8,12 +8,13 @@
 void* inicializar_CPU(int id){
     inicializar_logs();
     inicializar_configs();
-    pthread_t hilosCPU[2]; // interrupt, para instrucciones
+    //pthread_t hilosCPU[2]; // interrupt, para instrucciones
     int *valor_id = malloc(sizeof(int));
     *valor_id = id;
-    pthread_create(&hilosCPU[0],NULL, iniciar_conexion_kernel_interrupt, valor_id); //interrupt
-    pthread_create(&hilosCPU[1],NULL, ejecutar_instrucciones, NULL);
-    inicializar(id);
+    iniciar_conexion_kernel_interrupt(valor_id);
+    //pthread_create(&hilosCPU[0],NULL, iniciar_conexion_kernel_interrupt, valor_id); //interrupt
+    //pthread_create(&hilosCPU[1],NULL, ejecutar_instrucciones, NULL);
+    //inicializar(id);
     return NULL;
 }
 
