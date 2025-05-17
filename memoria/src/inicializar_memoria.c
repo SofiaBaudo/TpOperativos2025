@@ -1,10 +1,14 @@
+//Incluir las librerias
+
 #include "inicializar_memoria.h"
+
+//Declaracion los Logs Globales
 
 t_memoria_config memoria_config;
 
 t_log* logger_memoria;
 
-void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header.)
+void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header)
     t_config* config = config_create("memoria.config");
     if (config == NULL) {
         printf("Error al leer el archivo de configuración\n");

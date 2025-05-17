@@ -29,3 +29,25 @@ struct{
     int cant_lecturas_memoria;
     int cant_escrituras_memoria;
 }listado_metricas;
+
+//LO SACAMOS DE INICIALIZAR_MEMORIA.C
+
+typedef struct t_memoria_config{ //le pongo el t adelante para saber y diferenciar que es un type (struct)
+    int PUERTO_ESCUCHA;
+    int TAM_MEMORIA;
+    int TAM_PAGINA;
+    int ENTRADAS_POR_TABLA;
+    int CANTIDAD_NIVELES;
+    int RETARDO_MEMORIA;
+    char* PATH_SWAPFILE;
+    int RETARDO_SWAP;
+    char* DUMP_PATH;
+} t_memoria_config;
+
+//struct compartido con CPU: PONER MISMOS PARAMETROS
+
+typedef struct {
+    op_code codigo;
+    char** parametros;
+    int cantidad_parametros;
+}t_instruccion;

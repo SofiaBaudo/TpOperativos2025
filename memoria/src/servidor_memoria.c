@@ -1,5 +1,9 @@
+//Incluir las librerias
+
 #include "servidor_memoria.h"
 #include "instrucciones.h"
+
+//Incluir las Variables Globales
 
 int tamanio_disponible_en_memoria = 30;
 
