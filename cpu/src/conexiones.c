@@ -17,11 +17,13 @@ void* iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
         exit(EXIT_FAILURE);
     }
     close(fd_conexion_kernel_dispatch);
+    return NULL;
 }
 
 //Iniciar conexion Kernel
 
-void iniciar_conexion_kernel_interrupt(int identificador_cpu){
+void* iniciar_conexion_kernel_interrupt(void *arg){
+    int identificador_cpu = *(int *)arg;
     fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_INTERRUPT);
     enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_interrupt);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
@@ -33,6 +35,7 @@ void iniciar_conexion_kernel_interrupt(int identificador_cpu){
         log_error(cpu_logger, "Error en la conexion con el kernel dispatch");
         exit(EXIT_FAILURE);
     }
+    return NULL;
 }
 
 //Iniciar conexion Memoria

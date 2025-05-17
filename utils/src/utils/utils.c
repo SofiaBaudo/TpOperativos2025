@@ -1,7 +1,5 @@
 #include <utils/utils.h>
 
-
-
 // FUNCIONES PARA LOS CONFIGS
 t_config *crear_config(char* direccion){
     t_config *nuevo_config = config_create(direccion); // se pasa la ruta del archivo .config
@@ -136,6 +134,75 @@ t_buffer *crear_buffer(){
 	return buffer_aux;
 }
 
+t_buffer * crear_buffer_cpu(int pc, int pid){ //esto se lo manda kernel a cpu
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 2*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pc, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+}
+
+t_buffer * devolver_pid_a_kernel(int pid){
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+}
+
+t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria){
+	t_buffer *buffer_aux = crear_buffer();
+	int longitud = strlen(ruta_del_archivo);
+	buffer_aux->size = sizeof(int) + longitud;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &tamanio_en_memoria, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+
+	buffer_aux -> stream = buffer_aux-> stream;
+
+	return buffer_aux;
+}
+t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos){
+	t_buffer *buffer_aux = crear_buffer();
+	int longitud = strlen(nombre);
+	buffer_aux->size = sizeof(int) + longitud;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+
+	memcpy(buffer_aux->stream + buffer_aux->offset, &milisegundos, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
+	buffer_aux->offset += sizeof(int);
+	
+
+	buffer_aux -> stream = buffer_aux-> stream;
+
+	return buffer_aux;
+}
+
+
+t_buffer *crear_buffer_vacio(){
+	t_buffer *buffer_aux = crear_buffer();
+	return buffer_aux;	
+}
+
+
 t_buffer *crear_buffer_io_nombre(char *nombre){
 	t_buffer *buffer_aux = crear_buffer();
 	int longitud = strlen(nombre);
@@ -191,14 +258,37 @@ t_paquete* recibir_paquete(int socket){
 }
 
 char *deserializar_nombre_io(t_paquete *paquete){
-	   		void *stream = paquete->buffer->stream;
-            int longitud;
-            memcpy(&longitud,stream,sizeof(int));
-            stream+=sizeof(int);
-            char *nombre = malloc(longitud+1);
-            memcpy(nombre,stream,longitud);
-			free(paquete->buffer->stream);
-            free(paquete->buffer);
-            free(paquete);
-			return nombre;
+	void *stream = paquete->buffer->stream;
+    int longitud;
+    memcpy(&longitud,stream,sizeof(int));
+        stream+=sizeof(int);
+    char *nombre = malloc(longitud+1);
+        memcpy(nombre,stream,longitud);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return nombre;
 }
+
+int deserializar_pid(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int pid;
+    memcpy(&pid,stream,sizeof(int));
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return pid;
+}
+
+int deserializar_pc(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+	stream+=sizeof(int);
+    int pc;
+    memcpy(&pc,stream,sizeof(int));
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return pc;
+}
+
+//para lo de deserializar init proc viene primero el tamanio en memoria

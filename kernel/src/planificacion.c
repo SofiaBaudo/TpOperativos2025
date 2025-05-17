@@ -100,6 +100,11 @@ printf("Se esta esperando un enter por pantalla");
 }
 
 /*
+struct pcb * finalizar proceso (proceso,estado anterior)
+cambio de estado (proceso,estado anterior, exit)
+*/
+
+/*
 Funcion: Recibir Proceso ()
     recibo informacion de CPU.
     creo proceso con informacion recibida
@@ -224,10 +229,10 @@ void planificador_corto_plazo_fifo(){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
         sem_wait(&INGRESO_DEL_PRIMERO_READY);
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
-        //lock semaforo
+        pthread_mutex_lock(&mx_usar_cola_ready);
         struct pcb *aux = agarrar_el_primer_proceso(colaEstados[READY]);
         cambiarEstado(aux,READY,EXEC);
-        //unlock
+        pthread_mutex_unlock(&mx_usar_cola_ready);
         // PROCESO DE ENVIADO DE PID Y PC A CPU
         //ESPERAR DEVOLUCION DE PID Y PC CON MOTIVO
         //VER SI HAY QUE DESALOJAR Y FORZAR DESALOJO SI ES NECESARIO

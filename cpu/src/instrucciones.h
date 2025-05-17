@@ -8,7 +8,7 @@ t_log *logger;
 
 //Inicializacion de las funciones
 
-void ejecutar_instrucciones(void);
+void* ejecutar_instrucciones(void* arg);
 char* fetch(int pc,int pid);
 t_instruccion decode(char* instruccion_recibida);
 void obtenerDelKernelPcPid(int pid, int pc);

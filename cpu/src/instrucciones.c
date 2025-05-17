@@ -5,14 +5,16 @@
 
 //Me comunico con el Kernel para obtener el PC/IP y el PID.
 
-void ejecutar_instrucciones(void){
+void* ejecutar_instrucciones(void* arg){
+    //int cpu_id = *(int *)arg;
     t_instruccion instru;
     char *instruccionEntera;
     obtenerDelKernelPcPid(pid, pc);
-    instruccionEntera = fetch(pc);
+    instruccionEntera = fetch(pc,pid);
     instru = decode(instruccionEntera);
     execute(instru);
     check_interrupt();
+    return NULL;
 }
 
 void obtenerDelKernelPcPid(int pid, int pc){
@@ -20,17 +22,17 @@ void obtenerDelKernelPcPid(int pid, int pc){
     recv(fd_conexion_kernel_dispatch, &pid, sizeof(pid),0);
     recv(fd_conexion_kernel_dispatch, &pc, sizeof(pc),0);
     if(pc < 0){
-        log_error(logger, "El program Counter no puede ser negativo");
+    log_error(logger, "El program Counter no puede ser negativo");
     }
 }
 
 //Fase fetch (Buscar proxima instruccion a realizar)(Primer Fase del Ciclo de Instruccion).
 
-char* fetch(int pc,int pid){
+char* fetch(int pid,int pc){
     //Mando confirmacion de cpu a memoria, espero la instruccion a realizar de memoria.
     //LOG OBLIGATORIO
     log_info(logger, "## PID: <PID> - FETCH - Program Counter: <%d>", pc);
-    send(fd_conexion_dispatch_memoria,&cpu,sizeof(int),0);
+    //send(fd_conexion_dispatch_memoria,&id,sizeof(int),0);
     send(fd_conexion_dispatch_memoria,&pc,sizeof(int),0);
     send(fd_conexion_dispatch_memoria,&pid,sizeof(int),0);
     //Ver con Sofi Mandar PID y CPU

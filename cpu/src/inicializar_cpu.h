@@ -1,5 +1,6 @@
 //Incluimos las librerias.
 
+#include <instrucciones.h>
 #include <variables_globales_cpu.h>
 #include <conexiones.h>
 

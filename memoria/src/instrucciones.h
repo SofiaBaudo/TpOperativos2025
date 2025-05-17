@@ -1,7 +1,6 @@
 #ifndef INSTRUCCIONES
 #define INSTRUCCIONES
 
-
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <stdio.h>
