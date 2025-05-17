@@ -2,6 +2,17 @@
 //Incluimos las librerias.
 
 #include <instrucciones.h>
+//Inicializacion de los Loggers
+
+t_log *logger;
+//Declaracion Variables Globales
+
+char* instruccion_recibida;
+char** obtenerInsPartes;
+char* parametros;
+char* nombre_instruccion;
+int pid;
+int pc;
 
 //Me comunico con el Kernel para obtener el PC/IP y el PID.
 

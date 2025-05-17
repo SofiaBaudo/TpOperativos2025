@@ -12,7 +12,7 @@ void inicializar_sincronizacion() {
     pthread_mutex_init(&mx_identificador_del_proceso, NULL);
     pthread_mutex_init(&mx_avisar_que_entro_el_primero,NULL);
     pthread_mutex_init(&mx_usar_cola_new,NULL);
-     pthread_mutex_init(&mx_usar_cola_ready,NULL);
+    pthread_mutex_init(&mx_usar_cola_ready,NULL);
     sem_init(&INGRESO_DEL_PRIMERO, 0, 1); // El segundo parámetro es 0 para semáforo binario
     sem_init(&CANTIDAD_DE_PROCESOS_EN_NEW,0,0);
     sem_init(&CANTIDAD_DE_PROCESOS_EN_READY,0,0);

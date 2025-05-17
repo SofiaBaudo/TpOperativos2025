@@ -44,6 +44,7 @@ extern char* nombre_instruccion;
 extern int pid;
 extern int pc;
 
+
 typedef struct {
     char* opcode; //codigo de instruccion
     char* param1; 

@@ -2,9 +2,7 @@
 
 #include <variables_globales_cpu.h>
 
-//Inicializacion de los Loggers
 
-t_log *logger;
 
 //Inicializacion de las funciones
 
@@ -20,11 +18,3 @@ void instruccion_goto(char *parametro);
 void mandar_syscall(t_instruccion instruccion);
 void check_interrupt(void);
 
-//Declaracion Variables Globales
-
-char* instruccion_recibida;
-char** obtenerInsPartes;
-char* parametros;
-char* nombre_instruccion;
-int pid;
-int pc;
