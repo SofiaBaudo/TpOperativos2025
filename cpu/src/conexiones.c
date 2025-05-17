@@ -16,10 +16,13 @@ void* iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
         log_error(log, "Error en la conexion con el kernel dispatch");
         exit(EXIT_FAILURE);
     }
-    close(fd_conexion_kernel_dispatch);
+   
     return NULL;
 }
 
+void cerrar_conexion(int socket){
+close(socket);
+}
 //Iniciar conexion Kernel
 
 void* iniciar_conexion_kernel_interrupt(void *arg){
@@ -68,6 +71,9 @@ void inicializar(int id){
     }
     log_info(logger, "Iniciando CPU %d", id);
     iniciar_conexion_kernel_dispatch(id, logger);
+    t_paquete *paquete = recibir_paquete(fd_conexion_kernel_dispatch);
+  int pc = deserializar_pc(paquete);
+    log_info(logger,"EL pc recibido es: %i",pc);
     log_destroy(logger);
 }
 

@@ -233,6 +233,7 @@ void planificador_corto_plazo_fifo(){
         struct pcb *aux = agarrar_el_primer_proceso(colaEstados[READY]);
         cambiarEstado(aux,READY,EXEC);
         pthread_mutex_unlock(&mx_usar_cola_ready);
+     
         // PROCESO DE ENVIADO DE PID Y PC A CPU
         //ESPERAR DEVOLUCION DE PID Y PC CON MOTIVO
         //VER SI HAY QUE DESALOJAR Y FORZAR DESALOJO SI ES NECESARIO

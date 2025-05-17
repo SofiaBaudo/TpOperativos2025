@@ -48,7 +48,7 @@ typedef enum op_code
 	//enums memoria con cpu
 	SOLCITAR_INSTRUCCION,
 	RESPUESTA_INSTRUCCION,
-
+	ENVIO_PID_Y_PC,
 	//enums instrucciones
 	/*NOOP,
 	WRITE,
