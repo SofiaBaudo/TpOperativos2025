@@ -50,14 +50,14 @@ typedef enum op_code
 	RESPUESTA_INSTRUCCION,
 	ENVIO_PID_Y_PC,
 	//enums instrucciones
-	/*NOOP,
+	NOOP,
 	WRITE,
 	READ,
 	GOTO,
 	IO,
 	INIT_PROC,
 	DUMP_MEMORY,
-	EXIT*/
+	EXIT
 }op_code;
 
 typedef struct
@@ -95,10 +95,13 @@ t_buffer *crear_buffer();
 t_buffer * crear_buffer_cpu(int pc, int pid);
 t_buffer * devolver_pid_a_kernel(int pid);
 t_buffer *crear_buffer_vacio();
+op_code obtener_codigo_de_operacion (t_paquete * paquete);
 t_buffer *crear_buffer_io_nombre(char *nombre);
 void crear_paquete(op_code codigo, t_buffer *buffer, int socket);
 t_paquete* recibir_paquete(int socket);
 char *deserializar_nombre_io(t_paquete *paquete);
 int deserializar_pid(t_paquete *paquete);
 int deserializar_pc(t_paquete *paquete);
+int deserializar_tamanio(t_paquete *paquete);
+char *deserializar_nombre_archivo(t_paquete *paquete);
 #endif

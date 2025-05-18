@@ -5,7 +5,7 @@
 
 t_list *ios_conectados = NULL; // variable global
 t_list *cpus_conectadas = NULL;
-
+int cliente_dispatch;
 void atender_kernel_dispatch(){
    int servidor_kernel = iniciar_servidor(PUERTO_ESCUCHA_DISPATCH,kernel_logger,"El kernel se conecto y esta esperando al dispatch");
    if (servidor_kernel == -1) {
@@ -13,13 +13,13 @@ void atender_kernel_dispatch(){
        exit(EXIT_FAILURE);
    }
    log_debug(kernel_logger, "Servidor de kernel para dispatch iniciado en el puerto %s", PUERTO_ESCUCHA_DISPATCH);// Log de inicio del servidor
-   while (1) { // sigue ciclando mientras no se desconecte el cliente
-       // Aca esperan al cliente (CPU)
-       int cliente_dispatch = esperar_cliente(servidor_kernel,kernel_logger,"CPU_DISPATCH");
-       if (cliente_dispatch == -1) {
-               log_error(kernel_logger, "Error al aceptar un cliente");
-               continue;
-           }
+    while (1) { // sigue ciclando mientras no se desconecte el cliente
+    // Aca esperan al cliente (CPU)
+    cliente_dispatch = esperar_cliente(servidor_kernel,kernel_logger,"CPU_DISPATCH");
+    if (cliente_dispatch == -1) {
+        log_error(kernel_logger, "Error al aceptar un cliente");
+        continue;
+    }
        int *puntero_al_dispatch = malloc(sizeof(*puntero_al_dispatch));
        memcpy(puntero_al_dispatch, &cliente_dispatch, sizeof(int));
        //*puntero_al_dispatch = cliente_dispatch;

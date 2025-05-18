@@ -8,7 +8,8 @@ int main(int argc, char* argv[]){
  //argc es la cantidad de argumentos y argv que contiene cada argumento
   
    inicializar_kernel();
-   atender_kernel_dispatch();
+   
+   //atender_kernel_dispatch();
    /*crear_proceso(5,"f1");
    crear_proceso(35,"f");
    crear_proceso(2,"f3");

@@ -270,6 +270,12 @@ char *deserializar_nombre_io(t_paquete *paquete){
 	return nombre;
 }
 
+op_code obtener_codigo_de_operacion (t_paquete * paquete){
+	op_code codigo;
+	memcpy(&codigo, &(paquete->codigo_operacion), sizeof(op_code));
+	return codigo;
+}
+
 int deserializar_pid(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int pid;
@@ -289,6 +295,29 @@ int deserializar_pc(t_paquete *paquete){
     free(paquete->buffer);
     free(paquete);
 	return pc;
+}
+
+int deserializar_tamanio(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int tamanio;
+    memcpy(&tamanio,stream,sizeof(int));
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return tamanio;
+}
+
+char *deserializar_nombre_archivo(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int longitud;
+    memcpy(&longitud,stream,sizeof(int));
+        stream+=sizeof(int);
+    char *nombre = malloc(longitud+1);
+        memcpy(nombre,stream,longitud);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return nombre;
 }
 
 //para lo de deserializar init proc viene primero el tamanio en memoria

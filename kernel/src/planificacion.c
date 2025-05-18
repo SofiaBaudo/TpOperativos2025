@@ -122,7 +122,7 @@ void *planificador_largo_plazo_fifo(){
        t_list *aux = colaEstados[NEW];
         struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
         int tamanio = proceso->tamanio;
-         pthread_mutex_unlock(&mx_usar_cola_new);
+        pthread_mutex_unlock(&mx_usar_cola_new);
         int socket = iniciar_conexion_kernel_memoria();
         bool respuesta = solicitar_permiso_a_memoria(socket,tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
         cerrar_conexion(socket);
@@ -233,10 +233,43 @@ void planificador_corto_plazo_fifo(){
         struct pcb *aux = agarrar_el_primer_proceso(colaEstados[READY]);
         cambiarEstado(aux,READY,EXEC);
         pthread_mutex_unlock(&mx_usar_cola_ready);
-     
-        // PROCESO DE ENVIADO DE PID Y PC A CPU
-        //ESPERAR DEVOLUCION DE PID Y PC CON MOTIVO
-        //VER SI HAY QUE DESALOJAR Y FORZAR DESALOJO SI ES NECESARIO
+        t_buffer *buffer = crear_buffer_cpu(aux->pc,aux->pid);
+        crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
+        t_paquete *paquete = recibir_paquete(cliente_dispatch);
+        op_code syscall = obtener_codigo_de_operacion(paquete);
+        switch(syscall){
+            case INIT_PROC:
+            char *nombre_archivo = deserializar_nombre_archivo(paquete);
+            int tamanio = deserializar_tamanio (paquete);
+            crear_proceso(tamanio,nombre_archivo);
+            break;
+            case EXIT:
+            /*
+            cambiar_estado(aux,EXEC,EXIT);
+            crear_conexion_con_memoria()
+            solicitar finalizacion de proceso
+            liberar pcb
+            intentar inicializar otro
+            */
+            //Hablar con Camila.
+            break;
+            case DUMP_MEMORY:
+            //Hablar con Cami
+            break;
+            case IO:
+            /*
+                recorrer la lista
+                preguntar por cada IO si es el nombre que buscamos
+                    CASO AFIRMATIVO
+                    - agregar a estado Bloqueado
+                    - agregar a la cola de bloqueados por esa IO.
+                    CASO NEGATIVO
+                    -enviar a exit
+            */
+            break;
+            default:
+            break;
+        }
     }
 
 
