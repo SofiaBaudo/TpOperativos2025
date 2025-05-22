@@ -10,12 +10,12 @@ struct pcb *pcb;
 
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
   struct pcb* pcb = malloc(sizeof(struct pcb));
-  pcb -> pid = identificador_del_proceso; //ver lo de la variable global
-  pcb -> pc = 0;
-  pcb -> tamanio = tamanio;
-  pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
+    pcb -> pid = identificador_del_proceso; //ver lo de la variable global
+    pcb -> pc = 0;
+    pcb -> tamanio = tamanio;
+    pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
   //pcb -> estado = NEW; // seguramente no sirva mucho
-  pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
+    pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
   pthread_mutex_lock(&mx_usar_cola_new); //CONSULTAR EN SOPORTE. 
   list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
   pthread_mutex_unlock(&mx_usar_cola_new);
@@ -23,7 +23,7 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
   pthread_mutex_lock(&mx_identificador_del_proceso);
-  identificador_del_proceso++; 
+    identificador_del_proceso++; 
   pthread_mutex_unlock(&mx_identificador_del_proceso);
   return; 
 }
@@ -104,22 +104,15 @@ struct pcb * finalizar proceso (proceso,estado anterior)
 cambio de estado (proceso,estado anterior, exit)
 */
 
-/*
-Funcion: Recibir Proceso ()
-    recibo informacion de CPU.
-    creo proceso con informacion recibida
-    envio proceso a planificador de largo plazo.
-*/
-
 
 void *planificador_largo_plazo_fifo(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     while(1){
-    sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
-    sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
-    pthread_mutex_lock(&mx_usar_cola_new); // es una variable global asi que la protegemos (mejor un mx)
-       t_list *aux = colaEstados[NEW];
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
+        sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
+        pthread_mutex_lock(&mx_usar_cola_new); // es una variable global asi que la protegemos (mejor un mx)
+        t_list *aux = colaEstados[NEW];
         struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
         int tamanio = proceso->tamanio;
         pthread_mutex_unlock(&mx_usar_cola_new);
@@ -227,37 +220,41 @@ void planificador_corto_plazo_fifo(){
   
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-        sem_wait(&INGRESO_DEL_PRIMERO_READY);
+        //semaforo de cpus libres
+        sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         pthread_mutex_lock(&mx_usar_cola_ready);
         struct pcb *aux = agarrar_el_primer_proceso(colaEstados[READY]);
         cambiarEstado(aux,READY,EXEC);
+        //mejor hacer un list add para cada estado con sus respectivos mutex
         pthread_mutex_unlock(&mx_usar_cola_ready);
         t_buffer *buffer = crear_buffer_cpu(aux->pc,aux->pid);
         crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
+        //funcion enviar donde le mande el socket y el id de la cpu
         t_paquete *paquete = recibir_paquete(cliente_dispatch);
         op_code syscall = obtener_codigo_de_operacion(paquete);
         switch(syscall){
             case INIT_PROC:
-            char *nombre_archivo = deserializar_nombre_archivo(paquete);
-            int tamanio = deserializar_tamanio (paquete);
-            crear_proceso(tamanio,nombre_archivo);
-            break;
+                char *nombre_archivo = deserializar_nombre_archivo(paquete);
+                int tamanio = deserializar_tamanio (paquete);
+                crear_proceso(tamanio,nombre_archivo);
+                //avisar que termine
+                break;
             case EXIT:
-            /*
-            cambiar_estado(aux,EXEC,EXIT);
-            crear_conexion_con_memoria()
-            solicitar finalizacion de proceso
-            liberar pcb
-            intentar inicializar otro
-            */
-            //Hablar con Camila.
-            break;
+                /*
+                cambiar_estado(aux,EXEC,EXIT);
+                crear_conexion_con_memoria()
+                solicitar finalizacion de proceso
+                liberar pcb
+                intentar inicializar otro
+                */
+                //Hablar con Cami.
+                break;
             case DUMP_MEMORY:
-            //Hablar con Cami
-            break;
+                //Hablar con Cami
+                break;
             case IO:
-            /*
+                /*
                 recorrer la lista
                 preguntar por cada IO si es el nombre que buscamos
                     CASO AFIRMATIVO
@@ -265,10 +262,10 @@ void planificador_corto_plazo_fifo(){
                     - agregar a la cola de bloqueados por esa IO.
                     CASO NEGATIVO
                     -enviar a exit
-            */
-            break;
+                */
+                break;
             default:
-            break;
+                break;
         }
     }
 
