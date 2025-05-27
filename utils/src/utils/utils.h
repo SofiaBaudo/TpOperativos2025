@@ -72,7 +72,19 @@ typedef struct
 	op_code codigo_operacion;
 	t_buffer* buffer;
 } t_paquete;
+struct instancia_de_cpu{
+    int* id_cpu;
+    bool puede_usarse;
+    struct pcb *proceso_ejecutando;
+    t_list *procesos_esperando;
+};
 
+struct instancia_de_io{
+    char* nombre;
+    bool puede_usarse;
+    struct pcb *proceso_ejecutando;
+    t_list *procesos_esperando;
+};
 
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);

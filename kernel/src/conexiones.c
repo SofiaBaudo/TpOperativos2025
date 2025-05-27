@@ -41,9 +41,12 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            enviar_op_code(dispatch, HANDSHAKE_ACCEPTED);
            int *id = malloc(sizeof(int));
            recv(dispatch,id,sizeof(int),0);
-           log_debug(kernel_debug_log,"Se conecto la cpu con id %i",*id);
-           list_add(cpus_conectadas,id);
-           log_debug(kernel_debug_log,"Se agrego a la lista la cpu con id: %i ", *id); //%i espera un entero
+           struct instancia_de_cpu *aux= malloc(sizeof(struct instancia_de_cpu));
+           aux->id_cpu = id;
+           aux->puede_usarse = true;
+           log_debug(kernel_debug_log,"Se conecto la cpu con id %i",*aux->id_cpu);
+           list_add(cpus_conectadas,aux);
+           log_debug(kernel_debug_log,"Se agrego a la lista la cpu con id: %i ", *(aux->id_cpu)); //%i espera un entero
            //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
            break;
            //case HANDSHAKE_CPU_INTERRUPT:
@@ -101,25 +104,25 @@ void* manejar_kernel_interrupt(void *socket_interrupt){
 
 void atender_kernel_io(){
   
-   int servidor_kernel = iniciar_servidor(PUERTO_ESCUCHA_IO,kernel_logger,"El kernel se conecto y esta esperando al IO");
-   if (servidor_kernel == -1) {
-       log_error(kernel_logger, "Error al iniciar el servidor de kernel");
-       exit(EXIT_FAILURE);
-   }
-   log_debug(kernel_logger, "Servidor de kernel para dispatch iniciado en el puerto %s", PUERTO_ESCUCHA_IO);// Log de inicio del servidor
-   while (1) { // sigue ciclando mientras no se desconecte el cliente
-    cliente_io = esperar_cliente(servidor_kernel,kernel_logger,"IO"); //este es el socket que hay que utilizar para comunicarse
-   if (cliente_io == -1) {
+    int servidor_kernel = iniciar_servidor(PUERTO_ESCUCHA_IO,kernel_logger,"El kernel se conecto y esta esperando al IO");
+    if (servidor_kernel == -1) {
+        log_error(kernel_logger, "Error al iniciar el servidor de kernel");
+        exit(EXIT_FAILURE);
+    }
+    log_debug(kernel_logger, "Servidor de kernel para dispatch iniciado en el puerto %s", PUERTO_ESCUCHA_IO);// Log de inicio del servidor
+    while (1) { // sigue ciclando mientras no se desconecte el cliente
+        cliente_io = esperar_cliente(servidor_kernel,kernel_logger,"IO"); //este es el socket que hay que utilizar para comunicarse
+        if (cliente_io == -1) {
            log_error(kernel_logger, "Error al aceptar un cliente");
            continue;
-       }
+        }
       
-   int *puntero_al_io= malloc(sizeof(*puntero_al_io));
-   //*puntero_al_io = cliente_io;
-   memcpy(puntero_al_io, &cliente_io, sizeof(int));
-   pthread_t hilo_kernel_io;
-   pthread_create(&hilo_kernel_io,NULL,manejar_kernel_io,(void*)puntero_al_io); //Creamos el hilo
-   pthread_detach(hilo_kernel_io);//El hilo se desacopla del hilo principal.
+        int *puntero_al_io= malloc(sizeof(*puntero_al_io));
+        //*puntero_al_io = cliente_io;
+        memcpy(puntero_al_io, &cliente_io, sizeof(int));
+        pthread_t hilo_kernel_io;
+        pthread_create(&hilo_kernel_io,NULL,manejar_kernel_io,(void*)puntero_al_io); //Creamos el hilo
+        pthread_detach(hilo_kernel_io);//El hilo se desacopla del hilo principal.
       
    }
    }
@@ -134,20 +137,22 @@ void* manejar_kernel_io(void *socket_io){
    {       
        case HANDSHAKE_IO:
            //LOG_INFO : ES EL LOG OBLIGATORIO
-
             log_info(kernel_logger, "## IO Conectado - FD del socket: %d", io);
-            printf("\n");
-            enviar_op_code(io, HANDSHAKE_ACCEPTED);  
+                printf("\n");
+            enviar_op_code(io, HANDSHAKE_ACCEPTED); 
+            struct instancia_de_io *aux = malloc(sizeof(struct instancia_de_io)); 
             t_paquete *paquete = recibir_paquete(io);
             char *nombre = deserializar_nombre_io(paquete);
+                aux->nombre = nombre;
+                aux->puede_usarse = true;
             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
-            log_info(kernel_logger,"se conecto el io con nombre; %s",nombre); // %s espera un puntero a char
-            list_add(ios_conectados,nombre);
-            log_debug(kernel_debug_log,"Se agrego el io %s a la lista",nombre);
-            break;
-            default:
-           log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL
-           break;
+            log_info(kernel_logger,"se conecto el io con nombre; %s",aux->nombre); // %s espera un puntero a char
+            list_add(ios_conectados,aux);
+            log_debug(kernel_debug_log,"Se agrego el io %s a la lista",aux->nombre);
+        break;
+        default:
+            log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL
+        break;
    }
    return NULL;
 }

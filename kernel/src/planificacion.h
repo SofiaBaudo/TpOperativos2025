@@ -1,4 +1,4 @@
-#include <k_vglobales.h>
+
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <conexiones.h>
@@ -26,7 +26,6 @@ struct rafaga{
   struct nodo_rafaga *sgte = NULL;
 };*/
 
-
 struct pcb{
   int pid;
   int pc;
@@ -38,7 +37,11 @@ struct pcb{
 };
 
 
+
 void crear_proceso(int tamanio, char *ruta_archivo);
+int obtener_tamanio_del_primer_proceso_de_new();
+bool consultar_si_puede_entrar(int tamanio);
+void pasar_primero_de_estado(Estado inicial,Estado final);
 int buscar_en_lista(t_list *lista,int pid);
 void esperar_enter_por_pantalla();
 void *planificador_largo_plazo_fifo();
@@ -48,7 +51,8 @@ bool menor_por_tamanio(void* a, void* b);
 void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparador)(void *, void *));
 void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 //struct pcb *seleccionar_proceso_segun_tamanio_mas_chico_en_memoria();
-
+void poner_a_ejecutar(struct pcb* aux);
+void gestionar_syscalls();
 // podria armar algo parecido que devuelva la rafaga
 
 

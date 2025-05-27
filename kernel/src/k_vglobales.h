@@ -51,9 +51,31 @@ extern t_list *cpus_conectadas;
 
 extern pthread_mutex_t mx_identificador_del_proceso;
 extern pthread_mutex_t mx_avisar_que_entro_el_primero;
-extern pthread_mutex_t mx_usar_cola_new;
-extern pthread_mutex_t mx_usar_cola_ready;
+extern pthread_mutex_t mx_usar_cola_estado[7];
 extern sem_t INGRESO_DEL_PRIMERO;
 extern sem_t CANTIDAD_DE_PROCESOS_EN_NEW;
 extern sem_t CANTIDAD_DE_PROCESOS_EN_READY;
 extern sem_t INGRESO_DEL_PRIMERO_READY;
+
+//enums
+
+/*typedef enum{
+  NEW, //0
+  READY,//1
+  BLOCKED,//2
+  EXEC,//3
+  EXIT_ESTADO,//4
+  READY_SUSPEND,//5
+  BLOCKED_SUSPEND//6
+} Estado;
+
+struct pcb{
+  int pid;
+  int pc;
+  //despues terminar lo de las metricas de estado y la otra metrica
+  //Estado estado;
+  t_list *lista_de_rafagas;
+  int tamanio;
+  char *ruta_del_archivo_de_pseudocodigo; // a chequear
+};*/
+
