@@ -55,6 +55,7 @@ extern pthread_mutex_t mx_usar_cola_estado[7];
 extern sem_t INGRESO_DEL_PRIMERO;
 extern sem_t CANTIDAD_DE_PROCESOS_EN_NEW;
 extern sem_t CANTIDAD_DE_PROCESOS_EN_READY;
+extern sem_t INTENTAR_INICIAR;
 extern sem_t INGRESO_DEL_PRIMERO_READY;
 
 //enums

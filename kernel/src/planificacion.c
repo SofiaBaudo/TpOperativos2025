@@ -17,7 +17,11 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   //pcb -> estado = NEW; // seguramente no sirva mucho
     pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
   pthread_mutex_lock(&mx_usar_cola_estado[NEW]); //CONSULTAR EN SOPORTE. 
-  list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+  //if(ALGORITMO_INGRESO_A_READY == FIFO){
+    //list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+  //}else{
+    list_add_in_index (colaEstados[NEW],0,pcb); // lo inserto al principio de la lista para que apenas llegue se consulte si puede entrar
+  //}
   pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
   sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
   //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
@@ -46,10 +50,26 @@ funcion planificador de largo plazo ()
         }
     }
 
-
+*/
 void planificador_proceso_mas_chico_primero(){
-    otro readline aca
-    el proceso ingresa
+    esperar_enter_por_pantalla();
+     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
+     while(1){
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
+        sem_wait(&INTENTAR_INICIAR);
+        int tamanio = obtener_tamanio_del_primer_proceso_de_new();
+        bool respuesta = consultar_si_puede_entrar(tamanio);
+        log_debug(kernel_debug_log,"Conexion con memoria cerrada");
+        if(respuesta == true){
+            pasar_primero_de_estado(NEW,READY);
+            sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
+        }
+        pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
+        list_sort(colaEstados[NEW],menor_por_tamanio); // si no pudo entrar lo dejo encolado pero ordenado
+        pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
+        sem_post(&INTENTAR_INICIAR);
+     }
+   /* el proceso ingresa
     semaforo que espera a que se cree un proceso nuevo
     se consulta a la memoria si puede inicializarse o no (es agarrar la respuesta y despues un if)
     caso positivo
@@ -57,7 +77,8 @@ void planificador_proceso_mas_chico_primero(){
     caso negativo
         se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
         este ordenando por tamanio (utilizar list_add_sorted)
-    }*/
+        */
+    }
        
 
 
@@ -118,7 +139,7 @@ void planificador_corto_plazo_fifo(){
 //FUNCIONES AUXILIARES
 
 int obtener_tamanio_del_primer_proceso_de_new(){
-     pthread_mutex_lock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
+    pthread_mutex_lock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
     t_list *aux = colaEstados[NEW];
     struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
     int tamanio = proceso->tamanio;
@@ -215,22 +236,19 @@ void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
     list_add(colaEstados[estadoNuevo],pcb); //preguntar si hay que usar mutex
 }
 
-void mandar_paquete_a_cpu(struct pcb *prcoeso){
+void mandar_paquete_a_cpu(struct pcb *proceso){
 t_buffer *buffer = crear_buffer_cpu(proceso->pc,proceso->pid);
         crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
 }
 
-op_code esperar_syscall(){
-    t_paquete *paquete = recibir_paquete(cliente_dispatch);
-    op_code syscall = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
-    return syscall;
-}
+
 
 void poner_a_ejecutar(struct pcb* aux){
     bool bloqueante = false;
     while(!bloqueante){
         mandar_paquete_a_cpu(aux);
-        op_code syscall = esperar_syscall();
+       t_paquete *paquete = recibir_paquete(cliente_dispatch);
+        op_code syscall = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         switch(syscall){
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo(paquete);

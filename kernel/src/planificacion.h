@@ -52,7 +52,7 @@ void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparad
 void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 //struct pcb *seleccionar_proceso_segun_tamanio_mas_chico_en_memoria();
 void mandar_paquete_a_cpu(struct pcb *prcoeso);
-op_code esperar_syscall();
+
 void poner_a_ejecutar(struct pcb* aux);
 
 // podria armar algo parecido que devuelva la rafaga
