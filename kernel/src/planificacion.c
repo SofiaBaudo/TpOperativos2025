@@ -104,7 +104,6 @@ void planificador_corto_plazo_fifo(){
         struct pcb* proceso = list_get(colaEstados[READY],0); // a chequear, capaz un mutex ahi tambien
         pasar_primero_de_estado(READY,EXEC); // preguntar si hay que cambiarla para pasarle el proceso por parametro
         poner_a_ejecutar(proceso);
-        gestionar_syscalls();
         sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
 
@@ -216,18 +215,22 @@ void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
     list_add(colaEstados[estadoNuevo],pcb); //preguntar si hay que usar mutex
 }
 
-
-void poner_a_ejecutar(struct pcb* aux){
-        t_buffer *buffer = crear_buffer_cpu(aux->pc,aux->pid);
+void mandar_paquete_a_cpu(struct pcb *prcoeso){
+t_buffer *buffer = crear_buffer_cpu(proceso->pc,proceso->pid);
         crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
-        //funcion enviar donde le mande el socket y el id de la cpu    
 }
 
-void gestionar_syscalls(){
+op_code esperar_syscall(){
+    t_paquete *paquete = recibir_paquete(cliente_dispatch);
+    op_code syscall = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
+    return syscall;
+}
+
+void poner_a_ejecutar(struct pcb* aux){
     bool bloqueante = false;
     while(!bloqueante){
-    t_paquete *paquete = recibir_paquete(cliente_dispatch);
-    op_code syscall = obtener_codigo_de_operacion(paquete);
+        mandar_paquete_a_cpu(aux);
+        op_code syscall = esperar_syscall();
         switch(syscall){
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo(paquete);
