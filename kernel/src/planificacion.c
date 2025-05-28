@@ -18,9 +18,9 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
     pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
   pthread_mutex_lock(&mx_usar_cola_estado[NEW]); //CONSULTAR EN SOPORTE. 
   //if(ALGORITMO_INGRESO_A_READY == FIFO){
-    //list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+    list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
   //}else{
-    list_add_in_index (colaEstados[NEW],0,pcb); // lo inserto al principio de la lista para que apenas llegue se consulte si puede entrar
+    //list_add_in_index (colaEstados[NEW],0,pcb); // lo inserto al principio de la lista para que apenas llegue se consulte si puede entrar
   //}
   pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
   sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
@@ -64,9 +64,12 @@ void planificador_proceso_mas_chico_primero(){
             pasar_primero_de_estado(NEW,READY);
             sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
         }
+        else{
         pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
-        list_sort(colaEstados[NEW],menor_por_tamanio); // si no pudo entrar lo dejo encolado pero ordenado
+        ordenar_lista_segun(colaEstados[NEW],menor_por_tamanio); // si no pudo entrar dejo la lista ordenada
         pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
+        }
+      
         sem_post(&INTENTAR_INICIAR);
      }
    /* el proceso ingresa
@@ -138,6 +141,10 @@ void planificador_corto_plazo_fifo(){
 
 //FUNCIONES AUXILIARES
 
+
+void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *)){
+ list_sort(lista,comparador); 
+}
 int obtener_tamanio_del_primer_proceso_de_new(){
     pthread_mutex_lock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
     t_list *aux = colaEstados[NEW];
