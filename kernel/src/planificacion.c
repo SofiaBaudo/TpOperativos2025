@@ -27,7 +27,7 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
   log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
   pthread_mutex_lock(&mx_identificador_del_proceso);
-    identificador_del_proceso++; 
+  identificador_del_proceso++; 
   pthread_mutex_unlock(&mx_identificador_del_proceso);
   return; 
 }
@@ -57,8 +57,8 @@ void planificador_proceso_mas_chico_primero(){
      while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR);
-        int tamanio = obtener_tamanio_del_primer_proceso_de_new();
-        bool respuesta = consultar_si_puede_entrar(tamanio);
+        struct pcb* primer_proceso = obtener_primer_proceso_de_new();
+        bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if(respuesta == true){
             pasar_primero_de_estado(NEW,READY);
@@ -97,8 +97,8 @@ void *planificador_largo_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
         sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
-        int tamanio = obtener_tamanio_del_primer_proceso_de_new();
-        bool respuesta = consultar_si_puede_entrar(tamanio);
+        struct pcb* primer_proceso = obtener_primer_proceso_de_new();
+        bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
             pasar_primero_de_estado(NEW,READY);
@@ -145,18 +145,17 @@ void planificador_corto_plazo_fifo(){
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *)){
  list_sort(lista,comparador); 
 }
-int obtener_tamanio_del_primer_proceso_de_new(){
+
+struct pcb *obtener_primer_proceso_de_new(){
     pthread_mutex_lock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
     t_list *aux = colaEstados[NEW];
     struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
-    int tamanio = proceso->tamanio;
-    pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
-    return tamanio;
+    return proceso;
     }
 
-bool consultar_si_puede_entrar(int tamanio){
+bool consultar_si_puede_entrar(struct pcb *proceso){
     int socket = iniciar_conexion_kernel_memoria();
-    bool respuesta = solicitar_permiso_a_memoria(socket,tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
+    bool respuesta = solicitar_permiso_a_memoria(socket,proceso->tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
     cerrar_conexion(socket);
     return respuesta;
 }
@@ -247,8 +246,6 @@ void mandar_paquete_a_cpu(struct pcb *proceso){
 t_buffer *buffer = crear_buffer_cpu(proceso->pc,proceso->pid);
         crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
 }
-
-
 
 void poner_a_ejecutar(struct pcb* aux){
     bool bloqueante = false;
