@@ -243,7 +243,7 @@ void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
 }
 
 void mandar_paquete_a_cpu(struct pcb *proceso){
-t_buffer *buffer = crear_buffer_cpu(proceso->pc,proceso->pid);
+        t_buffer *buffer = crear_buffer_cpu(proceso->pc,proceso->pid);
         crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
 }
 
@@ -251,7 +251,7 @@ void poner_a_ejecutar(struct pcb* aux){
     bool bloqueante = false;
     while(!bloqueante){
         mandar_paquete_a_cpu(aux);
-       t_paquete *paquete = recibir_paquete(cliente_dispatch);
+       t_paquete *paquete = recibir_paquete(cliente_dispatch); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         op_code syscall = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         switch(syscall){
             case INIT_PROC:
