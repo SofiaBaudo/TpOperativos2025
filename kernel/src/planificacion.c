@@ -32,8 +32,6 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   return; 
 }
 
-
-
 /*
 funcion planificador de largo plazo ()
 
@@ -52,7 +50,7 @@ funcion planificador de largo plazo ()
 
 */
 void planificador_proceso_mas_chico_primero(){
-    esperar_enter_por_pantalla();
+     esperar_enter_por_pantalla();
      log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
      while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
@@ -61,26 +59,17 @@ void planificador_proceso_mas_chico_primero(){
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if(respuesta == true){
+            sacar_primero_de_la_lista(NEW);
             pasar_primero_de_estado(NEW,READY);
             sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
         }
         else{
-        pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
-        ordenar_lista_segun(colaEstados[NEW],menor_por_tamanio); // si no pudo entrar dejo la lista ordenada
-        pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
+            pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
+            ordenar_lista_segun(colaEstados[NEW],menor_por_tamanio); // si no pudo entrar dejo la lista ordenada
+            pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
         }
-      
         sem_post(&INTENTAR_INICIAR);
      }
-   /* el proceso ingresa
-    semaforo que espera a que se cree un proceso nuevo
-    se consulta a la memoria si puede inicializarse o no (es agarrar la respuesta y despues un if)
-    caso positivo
-        cambiar de estado
-    caso negativo
-        se ingresa el proceso a una lista de procesos esperando, que a su vez esta lista se 
-        este ordenando por tamanio (utilizar list_add_sorted)
-        */
     }
        
 
@@ -97,10 +86,11 @@ void *planificador_largo_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
         sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
-        struct pcb* primer_proceso = obtener_primer_proceso_de_new();
+        struct pcb* primer_proceso = obtener_primer_proceso_de_new(); //no lo sacamos de la lista todavia
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
+            sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
             pasar_primero_de_estado(NEW,READY);
             sem_post(&INGRESO_DEL_PRIMERO);
             sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
@@ -125,7 +115,7 @@ void planificador_corto_plazo_fifo(){
         //semaforo de cpus libres
         sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
-        struct pcb* proceso = list_get(colaEstados[READY],0); // a chequear, capaz un mutex ahi tambien
+        sacar_primero_de_la_lista(READY);
         pasar_primero_de_estado(READY,EXEC); // preguntar si hay que cambiarla para pasarle el proceso por parametro
         poner_a_ejecutar(proceso);
         sem_post(&INGRESO_DEL_PRIMERO_READY);
@@ -150,6 +140,7 @@ struct pcb *obtener_primer_proceso_de_new(){
     pthread_mutex_lock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
     t_list *aux = colaEstados[NEW];
     struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
+    pthread_mutex_unlock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
     return proceso;
     }
 
@@ -161,10 +152,8 @@ bool consultar_si_puede_entrar(struct pcb *proceso){
 }
 
 void pasar_primero_de_estado(Estado inicial,Estado final){
-    pthread_mutex_lock(&mx_usar_cola_estado[inicial]);   //productor-consumidor
-        struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[inicial]); //una vez que tenemos la confirmacion de memoria lo sacamos de la lista
-        cambiarEstado(pcb_aux,inicial,final);
-    pthread_mutex_unlock(&mx_usar_cola_estado[inicial]);
+    struct pcb *pcb_aux = agarrar_el_primer_proceso(colaEstados[inicial]); //una vez que tenemos la confirmacion de memoria lo sacamos de la lista
+    cambiarEstado(pcb_aux,inicial,final);
 }
 
 int buscar_en_lista(t_list *lista, int pid) {
@@ -188,6 +177,28 @@ int buscar_en_lista(t_list *lista, int pid) {
     printf("El proceso con PID %d no se encuentra en la lista\n", pid);
     return -1;
 }
+int buscar_IO_solicitada(t_list *lista, char* nombre_io) { //preguntar si capaz esta bueno que devuelva una instancia y si no hay que devuelva NULL
+   
+    if (!lista) {
+        printf("La lista no tiene ningan proceso\n");
+        return -1;
+    }
+    t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
+    int pos = 0;
+    while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
+        struct pcb *pcb_aux = list_iterator_next(aux);
+        if (pcb_aux->nombre == nombre_io) { // comparo al pid que estoy apuntando con el pid que busco.
+            list_iterator_destroy(aux); //delete del iterador.
+            return pos; // devuelvo la posicion en la que se encuentra porque nos va a servir para usar el list_get mas facil
+        }
+        pos++;
+    }
+
+    list_iterator_destroy(aux); // destruyo el iterador creado por mas que no haya encontrado el proceso que queriamos.
+    printf("El proceso con PID %d no se encuentra en la lista\n", pid);
+    return -1;
+}
+
 
 bool menor_por_tamanio(void* a, void* b) {
     
@@ -211,9 +222,11 @@ printf("Se esta esperando un enter por pantalla");
 }
 
 
-struct pcb *agarrar_el_primer_proceso(t_list *lista){
+struct pcb *sacar_primero_de_la_lista(Estado estado){
     struct pcb *aux;
+    pthread_mutex_lock(colaEstados[estado]);
     aux =list_remove(lista,0); //como el list add agrerga al final, sacamos del principio para no romper el comportamiento de la cola
+    pthread_mutex_unlock(colaEstados[estado]);
     return aux;
 }
 
@@ -239,7 +252,9 @@ void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
     char *string_estado_anterior = cambiar_a_string(estadoAnterior);
     log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",pcb->pid,string_estado_anterior,string_estado_nuevo);
+    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
     list_add(colaEstados[estadoNuevo],pcb); //preguntar si hay que usar mutex
+    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
 }
 
 void mandar_paquete_a_cpu(struct pcb *proceso){
@@ -276,15 +291,24 @@ void poner_a_ejecutar(struct pcb* aux){
                 bloqueante = true; // a chequear
                 break;
             case IO:
-                /*
-                recorrer la lista
-                preguntar por cada IO si es el nombre que buscamos
-                    CASO AFIRMATIVO
-                    - agregar a estado Bloqueado
-                    - agregar a la cola de bloqueados por esa IO.
-                    CASO NEGATIVO
-                    -enviar a exit
-                */
+                int milisegundos = deserializar_cant_segundos(paquete);
+                char *instancia_io_a_usar = deserializar_nombre_io(paquete);
+                int posicionIO = buscar_IO_solicitada(instancia_io_a_usar);
+                if(posicionIO == -1){
+                    cambiarEstado(aux,EXEC,EXIT_ESTADO);
+                }
+                else{
+                    struct instancia_de_io *instancia_aux = list_get(ios_conectados,pos);
+                    cambiarEstado(aux,EXEC,BLOCKED);
+                    //list_add(instancia_aux->)
+                    if(instancia_aux->puede_usarse){
+                      
+                        //enviar a esa instancia de io el PID y el TIEMPO por el cual debe bloquearse 
+                    }
+                    else{
+                        list_add(instancia_de_io->procesos_esperando,aux);
+                    }
+                }
                 bloqueante = true;
                 break;
             default:

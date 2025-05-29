@@ -158,6 +158,8 @@ t_buffer * devolver_pid_a_kernel(int pid){
 	return buffer_aux;
 }
 
+
+
 t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria){
 	t_buffer *buffer_aux = crear_buffer();
 	int longitud = strlen(ruta_del_archivo);
@@ -260,10 +262,11 @@ t_paquete* recibir_paquete(int socket){
 char *deserializar_nombre_io(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int longitud;
+	stream+=sizeof(int); //para "saltear" los milisegundos que vienen primero
     memcpy(&longitud,stream,sizeof(int));
-        stream+=sizeof(int);
+    stream+=sizeof(int);
     char *nombre = malloc(longitud+1);
-        memcpy(nombre,stream,longitud);
+    memcpy(nombre,stream,longitud);
 	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
@@ -306,7 +309,15 @@ int deserializar_tamanio(t_paquete *paquete){
     free(paquete);
 	return tamanio;
 }
-
+int deserializar_cant_segundos(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int tamanio;
+    memcpy(&tamanio,stream,sizeof(int));
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return tamanio;
+}
 char *deserializar_nombre_archivo(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int longitud;

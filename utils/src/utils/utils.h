@@ -72,6 +72,7 @@ typedef struct
 	op_code codigo_operacion;
 	t_buffer* buffer;
 } t_paquete;
+
 struct instancia_de_cpu{
     int* id_cpu;
     bool puede_usarse;
@@ -85,6 +86,8 @@ struct instancia_de_io{
     struct pcb *proceso_ejecutando;
     t_list *procesos_esperando;
 };
+
+
 
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);
@@ -100,7 +103,7 @@ int recibir_entero(int fd_conexion);
 
 void enviar_op_code(int socket_cliente, op_code codigo_operacion);
 op_code recibir_op_code (int socket);
-
+int deserializar_cant_segundos(t_paquete *paquete);
 void enviar_mensaje(int socket, char* mensaje);
 
 t_buffer *crear_buffer();
