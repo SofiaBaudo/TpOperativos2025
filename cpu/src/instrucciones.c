@@ -109,14 +109,14 @@ void instruccion_noop(void){
 
 //Ejecucion Write.
 
-void instruccion_write(char* param1, char* param2){
+void instruccion_write(uint32_t direccion, char* param2){
     log_info(logger,"## PID: %d - Ejecutando: <WRITE>",pid);
     log_info(logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%s> - Valor: <%s>",pid,param1, param2);
 }
 
 //Ejecucion Read.
 
-void instruccion_read(char* param1, char* param2){
+void instruccion_read(uint32_t direccion, char* param2){
     log_info(logger,"## PID: %d - Ejecutando: <READ>",pid);
     log_info(logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%s> - Valor: <%s>",pid,param1,param2);
 }
