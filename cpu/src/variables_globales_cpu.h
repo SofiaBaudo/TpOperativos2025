@@ -34,6 +34,7 @@ extern char* PUERTO_KERNEL_INTERRUPT;
 extern int ENTRADAS_TLB;
 extern int ENTRADAS_CACHE;
 extern int RETARDO_CACHE;
+extern int tamPag;
 
 //Declaracion Variables Globales
 
