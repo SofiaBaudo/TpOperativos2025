@@ -9,7 +9,7 @@
 
 //Declaracion de Variables Globales
 
-int pagina [2] [ENTRADAS_POR_TABLA]; //FIJA 
+int pagina [2] [cantidad_de_marcos]; //FIJA 
 int niveles_de_pagina = CANTIDAD_NIVELES; //Niveles de Paginacion
 int tamanio_pagina = TAM_PAGINA;
 int tamanio_total = TAM_MEMORIA;
@@ -18,8 +18,10 @@ int tamanio_memoria_paginas = 0;
 int tamanio_marcos = 1;
 int cantidad_de_paginas = 0;
 int cantidad_de_marcos = 0;
+cantidad_de_marcos = tamanio_pagina/tamanio_marcos;
 int tamanio_ocupado = 0;
 int tamanio_disponible = 0;
+int memoria_paginada = 0;
 char* proceso_lectura_escritura;
 
 //Hay que Hacer lista de Paginas y sus niveles de Paginacion
@@ -27,7 +29,7 @@ char* proceso_lectura_escritura;
 //Estructuras: La memoria contará principalmente con 4 estructuras:
 
 //Un espacio contiguo de memoria (representado por un void*). Este representará el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
-void* espacio_usuario(int pid, int pc, char* proceso_lectura_escritura) {
+void* espacio_usuario(int pid, int pc, char* proceso_lectura_escritura){
     if (strcmp(proceso_lectura_escritura, "WRITE") == 0) {
         //Función escritura
         funcion_escritura_usuario(info_escribir);
@@ -52,11 +54,9 @@ void funcion_escritura_usuario(char* info_escribir){
 
 //Las tablas de páginas, que representarán el espacio de Kernel.
 
-void tablas_de_paginas(int ENTRADAS_POR_TABLA){
-    cantidad_de_marcos = tamanio_pagina/tamanio_marcos;
-    cantidad_de_paginas = tamanio_pagina/CANTIDAD_NIVELES;
-    tamanio_disponible = tamanio total - tamanio ocpuado;
+void tablas_de_paginas(){
     //Paginar
+    tamanio_disponible = tamanio total - tamanio ocupado;
     //Llega Informacion desde Kernel(Proceso)
     if(tamanio_total == tamanio_disponible)
     {
@@ -73,6 +73,11 @@ void tablas_de_paginas(int ENTRADAS_POR_TABLA){
 
 void escribir_proceso_memoria(int proceso recibido){
     proceso_paginado[];
+    busqueda_memoria_disponible();
+ 
+}
+
+void busqueda_memoria_disponible(){
 
 }
 
