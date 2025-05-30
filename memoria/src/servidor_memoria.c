@@ -5,8 +5,6 @@
 
 //Incluir las Variables Globales
 
-int tamanio_disponible_en_memoria = 30;
-
 //HACER LA CONEXION CON LOS OTROS MODULOS PARA QUE EL SERVIDOR NO SE QUEDE ESPERANDO
 
 void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender peticiones
@@ -34,6 +32,7 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     }
     close(servidor_memoria);
 }
+
 void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión con el cliente dependiendo de que modulo venga
 {
     int cliente = *((int *)socketCliente); // Desreferencio el puntero para obtener el socket del cliente
@@ -61,14 +60,4 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
     }
     close(cliente);
     return NULL;
-}
-
-op_code verificar_si_hay_espacio(int tamanio){
-    if(tamanio>tamanio_disponible_en_memoria){
-        return NO_HAY_ESPACIO_EN_MEMORIA;
-    }
-    else{
-        tamanio_disponible_en_memoria-=tamanio;
-        return HAY_ESPACIO_EN_MEMORIA;
-    }
 }

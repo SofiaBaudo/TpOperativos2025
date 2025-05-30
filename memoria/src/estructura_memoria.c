@@ -7,24 +7,73 @@
 #include <stdio.h>
 #include <variables_globales_memoria.h>
 
-/*Estructuras: La memoria contará principalmente con 4 estructuras:
-*/
+//Declaracion de Variables Globales
+
+int pagina [2] [ENTRADAS_POR_TABLA]; //FIJA 
+int niveles_de_pagina = CANTIDAD_NIVELES; //Niveles de Paginacion
+int tamanio_pagina = TAM_PAGINA;
+int tamanio_total = TAM_MEMORIA;
+int tamanio_memoria_usuario = 0;
+int tamanio_memoria_paginas = 0;
+int tamanio_marcos = 1;
+int cantidad_de_paginas = 0;
+int cantidad_de_marcos = 0;
+int tamanio_ocupado = 0;
+int tamanio_disponible = 0;
+char* proceso_lectura_escritura;
+
+//Hay que Hacer lista de Paginas y sus niveles de Paginacion
+
+//Estructuras: La memoria contará principalmente con 4 estructuras:
 
 //Un espacio contiguo de memoria (representado por un void*). Este representará el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
 void* espacio_usuario(int pid, int pc, char* proceso_lectura_escritura) {
     if (strcmp(proceso_lectura_escritura, "WRITE") == 0) {
         //Función escritura
+        funcion_escritura_usuario(info_escribir);
     } else if (strcmp(proceso_lectura_escritura, "READ") == 0) {
         //Función lectura
+        funcion_lectura_usuario(info_leer);
     } else {
         //Log error
+         log_error(logger_memoria, "Error al mandar la Solicitud de Escritura o Lectura");
     }
+}
+
+//Función lectura
+void funcion_lectura_usuario(char* info_leer){
+    //Buscar en Pagina la Informacion Buscada
+}
+
+//Función lectura
+void funcion_escritura_usuario(char* info_escribir){
+    //Buscar en Pagina Proximo Espacio Disponible
 }
 
 //Las tablas de páginas, que representarán el espacio de Kernel.
 
-void tabla_de_paginas(int ENTRADAS_POR_TABLA){
-    //Paginacion
+void tablas_de_paginas(int ENTRADAS_POR_TABLA){
+    cantidad_de_marcos = tamanio_pagina/tamanio_marcos;
+    cantidad_de_paginas = tamanio_pagina/CANTIDAD_NIVELES;
+    tamanio_disponible = tamanio total - tamanio ocpuado;
+    //Paginar
+    //Llega Informacion desde Kernel(Proceso)
+    if(tamanio_total == tamanio_disponible)
+    {
+        NO_HAY_ESPACIO_EN_MEMORIA;
+        //(Hacer SWAP Procesos o lo que se necesite en el Momento)(Depende la Situacion)
+    }
+    else{
+        HAY_ESPACIO_EN_MEMORIA;
+        //(Meter en Memoria el Proceso o lo que se pida en el momento)
+        //Recibo de Kernel el Proceso a guardar
+        escribir_proceso_memoria();
+    }
+}
+
+void escribir_proceso_memoria(int proceso recibido){
+    proceso_paginado[];
+
 }
 
 //Un archivos SWAP denominado swapfile.bin.
@@ -32,7 +81,7 @@ void tabla_de_paginas(int ENTRADAS_POR_TABLA){
 //guardamos los procesos suspendidos en el archivo swapfile.bin
 
 void SWAP(int pid){
-    //SWAP de Memoria
+    //SWAP de Memoria(Hay que Paginas Antes de Hacer SWAP)
    FILE *archivo_swap;
    archivo_swap = fopen(PATH_SWAPHILE,"ab+");
 
