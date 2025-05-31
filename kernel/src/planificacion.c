@@ -63,6 +63,7 @@ void planificador_proceso_mas_chico_primero(){
             cambiarEstado(proceso,NEW,READY);
             sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
         }
+        // vamos a necesitar un hilo para que ejecuten tambien los procesos que estan esperando en la cola NEW.
         else{
             pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
             ordenar_lista_segun(colaEstados[NEW],menor_por_tamanio); // si no pudo entrar dejo la lista ordenada
@@ -274,7 +275,8 @@ void poner_a_ejecutar(struct pcb* aux){
                 break;
             case EXIT:
                 /*
-                cambiar_estado(aux,EXEC,EXIT);
+                TODO ESTO IRIA EN UNA FUNCION FINALIZAR PROCESO
+                cambiar_estado(aux,EXEC,EXIT); //indistinto el orden
                 crear_conexion_con_memoria()
                 solicitar finalizacion de proceso
                 liberar pcb
@@ -284,6 +286,7 @@ void poner_a_ejecutar(struct pcb* aux){
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
+                //bloquear y esperar el ok(o no) de memoria
                 //Hablar con Cami
                 bloqueante = true; // a chequear
                 break;
@@ -299,8 +302,9 @@ void poner_a_ejecutar(struct pcb* aux){
                     cambiarEstado(aux,EXEC,BLOCKED);
                     //list_add(instancia_aux->)
                     if(instancia_aux->puede_usarse){
-                      
-                        //enviar a esa instancia de io el PID y el TIEMPO por el cual debe bloquearse 
+                        //enviar a esa instancia de io el PID y el TIEMPO por el cual debe bloquearse.a
+                        //hacerlo en un hilo que administre cada interfaz distinto. Solo para IO.
+                        //lista de sockets de ios. 
                     }
                     else{
                         list_add(instancia_aux->procesos_esperando,aux);
@@ -313,7 +317,7 @@ void poner_a_ejecutar(struct pcb* aux){
                 break;
         }
     }
-    
 }
 
+//no hace falta hacer distincion entre mouse/teclado/cpus
 

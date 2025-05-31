@@ -143,8 +143,8 @@ void* manejar_kernel_io(void *socket_io){
             struct instancia_de_io *aux = malloc(sizeof(struct instancia_de_io)); 
             t_paquete *paquete = recibir_paquete(io);
             char *nombre = deserializar_nombre_io(paquete);
-                aux->nombre = nombre;
-                aux->puede_usarse = true;
+            aux->nombre = nombre;
+            aux->puede_usarse = true;
             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
             log_info(kernel_logger,"se conecto el io con nombre; %s",aux->nombre); // %s espera un puntero a char
             list_add(ios_conectados,aux);
