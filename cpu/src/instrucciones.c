@@ -28,7 +28,7 @@ void* ejecutar_instrucciones(void* arg){
     return NULL;
 }
 
-void obtenerDelKernelPcPid(int pid, int pc){
+void obtenerDelKernelPcPid(int &pid, &int pc){
     //Serializar
     t_paquete *paquete = recibir_paquete(fd_conexion_kernel_dispatch);
      pid = deserializar_pid(paquete); 
@@ -62,7 +62,7 @@ t_instruccion decode(char* instruccion_recibida){
     instruccion.param1 = obtenerInsPartes[1];
     instruccion.param2 = obtenerInsPartes[2];
     if(strcmp(instruccion.opcode, "WRITE") == 0 || strcmp(instruccion.opcode, "READ") == 0){ //hacer un if en vez array 
-    //Llamar a la MMMU para que lo traduzca.
+    //Llamar a la MMMU para que lo traduzca.TB TENES QUE MANDAR EL PID
     //hardcodeemos un valor ahora para la prueba, porque se hace en el prox checkpoint
     } 
     return instruccion;  
@@ -109,14 +109,14 @@ void instruccion_noop(void){
 
 //Ejecucion Write.
 
-void instruccion_write(uint32_t direccion, char* param2){
+void instruccion_write(int direccion, char* param2){
     log_info(logger,"## PID: %d - Ejecutando: <WRITE>",pid);
     log_info(logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%s> - Valor: <%s>",pid,param1, param2);
 }
 
 //Ejecucion Read.
 
-void instruccion_read(uint32_t direccion, char* param2){
+void instruccion_read(int direccion, char* param2){
     log_info(logger,"## PID: %d - Ejecutando: <READ>",pid);
     log_info(logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%s> - Valor: <%s>",pid,param1,param2);
 }

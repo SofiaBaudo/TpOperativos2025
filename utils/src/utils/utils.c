@@ -147,6 +147,18 @@ t_buffer * crear_buffer_cpu(int pc, int pid){ //esto se lo manda kernel a cpu
 	return buffer_aux;
 }
 
+t_buffer * crear_buffer_paginaMem(int pid, int numPag){
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 2*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &numPag, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+
 t_buffer * devolver_pid_a_kernel(int pid){
 	t_buffer *buffer_aux = crear_buffer();
 	buffer_aux->size = sizeof(int);

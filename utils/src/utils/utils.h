@@ -49,6 +49,7 @@ typedef enum op_code
 	SOLCITAR_INSTRUCCION,
 	RESPUESTA_INSTRUCCION,
 	ENVIO_PID_Y_PC,
+	ENVIO_PID_Y_NUMPAG,
 	//enums instrucciones
 	NOOP,
 	WRITE,
@@ -108,6 +109,7 @@ void enviar_mensaje(int socket, char* mensaje);
 
 t_buffer *crear_buffer();
 t_buffer * crear_buffer_cpu(int pc, int pid);
+t_buffer * crear_buffer_paginaMem(int pid, int numPag);
 t_buffer * devolver_pid_a_kernel(int pid);
 t_buffer *crear_buffer_vacio();
 op_code obtener_codigo_de_operacion (t_paquete * paquete);
