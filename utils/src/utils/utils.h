@@ -79,6 +79,7 @@ struct instancia_de_cpu{
     bool puede_usarse;
     struct pcb *proceso_ejecutando;
     t_list *procesos_esperando;
+	int cantInstancias;
 };
 
 struct instancia_de_io{
@@ -86,6 +87,7 @@ struct instancia_de_io{
     bool puede_usarse;
     struct pcb *proceso_ejecutando;
     t_list *procesos_esperando;
+	int cantInstancias;
 };
 
 
@@ -116,6 +118,7 @@ op_code obtener_codigo_de_operacion (t_paquete * paquete);
 t_buffer *crear_buffer_io_nombre(char *nombre);
 void crear_paquete(op_code codigo, t_buffer *buffer, int socket);
 t_paquete* recibir_paquete(int socket);
+char *deserializar_nombre_syscall_io(t_paquete *paquete);
 char *deserializar_nombre_io(t_paquete *paquete);
 int deserializar_pid(t_paquete *paquete);
 int deserializar_pc(t_paquete *paquete);

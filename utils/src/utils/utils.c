@@ -158,7 +158,7 @@ t_buffer * crear_buffer_paginaMem(int pid, int numPag){
 	buffer_aux->offset += sizeof(int);
 	buffer_aux -> stream = buffer_aux-> stream;
 	return buffer_aux;
-
+}
 t_buffer * devolver_pid_a_kernel(int pid){
 	t_buffer *buffer_aux = crear_buffer();
 	buffer_aux->size = sizeof(int);
@@ -274,6 +274,18 @@ t_paquete* recibir_paquete(int socket){
 char *deserializar_nombre_io(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int longitud;
+    memcpy(&longitud,stream,sizeof(int));
+    stream+=sizeof(int);
+    char *nombre = malloc(longitud+1);
+    memcpy(nombre,stream,longitud);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return nombre;
+}
+char *deserializar_nombre_syscall_io(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int longitud;
 	stream+=sizeof(int); //para "saltear" los milisegundos que vienen primero
     memcpy(&longitud,stream,sizeof(int));
     stream+=sizeof(int);
@@ -334,9 +346,9 @@ char *deserializar_nombre_archivo(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int longitud;
     memcpy(&longitud,stream,sizeof(int));
-        stream+=sizeof(int);
+    stream+=sizeof(int);
     char *nombre = malloc(longitud+1);
-        memcpy(nombre,stream,longitud);
+    memcpy(nombre,stream,longitud);
 	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);

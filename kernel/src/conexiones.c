@@ -143,12 +143,26 @@ void* manejar_kernel_io(void *socket_io){
             struct instancia_de_io *aux = malloc(sizeof(struct instancia_de_io)); 
             t_paquete *paquete = recibir_paquete(io);
             char *nombre = deserializar_nombre_io(paquete);
-            aux->nombre = nombre;
+             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
+            int pos = buscar_IO_solicitada(ios_conectados,nombre);
+            if(pos == -1){
+                aux->nombre = nombre;
+                aux->cantInstancias = 1;
+                list_add(ios_conectados,aux);
+                log_debug(kernel_debug_log,"Se conecto la primera instancia de la IO: %s",nombre);
+            }
+            else{
+                aux = list_get(ios_conectados,pos);
+                aux->cantInstancias++;
+                log_debug(kernel_debug_log,"Se conecto una nueva instancia de la IO %s y ahora hay %i instancias",nombre,aux->cantInstancias);
+            }
+            /*aux->nombre = nombre;
             aux->puede_usarse = true;
             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
             log_info(kernel_logger,"se conecto el io con nombre; %s",aux->nombre); // %s espera un puntero a char
             list_add(ios_conectados,aux);
             log_debug(kernel_debug_log,"Se agrego el io %s a la lista",aux->nombre);
+            */
         break;
         default:
             log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL
@@ -208,4 +222,27 @@ bool solicitar_permiso_a_memoria(int socket,int tamanio){
         }
     }
    
+}
+
+int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
+    if (list_is_empty(lista)) {
+        log_debug(kernel_debug_log, "La lista no tiene ninguna instancia de IO\n");
+        return -1;
+    }
+
+    t_list_iterator *iterador = list_iterator_create(lista);
+    int pos = 0;
+
+    while (list_iterator_has_next(iterador)) {
+        struct instancia_de_io *io_aux = list_iterator_next(iterador);
+        if (strcmp(io_aux->nombre, nombre_io) == 0) {
+            list_iterator_destroy(iterador);
+            return pos;
+        }
+        pos++;
+    }
+
+    list_iterator_destroy(iterador);
+    log_debug(kernel_debug_log, "La instancia de IO con nombre %s no se encuentra en la lista\n", nombre_io);
+    return -1;
 }

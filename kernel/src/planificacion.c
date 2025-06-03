@@ -175,27 +175,6 @@ int buscar_en_lista(t_list *lista, int pid) {
     printf("El proceso con PID %d no se encuentra en la lista\n", pid);
     return -1;
 }
-int buscar_IO_solicitada(t_list *lista, char* nombre_io) { //preguntar si capaz esta bueno que devuelva una instancia y si no hay que devuelva NULL
-   
-    if (!lista) {
-        printf("La lista no tiene ningan proceso\n");
-        return -1;
-    }
-    t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
-    int pos = 0;
-    while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
-        struct instancia_de_io *io_aux = list_iterator_next(aux);
-        if (io_aux->nombre == nombre_io) { // comparo al pid que estoy apuntando con el pid que busco.
-            list_iterator_destroy(aux); //delete del iterador.
-            return pos; // devuelvo la posicion en la que se encuentra porque nos va a servir para usar el list_get mas facil
-        }
-        pos++;
-    }
-
-    list_iterator_destroy(aux); // destruyo el iterador creado por mas que no haya encontrado el proceso que queriamos.
-    printf("La instancia de IO con NOMBRE %s no se encuentra en la lista\n", nombre_io);
-    return -1;
-}
 
 
 bool menor_por_tamanio(void* a, void* b) {
@@ -292,7 +271,7 @@ void poner_a_ejecutar(struct pcb* aux){
                 break;
             case IO:
                 //int milisegundos = deserializar_cant_segundos(paquete);
-                char *instancia_io_a_usar = deserializar_nombre_io(paquete);
+                char *instancia_io_a_usar = deserializar_nombre_syscall_io(paquete);
                 int posicionIO = buscar_IO_solicitada(ios_conectados,instancia_io_a_usar);
                 if(posicionIO == -1){
                     cambiarEstado(aux,EXEC,EXIT_ESTADO);

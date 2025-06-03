@@ -53,7 +53,7 @@ bool menor_por_tamanio(void* a, void* b);
 void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparador)(void *, void *));
 void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 //struct pcb *seleccionar_proceso_segun_tamanio_mas_chico_en_memoria();
-int buscar_IO_solicitada(t_list *lista, char* nombre_io);
+//int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 void mandar_paquete_a_cpu(struct pcb *prcoeso);
 
 void poner_a_ejecutar(struct pcb* aux);

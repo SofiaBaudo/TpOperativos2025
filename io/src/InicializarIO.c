@@ -34,7 +34,7 @@ void inicializar_logs(){
 }
 
 void inicializar_configs(){
-config_io = crear_config("/home/utnso/Desktop/tp-2025-1c-Sinergia-SO-13/io/io.config");
+config_io = crear_config("/home/utnso/tp-2025-1c-Sinergia-SO-13/io/io.config");
 IP_KERNEL = config_get_string_value(config_io,"IP_KERNEL");
 PUERTO_KERNEL = config_get_string_value(config_io,"PUERTO_KERNEL");
 LOG_LEVEL = config_get_string_value(config_io,"LOG_LEVEL");

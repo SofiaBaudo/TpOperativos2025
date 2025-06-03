@@ -13,3 +13,4 @@ int iniciar_conexion_kernel_memoria();
 void cerrar_conexion(int socket);
 void solicitar_rafaga_de_io(int duracion);
 bool solicitar_permiso_a_memoria(int socket,int tamanio);
+int buscar_IO_solicitada(t_list *lista, char* nombre_io);
