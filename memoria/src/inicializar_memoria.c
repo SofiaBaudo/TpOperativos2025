@@ -1,5 +1,3 @@
-//Incluir las librerias
-
 #include "inicializar_memoria.h"
 
 //Declaracion los Logs Globales
@@ -8,6 +6,7 @@ t_memoria_config memoria_config;
 
 t_log* logger_memoria;
 
+void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header.)
 void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header)
     t_config* config = config_create("memoria.config");
     if (config == NULL) {
@@ -33,13 +32,3 @@ t_log* iniciar_logger_memoria(){
         printf("Error al crear el logger de memoria\n");
         exit(EXIT_FAILURE);
     }
-    log_debug(logger_memoria, "Logger de memoria iniciado correctamente");
-    return logger_memoria;
-}
-
-void inicializar_memoria() {
-    leer_config(); // Lee la configuración de memoria y la guarda en memoria_config
-    iniciar_logger_memoria(); // Inicia el logger de memoria
-
-    log_debug(logger_memoria, "Memoria inicializada correctamente"); //Utilizo log_debug en vez de log_info para q no se confundan con los logs obligatorios del tp.
-}

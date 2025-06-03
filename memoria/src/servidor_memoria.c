@@ -5,6 +5,8 @@
 
 //Incluir las Variables Globales
 
+int tamanio_disponible_en_memoria = 30;
+
 //HACER LA CONEXION CON LOS OTROS MODULOS PARA QUE EL SERVIDOR NO SE QUEDE ESPERANDO
 
 void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender peticiones
@@ -12,7 +14,7 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     sprintf(puerto, "%d", memoria_config.PUERTO_ESCUCHA); // Convierte el puerto a cadena.  A puerto le asigna el valor de memoria_config.puerto_escucha
 
     int servidor_memoria = iniciar_servidor(puerto, logger_memoria, "Se ha iniciado el servidor de Memoria");
-    if (servidor_memoria == -1) {
+    if (servidor_memoria == -1) {More actions
         log_error(logger_memoria, "Error al iniciar el servidor de memoria");
         exit(EXIT_FAILURE);
     }
@@ -32,7 +34,6 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     }
     close(servidor_memoria);
 }
-
 void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión con el cliente dependiendo de que modulo venga
 {
     int cliente = *((int *)socketCliente); // Desreferencio el puntero para obtener el socket del cliente
@@ -60,4 +61,14 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
     }
     close(cliente);
     return NULL;
+}
+
+op_code verificar_si_hay_espacio(int tamanio){
+    if(tamanio>tamanio_disponible_en_memoria){
+        return NO_HAY_ESPACIO_EN_MEMORIA;
+    }
+    else{
+        tamanio_disponible_en_memoria-=tamanio;
+        return HAY_ESPACIO_EN_MEMORIA;
+    }
 }
