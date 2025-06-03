@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "memoria.h"
+#include <memoria.h>
+//#include <inicializar_memoria.h>
 
 int main(int argc, char* argv[]){
-    inicializar_memoria();
+    leer_config();
+    iniciar_logger_memoria();
     iniciar_servidor_memoria();
     return 0;
 }

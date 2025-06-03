@@ -22,6 +22,7 @@ void* espacio_usuario(int pid, int pc, char* proceso_lectura_escritura){
     else {
         //Log error
     }
+    return NULL; //cuando quede implementada hay que chequear que devolver
 }
 
 

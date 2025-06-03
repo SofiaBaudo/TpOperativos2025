@@ -21,7 +21,7 @@ t_instruccion* analizar_linea(char* linea) {
     char* linea_copia = strdup(linea);
 
     char* token = strtok(linea_copia, " ");
-    instr->codigo = string_a_instruccion(token);
+    //instr->codigo = string_a_instruccion(token);
 
     instr->parametros = malloc(sizeof(char*) * 10);
     instr->cantidad_parametros = 0;

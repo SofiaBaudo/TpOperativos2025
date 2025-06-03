@@ -16,7 +16,7 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
     pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
   //pcb -> estado = NEW; // seguramente no sirva mucho
     pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
-  pthread_mutex_lock(&mx_usar_cola_estado[NEW]); //CONSULTAR EN SOPORTE. 
+  pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
   //if(ALGORITMO_INGRESO_A_READY == FIFO){
     list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
   //}else{
@@ -49,7 +49,7 @@ funcion planificador de largo plazo ()
     }
 
 */
-void planificador_proceso_mas_chico_primero(){
+void *planificador_proceso_mas_chico_primero(){
      esperar_enter_por_pantalla();
      log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
      while(1){

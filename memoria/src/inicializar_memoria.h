@@ -27,9 +27,6 @@ typedef struct t_memoria_config{ //le pongo el t adelante para saber y diferenci
 extern t_memoria_config memoria_config; // agrego el extern para que no de error de redefinicion
 
 extern t_log* logger_memoria;
-
-//Declaracion de Funciones
-
-void inicializar_memoria(); // o con parámetros si tiene
-
+void leer_config();
+void iniciar_logger_memoria();
 #endif
