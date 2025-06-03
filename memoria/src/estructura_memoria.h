@@ -2,7 +2,5 @@
 #include <commons/collections/list.h>
 #include "utils/utils.h"
 #include <pthread.h>
+#include <variables_globales_memoria.h>
 
-//Declaracion de Variables Globales
-
-int pagina [ENTRADAS_POR_TABLA] [2]; //FIJA 

@@ -6,7 +6,6 @@ t_memoria_config memoria_config;
 
 t_log* logger_memoria;
 
-void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header.)
 void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header)
     t_config* config = config_create("memoria.config");
     if (config == NULL) {
@@ -26,9 +25,9 @@ void leer_config(){ // Lee la config y guarda todos los values de las key (struc
 }
 
 t_log* iniciar_logger_memoria(){
-
     logger_memoria = log_create("memoria.log", "[Memoria]", true, LOG_LEVEL_TRACE);
     if (logger_memoria == NULL) {
         printf("Error al crear el logger de memoria\n");
         exit(EXIT_FAILURE);
     }
+}

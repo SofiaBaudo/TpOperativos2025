@@ -1,11 +1,12 @@
+#ifndef VARIABLES_GLOBALES_MEMORIA_H
+#define VARIABLES_GLOBALES_MEMORIA_H
+
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "utils/utils.h"
-
-//Variables Globales
 
 extern int PUERTO_ESCUCHA;
 extern int TAM_MEMORIA;
@@ -18,7 +19,7 @@ extern char* LOG_LEVEL;
 extern char* DUMP_PATH;
 extern char* PATH_INSTRUCCIONES;
 
-struct{
+typedef struct {
     int pid;
     int cant_acceso_tabla_pagina;
     int instrucciones_solicitadas;
@@ -26,4 +27,8 @@ struct{
     int cant_subidas_memoria_principal;
     int cant_lecturas_memoria;
     int cant_escrituras_memoria;
-}listado_metricas;
+} t_metricas;
+
+extern t_metricas listado_metricas;
+
+#endif // VARIABLES_GLOBALES_MEMORIA_H

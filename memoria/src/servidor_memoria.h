@@ -1,8 +1,6 @@
 #ifndef SERVIDOR_MEMORIA
 #define SERVIDOR_MEMORIA
 
-//Incluir las librerias
-Add commentMore actions
 #include "utils/utils.h"
 #include "inicializar_memoria.h"
 

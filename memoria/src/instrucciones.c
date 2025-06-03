@@ -3,8 +3,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <estructura_memoria.h>
 
 t_list* lista_instrucciones;
+t_list* lista_procesos_instrucciones;
+t_metricas listado_metricas;
+
 
 void iniciar_lista_procesos_instrucciones() {
     lista_instrucciones = list_create();
@@ -63,15 +67,15 @@ void registrar_instrucciones_proceso(int pid, char* PATH_INSTRUCCIONES) {
     t_proceso_instrucciones* nuevo = malloc(sizeof(t_proceso_instrucciones));
     nuevo->pid = pid;
     nuevo->instrucciones = cargar_instrucciones_desde_archivo(PATH_INSTRUCCIONES);
-    list_add(procesos_instrucciones, nuevo);
+    list_add(lista_procesos_instrucciones, nuevo);
 }
 
 //Busca la instrucción número pc (program counter) del proceso con PID pid.
 //Devuelve el puntero a la instrucción que necesita la CPU ejecutar.
 
 t_instruccion* obtener_instruccion(int pid, int pc) {
-    for (int i = 0; i < list_size(procesos_instrucciones); i++) {
-        t_proceso_instrucciones* p = list_get(procesos_instrucciones, i);
+    for (int i = 0; i < list_size(lista_procesos_instrucciones); i++) {
+        t_proceso_instrucciones* p = list_get(lista_procesos_instrucciones, i);
         if (p->pid == pid) {
             return list_get(p->instrucciones, pc);
         }
@@ -94,12 +98,20 @@ void destruir_instruccion(t_instruccion* instr) {
 //Se usa al destruir un proceso (cuando pasa a EXIT creo)
 
 void destruir_proceso_instrucciones(int pid) {
-    for (int i = 0; i < list_size(procesos_instrucciones); i++) {
-        t_proceso_instrucciones* p = list_get(procesos_instrucciones, i);
+    for (int i = 0; i < list_size(lista_procesos_instrucciones); i++) {
+        t_proceso_instrucciones* p = list_get(lista_procesos_instrucciones, i);
         if (p->pid == pid) {
            // list_destroy_and_destroy_elements(p->instrucciones, (void*)destruir_instruccion);
-            list_remove(procesos_instrucciones, i);
-            log_info(logger_memoria,"## PID: <%d> - Proceso Destruido - Métricas - Acc.T.Pag: <ATP>; Inst.Sol.: <Inst.Sol.>; SWAP: <SWAP>; Mem.Prin.: <Mem.Prin.>; Lec.Mem.: <Lec.Mem.>; Esc.Mem.: <Esc.Mem.>", pid,listado_metricas.cant_acceso_tabla_pagina,listado_metricas.instrucciones_solicitadas,listado_metricas.bajadas_swap,listado_metricas.cant_subidas_memoria_principal,listado_metricas.cant_lecturas_memoria, listado_metricas.cant_escrituras_memoria,listado_metricas.cant_acceso_tabla_pagina);
+            list_remove(lista_procesos_instrucciones, i);
+            log_info(logger_memoria, "## PID: <%d> - Proceso Destruido - Métricas - Acc.T.Pag: <%d>; Inst.Sol.: <%d>; SWAP: <%d>; Mem.Prin.: <%d>; Lec.Mem.: <%d>; Esc.Mem.: <%d>",
+            pid,
+            listado_metricas.cant_acceso_tabla_pagina,
+            listado_metricas.instrucciones_solicitadas,
+            listado_metricas.bajadas_swap,
+            listado_metricas.cant_subidas_memoria_principal,
+            listado_metricas.cant_lecturas_memoria,
+            listado_metricas.cant_escrituras_memoria
+            );
             free(p);
             return;
         }

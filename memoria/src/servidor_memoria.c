@@ -14,7 +14,7 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     sprintf(puerto, "%d", memoria_config.PUERTO_ESCUCHA); // Convierte el puerto a cadena.  A puerto le asigna el valor de memoria_config.puerto_escucha
 
     int servidor_memoria = iniciar_servidor(puerto, logger_memoria, "Se ha iniciado el servidor de Memoria");
-    if (servidor_memoria == -1) {More actions
+    if (servidor_memoria == -1){
         log_error(logger_memoria, "Error al iniciar el servidor de memoria");
         exit(EXIT_FAILURE);
     }
@@ -53,7 +53,7 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
         case HANDSHAKE_CPU:
             log_debug(logger_memoria, "Se conecto CPU");
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
-            manejar_cpu(cpu);
+            //manejar_cpu(cpu);
             break;
         default:
             log_warning(logger_memoria, "No se pudo identificar al cliente; op_code: %d", cliente_id); //AVISA Q FUCNIONA MAL

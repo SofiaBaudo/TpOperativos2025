@@ -30,6 +30,6 @@ extern t_log* logger_memoria;
 
 //Declaracion de Funciones
 
-void inicializar_memoria();
+void inicializar_memoria(); // o con parámetros si tiene
 
 #endif
