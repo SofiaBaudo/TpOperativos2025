@@ -143,7 +143,8 @@ void* manejar_kernel_io(void *socket_io){
             struct instancia_de_io *aux = malloc(sizeof(struct instancia_de_io)); 
             t_paquete *paquete = recibir_paquete(io);
             char *nombre = deserializar_nombre_io(paquete);
-             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
+            log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
+            //Capaz estaria bueno agregar un mutex porque la lista de ios es una variable global
             int pos = buscar_IO_solicitada(ios_conectados,nombre);
             if(pos == -1){
                 aux->nombre = nombre;
