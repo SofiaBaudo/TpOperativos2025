@@ -72,14 +72,11 @@ void *planificador_proceso_mas_chico_primero(){
         sem_post(&INTENTAR_INICIAR);
      }
     }
-       
-
 
 /*
 struct pcb * finalizar proceso (proceso,estado anterior)
 cambio de estado (proceso,estado anterior, exit)
 */
-
 
 void *planificador_largo_plazo_fifo(){
     esperar_enter_por_pantalla();
@@ -271,26 +268,52 @@ void poner_a_ejecutar(struct pcb* aux){
                 //avisar que termine
                 break;
             case EXIT:
-                int confirmacion = finalizarProceso(aux);
+                //int confirmacion = finalizarProceso(aux); descomentar despues
                 //preguntar si puede llegar a pasar que se rechace
+                //tener en cuenta lo del mediano plazo
                 free(aux);
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
                 int respuesta = manejar_dump(aux);
-                if(strcmp(respuesta,DUMP_ACEPTADO)==0){
+                if(respuesta == DUMP_ACEPTADO){
                   cambiarEstado(aux,BLOCKED,READY);  
                 }
                 else{
-                    cambiarEstado(aux,BLOCKED,EXIT);
+                  cambiarEstado(aux,BLOCKED,EXIT);
                 }
                 bloqueante = true; // a chequear
                 break;
+                
             case IO:
                 //int milisegundos = deserializar_cant_segundos(paquete);
-                char *instancia_io_a_usar = deserializar_nombre_syscall_io(paquete);
-                int posicionIO = buscar_IO_solicitada(ios_conectados,instancia_io_a_usar);
+                char *nombre_io_a_usar = deserializar_nombre_syscall_io(paquete);
+                //agregar mutex
+                int posicionIO = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
                 if(posicionIO == -1){
+                    cambiarEstado(aux,EXEC,EXIT_ESTADO);
+                }else{
+                    cambiarEstado(aux,EXEC,BLOCKED)
+                   struct instancia_de_io *io_aux = list_get(ios_conectados,posicionIO);
+                    if(io_aux->cantInstancias > 0){
+                        //crear paquete con el pid y los milisegundos y mandarlo a IO.
+                    }
+                    else{
+                        list_add(instancia_de_io->procesos_esperando,aux);
+                    }
+                }
+                bloqueante = true;
+                break;
+            default:
+            log_debug(kernel_debug_log,"SYSCALL DESCONOCIDA");
+                break;
+        }
+    }
+}
+
+
+
+    /*if(posicionIO == -1){
                     cambiarEstado(aux,EXEC,EXIT_ESTADO);
                 }
                 else{
@@ -305,15 +328,4 @@ void poner_a_ejecutar(struct pcb* aux){
                     else{
                         list_add(instancia_aux->procesos_esperando,aux);
                     }
-                }
-                bloqueante = true;
-                break;
-            default:
-            log_debug(kernel_debug_log,"SYSCALL DESCONOCIDA");
-                break;
-        }
-    }
-}
-
-//no hace falta hacer distincion entre mouse/teclado/cpus
-
+                }*/
