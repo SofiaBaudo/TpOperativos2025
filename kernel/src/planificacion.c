@@ -239,6 +239,24 @@ void mandar_paquete_a_cpu(struct pcb *proceso){
         crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
 }
 
+int manejar_dump(struct pcb *aux){
+    int socket = iniciar_conexion_kernel_memoria();
+    t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
+    crear_paquete(DUMP_MEMORY,buffer,socket);
+    cambiarEstado(aux,EXEC,BLOCKED);
+    int respuesta = recibir_entero(socket);
+    return respuesta;
+}
+
+int finalizar_proceso(struct pcb*aux){
+    cambiarEstado(aux,EXEC,EXIT_ESTADO);
+    int socket = iniciar_conexion_kernel_memoria();
+    t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
+    crear_paquete(EXIT,buffer,socket);
+    int confirmacion = recibir_entero(socket);
+    return confirmacion;
+}
+
 void poner_a_ejecutar(struct pcb* aux){
     bool bloqueante = false;
     while(!bloqueante){
@@ -253,20 +271,19 @@ void poner_a_ejecutar(struct pcb* aux){
                 //avisar que termine
                 break;
             case EXIT:
-                /*
-                TODO ESTO IRIA EN UNA FUNCION FINALIZAR PROCESO
-                cambiar_estado(aux,EXEC,EXIT); //indistinto el orden
-                crear_conexion_con_memoria()
-                solicitar finalizacion de proceso
-                liberar pcb
-                intentar inicializar otro
-                */
-                //Hablar con Cami.
+                int confirmacion = finalizarProceso(aux);
+                //preguntar si puede llegar a pasar que se rechace
+                free(aux);
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
-                //bloquear y esperar el ok(o no) de memoria
-                //Hablar con Cami
+                int respuesta = manejar_dump(aux);
+                if(strcmp(respuesta,DUMP_ACEPTADO)==0){
+                  cambiarEstado(aux,BLOCKED,READY);  
+                }
+                else{
+                    cambiarEstado(aux,BLOCKED,EXIT);
+                }
                 bloqueante = true; // a chequear
                 break;
             case IO:

@@ -55,7 +55,8 @@ void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 //struct pcb *seleccionar_proceso_segun_tamanio_mas_chico_en_memoria();
 //int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 void mandar_paquete_a_cpu(struct pcb *prcoeso);
-
+int manejar_dump(struct pcb *aux);
+int finalizar_proceso(struct pcb*aux);
 void poner_a_ejecutar(struct pcb* aux);
 
 // podria armar algo parecido que devuelva la rafaga

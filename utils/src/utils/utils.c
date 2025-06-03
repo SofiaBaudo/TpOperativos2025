@@ -159,6 +159,18 @@ t_buffer * crear_buffer_paginaMem(int pid, int numPag){
 	buffer_aux -> stream = buffer_aux-> stream;
 	return buffer_aux;
 }
+
+t_buffer *mandar_pid_a_memoria(int pid){
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+}
+
 t_buffer * devolver_pid_a_kernel(int pid){
 	t_buffer *buffer_aux = crear_buffer();
 	buffer_aux->size = sizeof(int);

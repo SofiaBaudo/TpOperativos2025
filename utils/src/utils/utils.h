@@ -58,7 +58,11 @@ typedef enum op_code
 	IO,
 	INIT_PROC,
 	DUMP_MEMORY,
-	EXIT
+	EXIT,
+
+	//RESPUESTAS
+	DUMP_ACEPTADO,
+	DUMP_RECHAZADO
 }op_code;
 
 typedef struct
@@ -112,6 +116,7 @@ void enviar_mensaje(int socket, char* mensaje);
 t_buffer *crear_buffer();
 t_buffer * crear_buffer_cpu(int pc, int pid);
 t_buffer * crear_buffer_paginaMem(int pid, int numPag);
+t_buffer *mandar_pid_a_memoria(int pid);
 t_buffer * devolver_pid_a_kernel(int pid);
 t_buffer *crear_buffer_vacio();
 op_code obtener_codigo_de_operacion (t_paquete * paquete);
