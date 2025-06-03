@@ -146,6 +146,7 @@ void* manejar_kernel_io(void *socket_io){
             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
             //Capaz estaria bueno agregar un mutex porque la lista de ios es una variable global
             int pos = buscar_IO_solicitada(ios_conectados,nombre);
+            pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
             if(pos == -1){
                 aux->nombre = nombre;
                 aux->cantInstancias = 1;
@@ -157,6 +158,7 @@ void* manejar_kernel_io(void *socket_io){
                 aux->cantInstancias++;
                 log_debug(kernel_debug_log,"Se conecto una nueva instancia de la IO %s y ahora hay %i instancias",nombre,aux->cantInstancias);
             }
+            pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
             /*aux->nombre = nombre;
             aux->puede_usarse = true;
             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));

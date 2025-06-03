@@ -93,7 +93,10 @@ struct instancia_de_io{
     t_list *procesos_esperando;
 	int cantInstancias;
 };
-
+typedef enum{
+  REC_CPU,
+  REC_IO
+}Recurso;
 
 
 t_config *crear_config(char* direccion);
