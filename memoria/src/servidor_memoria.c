@@ -1,5 +1,3 @@
-//Incluir las librerias
-
 #include "servidor_memoria.h"
 #include "instrucciones.h"
 
@@ -34,6 +32,7 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     }
     close(servidor_memoria);
 }
+
 void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión con el cliente dependiendo de que modulo venga
 {
     int cliente = *((int *)socketCliente); // Desreferencio el puntero para obtener el socket del cliente
@@ -48,7 +47,7 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
             int tamanio = recibir_entero(cliente);
             op_code respuesta = verificar_si_hay_espacio(tamanio);
             enviar_op_code(cliente,respuesta);
-            // manejar_cliente_kernel(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS. 
+            //manejar_cliente_kernel(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS. 
             break;
         case HANDSHAKE_CPU:
             log_debug(logger_memoria, "Se conecto CPU");

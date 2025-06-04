@@ -9,7 +9,6 @@ t_list* lista_instrucciones;
 t_list* lista_procesos_instrucciones;
 t_metricas listado_metricas;
 
-
 void iniciar_lista_procesos_instrucciones() {
     lista_instrucciones = list_create();
 }

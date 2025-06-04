@@ -19,7 +19,19 @@ extern char* LOG_LEVEL;
 extern char* DUMP_PATH;
 extern char* PATH_INSTRUCCIONES;
 
-typedef struct {
+typedef struct t_memoria_config{ //le pongo el t adelante para saber y diferenciar que es un type (struct)
+    int PUERTO_ESCUCHA;
+    int TAM_MEMORIA;
+    int TAM_PAGINA;
+    int ENTRADAS_POR_TABLA;
+    int CANTIDAD_NIVELES;
+    int RETARDO_MEMORIA;
+    char* PATH_SWAPFILE;
+    int RETARDO_SWAP;
+    char* DUMP_PATH;
+} t_memoria_config;
+
+typedef struct t_metricas{
     int pid;
     int cant_acceso_tabla_pagina;
     int instrucciones_solicitadas;
