@@ -3,10 +3,9 @@
 
 #include "utils/utils.h"
 #include "inicializar_memoria.h"
-
 #include <pthread.h>
 
-//Incluir las Funciones
+//Declaracion de Prototipos de Funciones
 
 void iniciar_servidor_memoria();
 //manejar_cpu(int cpu);

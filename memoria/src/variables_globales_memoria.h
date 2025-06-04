@@ -8,6 +8,15 @@
 #include <string.h>
 #include "utils/utils.h"
 
+typedef enum {
+    ACCESO_TABLA,
+    INSTRUCCIONES_SOLICITADAS,
+    BAJADAS_SWAP,
+    SUBIDAS_MEMORIA,
+    LECTURAS_MEMORIA,
+    ESCRITURAS_MEMORIA
+} tipo_metrica;
+
 extern int PUERTO_ESCUCHA;
 extern int TAM_MEMORIA;
 extern int TAM_PAGINA;
@@ -19,7 +28,7 @@ extern char* LOG_LEVEL;
 extern char* DUMP_PATH;
 extern char* PATH_INSTRUCCIONES;
 
-typedef struct t_memoria_config{ //le pongo el t adelante para saber y diferenciar que es un type (struct)
+typedef struct t_memoria_config {
     int PUERTO_ESCUCHA;
     int TAM_MEMORIA;
     int TAM_PAGINA;
@@ -31,7 +40,7 @@ typedef struct t_memoria_config{ //le pongo el t adelante para saber y diferenci
     char* DUMP_PATH;
 } t_memoria_config;
 
-typedef struct t_metricas{
+typedef struct t_metricas {
     int pid;
     int cant_acceso_tabla_pagina;
     int instrucciones_solicitadas;
@@ -43,4 +52,4 @@ typedef struct t_metricas{
 
 extern t_metricas listado_metricas;
 
-#endif // VARIABLES_GLOBALES_MEMORIA_H
+#endif

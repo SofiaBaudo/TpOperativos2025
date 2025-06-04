@@ -9,6 +9,8 @@
 #include "inicializar_memoria.h"
 #include "variables_globales_memoria.h"
 
+//Variables y Structs Globales
+
 typedef struct t_instruccion {
     op_code codigo;
     char** parametros;
@@ -21,12 +23,14 @@ typedef struct {
 } t_proceso_instrucciones; //tipo de dato
 
 extern t_list* lista_procesos_instrucciones; //lista global
-
 op_code string_a_instruccion(char* token);
 
 
 t_list* cargar_instrucciones_desde_archivo(char* path);
 t_instruccion* obtener_instruccion(int pid, int pc);
+
+//Declaracion de Prototipos de Funciones
+
 void registrar_instrucciones_proceso(int pid, char* path);
 void iniciar_lista_procesos_instrucciones();
 
