@@ -73,19 +73,18 @@ void *planificador_largo_plazo_fifo(){
 void *planificador_corto_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-        log_debug(kernel_debug_log,"Ya pase pero no hay cpus");
-        //sem_wait(&CPUS_LIBRES);
+        sem_wait(&CPUS_LIBRES);
         //sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
         usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         cambiarEstado(proceso,READY,EXEC);
-       /* pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+       pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas);
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
-        */
+        
         //poner_a_ejecutar(proceso);
         //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
@@ -94,7 +93,7 @@ void *planificador_corto_plazo_fifo(){
 void *planificador_corto_plazo_sjf_sin_desalojo(){
       while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-        //sem_wait(&CPUS_LIBRES);
+        sem_wait(&CPUS_LIBRES);
         //sem_wait(&INGRESO_DEL_PRIMERO_READY); //Preguntar si es necesario pero creeriamos que con el de cantProcesos y el de las cpus ya esta
         usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
@@ -102,12 +101,12 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
         list_sort(colaEstados[READY],menor_por_rafaga);
         pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
-        /*pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+        pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas);
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
-        */
+        
         cambiarEstado(proceso,READY,EXEC);
         //poner_a_ejecutar(proceso);
         //sem_post(&INGRESO_DEL_PRIMERO_READY);

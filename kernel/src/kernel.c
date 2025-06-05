@@ -9,27 +9,38 @@ int main(int argc, char* argv[]){
   
    inicializar_kernel();
   
- 
-
+   struct instancia_de_cpu *cpu_1 = malloc(sizeof(struct instancia_de_cpu));
+   struct instancia_de_cpu *cpu_2 = malloc(sizeof(struct instancia_de_cpu));
+   cpu_1->id_cpu = 1;
+   cpu_1->puede_usarse = true;
+   cpu_2->id_cpu = 2;
+   cpu_2->puede_usarse = true;
+   list_add(cpus_conectadas,cpu_1);
+   sem_post(&CPUS_LIBRES);
+   //list_add(cpus_conectadas,cpu_2);
+   //sem_post(&CPUS_LIBRES);
    //atender_kernel_io();
-   atender_kernel_dispatch();
-   /*crear_proceso(5,"f1");
+   //atender_kernel_dispatch();
+
+
+   crear_proceso(5,"f1");
    crear_proceso(2,"f3");
-   crear_proceso(100,"f4");
+   crear_proceso(1,"f4");
    crear_proceso(23,"f");
   
 
    //crear_proceso(37,"f3");
-  
+ 
    pthread_t hilo_plani_largo_plazo;
    pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
    //hilos para cpus e ios. Ios se pueden agregar durante la ejecucion y las cpus son fijas
    pthread_t hilo_plani_corto_plazo;
    //pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL); //Creamos el hilo
    pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL); //Creamos el hilo
+  
    pthread_join(hilo_plani_largo_plazo,NULL);
    pthread_join(hilo_plani_corto_plazo,NULL);
-   */
+   
    //pthread_detach(hilo_plani_largo_plazo);//El hilo se desacopla del hilo principal.
 
 // ¿wait y signal para que espere a que se cree un proceso?
