@@ -7,11 +7,12 @@ t_list* colaEstados[7]={NULL};
 int identificador_del_proceso = 0;
 struct pcb *ultimo_proceso_en_entrar;
 int rafaga_de_prueba = 4;
+
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
     struct pcb* pcb = malloc(sizeof(struct pcb));
     pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo);
     //pcb -> estado = NEW; // seguramente no sirva mucho
-    transicionar_a_new(pcb);
+    transicionar_a_new(pcb); //aca esta lo de ultimo proceso en entrar
     log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
     log_info(kernel_logger,"Su rafaga es de: %i",rafaga_de_prueba);
     incrementar_var_global_id_proceso();
