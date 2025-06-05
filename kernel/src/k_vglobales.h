@@ -25,7 +25,7 @@ extern char *ALGORITMO_INGRESO_A_READY;
 extern char *ALFA;
 extern char *TIEMPO_SUSPENSION;
 extern char *LOG_LEVEL;
-
+extern char *ESTIMACION_INICIAL;
 
 // file descriptors
 

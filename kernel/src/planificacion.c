@@ -2,36 +2,31 @@
 #include <readline/readline.h>
 #include <string.h>
 
-
 t_list* procesos = NULL;
 t_list* colaEstados[7]={NULL};
 int identificador_del_proceso = 0;
 struct pcb *ultimo_proceso_en_entrar;
 
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
-  struct pcb* pcb = malloc(sizeof(struct pcb));
-    pcb -> pid = identificador_del_proceso; //ver lo de la variable global
-    pcb -> pc = 0;
-    pcb -> tamanio = tamanio;
-    pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
-  //pcb -> estado = NEW; // seguramente no sirva mucho
-    pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
-  pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
-  //if(ALGORITMO_INGRESO_A_READY == FIFO){
-    //list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
-  //}else{
-    insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
-    pthread_mutex_lock(&mx_ultimo_en_entrar);
-    ultimo_proceso_en_entrar = pcb;
-    pthread_mutex_unlock(&mx_ultimo_en_entrar);
-  //}
-  pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
-  sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
-  //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
-  log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
-  pthread_mutex_lock(&mx_identificador_del_proceso);
-  identificador_del_proceso++; 
-  pthread_mutex_unlock(&mx_identificador_del_proceso);
+    struct pcb* pcb = malloc(sizeof(struct pcb));
+    pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo);
+    //pcb -> estado = NEW; // seguramente no sirva mucho
+    pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
+    //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
+        list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+    //}else{
+        //insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
+        //pthread_mutex_lock(&mx_ultimo_en_entrar);
+        //ultimo_proceso_en_entrar = pcb;
+        //pthread_mutex_unlock(&mx_ultimo_en_entrar);
+    //}
+    pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
+    sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
+    //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
+    log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
+    pthread_mutex_lock(&mx_identificador_del_proceso);
+    identificador_del_proceso++; 
+    pthread_mutex_unlock(&mx_identificador_del_proceso);
   return; 
 }
 
@@ -55,7 +50,6 @@ void *planificador_proceso_mas_chico_primero(){
                         ultimo_proceso_en_entrar = primer_proceso_actualizado;
                         pthread_mutex_unlock(&mx_ultimo_en_entrar);
                     }
-                    
                 }
         }
         sem_post(&INTENTAR_INICIAR);
@@ -87,9 +81,6 @@ void *planificador_largo_plazo_fifo(){
     return NULL;
     }
 
-
-
-
 void planificador_corto_plazo_fifo(){
   
     while(1){
@@ -106,13 +97,22 @@ void planificador_corto_plazo_fifo(){
 
 //FUNCIONES AUXILIARES
 
-
+struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo){
+    pcb -> pid = identificador_del_proceso; //ver lo de la variable global
+    pcb -> pc = 0;
+    pcb -> tamanio = tamanio;
+    pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
+    pcb->ya_ejecuto_en_cpu = false;
+    pcb->ultima_estimacion = atoi(ESTIMACION_INICIAL);
+    pcb -> rafaga_actual_cpu = calcular_rafaga(pcb); 
+    return pcb;
+}
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *)){
  list_sort(lista,comparador); 
 }
 
 struct pcb *obtener_primer_proceso_de_new(){
-    if(list_is_empty(colaEstados[NEW])){
+   if(list_is_empty(colaEstados[NEW])){
         return NULL;
     }
     else{
@@ -130,8 +130,6 @@ bool consultar_si_puede_entrar(struct pcb *proceso){
     cerrar_conexion(socket);
     return respuesta;
 }
-
-
 
 int buscar_en_lista(t_list *lista, int pid) {
    
@@ -154,7 +152,34 @@ int buscar_en_lista(t_list *lista, int pid) {
     printf("El proceso con PID %d no se encuentra en la lista\n", pid);
     return -1;
 }
+/*
+    PLANIFICADOR SJF 
+    Est(n) = 10000, siempre y cuando sea un proceso nuevo.
+    hago la cuenta
+    Est(n) = Est (n+1)
+*/
 
+//  Est(n+1) =  a.R(n) + (1-a) Est(n) ;    a e [0,1]
+//Est(n) = 10000
+//a = 0,5
+
+int calcular_rafaga(struct pcb *proceso){
+    if(proceso->ya_ejecuto_en_cpu){
+        int rafaga;
+        float alfa = (float)atof(ALFA);
+        rafaga = alfa * proceso->duracion_ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
+        return rafaga;
+    }
+    else{
+        return (atoi(ESTIMACION_INICIAL));
+    }
+}
+
+bool menor_por_rafaga(void* a, void* b){
+    struct pcb* p1 = (struct pcb*) a;
+    struct pcb* p2 = (struct pcb*) b;
+    return p1->rafaga_actual_cpu < p2->rafaga_actual_cpu;
+}
 
 bool menor_por_tamanio(void* a, void* b) {
     

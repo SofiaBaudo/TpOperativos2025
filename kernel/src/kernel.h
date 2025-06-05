@@ -1,5 +1,6 @@
 #include <utils/utils.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <k_vglobales.h>
 #include <finalizarKernel.h>
@@ -32,9 +33,9 @@ char *PUERTO_ESCUCHA_IO;
 char *ALGORITMO_CORTO_PLAZO;
 char *ALGORITMO_INGRESO_A_READY;
 char *ALFA;
+char *ESTIMACION_INICIAL;
 char *TIEMPO_SUSPENSION;
 char *LOG_LEVEL;
-
 
 
 

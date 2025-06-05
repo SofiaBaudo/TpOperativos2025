@@ -1,4 +1,5 @@
 #include <inicializarKernel.h>
+
 void inicializar_kernel(){
   printf("Kernel inicializado");
     printf("\n");
@@ -33,6 +34,7 @@ ALGORITMO_CORTO_PLAZO = config_get_string_value(config_kernel,"ALGORITMO_CORTO_P
 ALGORITMO_INGRESO_A_READY= config_get_string_value(config_kernel,"ALGORITMO_INGRESO_A_READY");
 ALFA = config_get_string_value(config_kernel,"ALFA");
 TIEMPO_SUSPENSION = config_get_string_value(config_kernel,"TIEMPO_SUSPENSION");
+ESTIMACION_INICIAL = config_get_string_value(config_kernel,"ESTIMACION_INICIAL");
 LOG_LEVEL = config_get_string_value(config_kernel,"LOG_LEVEL");
 }
 
