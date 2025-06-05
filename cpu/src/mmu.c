@@ -1,4 +1,5 @@
 #include <mmu.h>
+#include <math.h>
 
 /*
 Las direcciones logicas estarian compuestas de esta manera. 
@@ -12,19 +13,21 @@ struct nivel{
     int numeroNivel;
     int tamanio;
     void* tablaDeNivel[400]; //es puntero generico porque hay veces que apunta a una pagina y veces que apunta a un prox nivel
-}
-
+};
+/*
 void creacionNivelesN(int n){
    nivel* niveles[n]; 
    //es una tabla de n niveles donde cada nivel tiene el tipo de dato nivel. 
-}
+}*/
+
 
 int traduccion(int direccion, int pid){ //te tendria que devolver la dir fisica
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int numeroMarco;
-    numeroMarco = accederATP(numPag, pid);
+    numeroMarco = accederATp(numPag, pid);
     //SEGUIR
+    return numeroMarco; //lo pongo esto para que no tire warning
 }
 void enviarValoresMem(int numPag, int pid){
     t_buffer *buffer = crear_buffer_paginaMem(pid,numPag);

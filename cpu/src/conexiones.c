@@ -4,7 +4,7 @@
 
 // Funcion Iniciar Conexion Kernel
 
-void* iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log* log){
+void* iniciar_conexion_kernel_dispatch(int identificador_cpu, t_log *log){
     fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
     enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU_DISPATCH);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
@@ -69,10 +69,11 @@ void inicializar(int id){
         printf("No se pudo crear el archivo de log para la CPU %d\n", id);
         exit(1);
     }
-    log_info(logger, "Iniciando CPU %d", id);
     iniciar_conexion_kernel_dispatch(id, logger);
+    log_info(logger, "Iniciando CPU %d", id);   
     log_destroy(logger);
 }
+
 
 //Inicializar el enviar id de la CPU
 

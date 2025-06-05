@@ -20,7 +20,7 @@ void* ejecutar_instrucciones(void* arg){
     //int cpu_id = *(int *)arg;
     t_instruccion instru;
     char *instruccionEntera;
-    obtenerDelKernelPcPid(pid, pc);
+    obtenerDelKernelPcPid(&pid, &pc);
     instruccionEntera = fetch(pc,pid);
     instru = decode(instruccionEntera);
     execute(instru);
@@ -28,11 +28,11 @@ void* ejecutar_instrucciones(void* arg){
     return NULL;
 }
 
-void obtenerDelKernelPcPid(int &pid, &int pc){
+void obtenerDelKernelPcPid(int *pid, int *pc){
     //Serializar
     t_paquete *paquete = recibir_paquete(fd_conexion_kernel_dispatch);
-     pid = deserializar_pid(paquete); 
-     pc = deserializar_pc(paquete);
+    *pid = deserializar_pid(paquete); 
+    *pc = deserializar_pc(paquete);
     if(pc < 0){
     log_error(logger, "El program Counter no puede ser negativo");
     }
@@ -72,7 +72,8 @@ t_instruccion decode(char* instruccion_recibida){
 
 void execute(t_instruccion instruccion){
     char *nombre_instruccion = instruccion.opcode;
-    char *param1 = instruccion.param1;
+    char *param1Char = instruccion.param1;
+    int param1 = atoi(param1Char);
     char *param2 = instruccion.param2;
     if(strcmp(nombre_instruccion, "NOOP") == 0){
         instruccion_noop();
@@ -111,24 +112,23 @@ void instruccion_noop(void){
 
 void instruccion_write(int direccion, char* param2){
     log_info(logger,"## PID: %d - Ejecutando: <WRITE>",pid);
-    log_info(logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%s> - Valor: <%s>",pid,param1, param2);
+    log_info(logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%d> - Valor: <%s>",pid,direccion, param2);
 }
 
 //Ejecucion Read.
 
 void instruccion_read(int direccion, char* param2){
     log_info(logger,"## PID: %d - Ejecutando: <READ>",pid);
-    log_info(logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%s> - Valor: <%s>",pid,param1,param2);
+    log_info(logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%d> - Valor: <%s>",pid,direccion,param2);
 }
 
 //Ejecucion Go to.
 //Hay un loop infinito con los go to
 
-void instruccion_goto(char *parametro){
+void instruccion_goto(int parametro){
    //Accedo a Memoria y Kernel para actualizar el PC
-    int valorACambiar = atoi(parametro);
-    pc = valorACambiar;
-    log_info(logger,"## PID: %d - Ejecutando: <GOTO> - <%s>",pid, parametro);
+    pc = parametro;
+    log_info(logger,"## PID: %d - Ejecutando: <GOTO> - <%d>",pid, parametro);
     send(fd_conexion_dispatch_memoria, &pc, sizeof(int), 0);
     send(fd_conexion_kernel_dispatch, &pc,sizeof(int),0);
 }
