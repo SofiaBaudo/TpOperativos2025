@@ -46,11 +46,12 @@ extern int identificador_del_proceso;
 // lista de ios
 extern t_list *ios_conectados;
 extern t_list *cpus_conectadas;
-
+extern struct pcb *ultimo_proceso_en_entrar;
 //Semaforos y Mutex
 
 extern pthread_mutex_t mx_identificador_del_proceso;
 extern pthread_mutex_t mx_avisar_que_entro_el_primero;
+extern pthread_mutex_t mx_ultimo_en_entrar;
 extern pthread_mutex_t mx_usar_cola_estado[7];
 extern pthread_mutex_t mx_usar_recurso[2];
 extern sem_t INGRESO_DEL_PRIMERO;

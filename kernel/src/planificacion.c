@@ -6,7 +6,7 @@
 t_list* procesos = NULL;
 t_list* colaEstados[7]={NULL};
 int identificador_del_proceso = 0;
-struct pcb *pcb;
+struct pcb *ultimo_proceso_en_entrar;
 
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
   struct pcb* pcb = malloc(sizeof(struct pcb));
@@ -18,9 +18,12 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
     pcb -> lista_de_rafagas = list_create(); // crea la lista como vacia
   pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
   //if(ALGORITMO_INGRESO_A_READY == FIFO){
-    list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+    //list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
   //}else{
-    //list_add_in_index (colaEstados[NEW],0,pcb); // lo inserto al principio de la lista para que apenas llegue se consulte si puede entrar
+    insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
+    pthread_mutex_lock(&mx_ultimo_en_entrar);
+    ultimo_proceso_en_entrar = pcb;
+    pthread_mutex_unlock(&mx_ultimo_en_entrar);
   //}
   pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
   sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
@@ -32,51 +35,32 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   return; 
 }
 
-/*
-funcion planificador de largo plazo ()
-
-
-    if(ALGORITMO_INGRESO_A_READY == FIFO){
-        planificador_largo_plazo_fifo()
-    }
-    else{
-        if(){
-            el de mas chico primero es por tamanio
-        }
-        else{
-            exit
-        }
-    }
-
-*/
 void *planificador_proceso_mas_chico_primero(){
-     esperar_enter_por_pantalla();
-     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
-     while(1){
+    esperar_enter_por_pantalla();
+    log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
+    while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR);
         struct pcb* primer_proceso = obtener_primer_proceso_de_new();
-        bool respuesta = consultar_si_puede_entrar(primer_proceso);
-        log_debug(kernel_debug_log,"Conexion con memoria cerrada");
-        if(respuesta == true){
-            struct pcb *proceso = sacar_primero_de_la_lista(NEW);
-            cambiarEstado(proceso,NEW,READY);
-            sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
-        }
-        // vamos a necesitar un hilo para que ejecuten tambien los procesos que estan esperando en la cola NEW.
-        else{
-            pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
-            ordenar_lista_segun(colaEstados[NEW],menor_por_tamanio); // si no pudo entrar dejo la lista ordenada
-            pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
+        if(primer_proceso->pid == ultimo_proceso_en_entrar->pid){
+                bool respuesta = consultar_si_puede_entrar(primer_proceso);
+                log_debug(kernel_debug_log,"Conexion con memoria cerrada");
+                if(respuesta == true){
+                    struct pcb *proceso = sacar_primero_de_la_lista(NEW);
+                    cambiarEstado(proceso,NEW,READY);
+                    sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
+                    struct pcb *primer_proceso_actualizado = obtener_primer_proceso_de_new();
+                    if(primer_proceso_actualizado!=NULL){
+                        pthread_mutex_lock(&mx_ultimo_en_entrar);
+                        ultimo_proceso_en_entrar = primer_proceso_actualizado;
+                        pthread_mutex_unlock(&mx_ultimo_en_entrar);
+                    }
+                    
+                }
         }
         sem_post(&INTENTAR_INICIAR);
-     }
     }
-
-/*
-struct pcb * finalizar proceso (proceso,estado anterior)
-cambio de estado (proceso,estado anterior, exit)
-*/
+}
 
 void *planificador_largo_plazo_fifo(){
     esperar_enter_por_pantalla();
@@ -104,7 +88,7 @@ void *planificador_largo_plazo_fifo(){
     }
 
 
-//int seleccionar_proceso_segun_tamanio_mas_chico_en_memoria(t_list *lista){
+
 
 void planificador_corto_plazo_fifo(){
   
@@ -118,13 +102,6 @@ void planificador_corto_plazo_fifo(){
         poner_a_ejecutar(proceso);
         sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
-
-
-    /*si no hay nada en ready, semaforo para que espere
-    una vez que llega algo, agarra el primer proceso que haya.
-    una vez que agarra el proceso, lo transiciona a la cola de execute.
-    mandar PID y PC a CPU, ya sea que este libre o conectada.   
-    */
 }   
 
 //FUNCIONES AUXILIARES
@@ -135,11 +112,16 @@ void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *)){
 }
 
 struct pcb *obtener_primer_proceso_de_new(){
+    if(list_is_empty(colaEstados[NEW])){
+        return NULL;
+    }
+    else{
     pthread_mutex_lock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
-    t_list *aux = colaEstados[NEW];
-    struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
+        t_list *aux = colaEstados[NEW];
+        struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
     pthread_mutex_unlock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
     return proceso;
+    }
     }
 
 bool consultar_si_puede_entrar(struct pcb *proceso){
@@ -275,7 +257,7 @@ void poner_a_ejecutar(struct pcb* aux){
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
-                int respuesta = manejar_dump(aux);
+                int respuesta = manejar_dump(aux); //esta funcion manda el proceso a BLOCKED
                 if(respuesta == DUMP_ACEPTADO){
                   cambiarEstado(aux,BLOCKED,READY);  
                 }
@@ -314,21 +296,3 @@ void poner_a_ejecutar(struct pcb* aux){
     }
 }
 
-
-
-    /*if(posicionIO == -1){
-                    cambiarEstado(aux,EXEC,EXIT_ESTADO);
-                }
-                else{
-                    struct instancia_de_io *instancia_aux = list_get(ios_conectados,posicionIO);
-                    cambiarEstado(aux,EXEC,BLOCKED);
-                    //list_add(instancia_aux->)
-                    if(instancia_aux->puede_usarse){
-                        //enviar a esa instancia de io el PID y el TIEMPO por el cual debe bloquearse.a
-                        //hacerlo en un hilo que administre cada interfaz distinto. Solo para IO.
-                        //lista de sockets de ios. 
-                    }
-                    else{
-                        list_add(instancia_aux->procesos_esperando,aux);
-                    }
-                }*/
