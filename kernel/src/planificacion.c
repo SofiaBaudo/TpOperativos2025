@@ -11,23 +11,10 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
     struct pcb* pcb = malloc(sizeof(struct pcb));
     pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo);
     //pcb -> estado = NEW; // seguramente no sirva mucho
-    pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
-    //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
-        list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
-    //}else{
-        //insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
-        //pthread_mutex_lock(&mx_ultimo_en_entrar);
-        //ultimo_proceso_en_entrar = pcb;
-        //pthread_mutex_unlock(&mx_ultimo_en_entrar);
-    //}
-    pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
-    sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
-    //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
+    transicionar_a_new(pcb);
     log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
     log_info(kernel_logger,"Su rafaga es de: %i",rafaga_de_prueba);
-    pthread_mutex_lock(&mx_identificador_del_proceso);
-    identificador_del_proceso++; 
-    pthread_mutex_unlock(&mx_identificador_del_proceso);
+    incrementar_var_global_id_proceso();
   return; 
 }
 
@@ -99,8 +86,8 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
       while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
         //semaforo de cpus libres
-        sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
-        usleep(5000000);
+        //sem_wait(&INGRESO_DEL_PRIMERO_READY); //Preguntar si es necesario pero creeriamos que con el de cantProcesos y el de las cpus ya esta
+        usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         pthread_mutex_lock(&mx_usar_cola_estado[READY]); //Preguntar en el soporte si tiene sentido el mutex
         list_sort(colaEstados[READY],menor_por_rafaga);
@@ -109,7 +96,7 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
         //buscar cpu libre.
         cambiarEstado(proceso,READY,EXEC);
         //poner_a_ejecutar(proceso);
-        sem_post(&INGRESO_DEL_PRIMERO_READY);
+        //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
 }
 
@@ -129,6 +116,27 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
 }
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *)){
  list_sort(lista,comparador); 
+}
+
+void transicionar_a_new(struct pcb *pcb){
+ pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
+    //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
+        list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+    //}else{
+        //insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
+        //pthread_mutex_lock(&mx_ultimo_en_entrar);
+        //ultimo_proceso_en_entrar = pcb;
+        //pthread_mutex_unlock(&mx_ultimo_en_entrar);
+    //}
+    pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
+    sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
+    //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
+}
+
+void incrementar_var_global_id_proceso(){
+    pthread_mutex_lock(&mx_identificador_del_proceso);
+    identificador_del_proceso++; 
+    pthread_mutex_unlock(&mx_identificador_del_proceso);
 }
 
 struct pcb *obtener_primer_proceso_de_new(){

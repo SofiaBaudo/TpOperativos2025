@@ -44,6 +44,8 @@ struct pcb{
 void crear_proceso(int tamanio, char *ruta_archivo);
 struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo);
 struct pcb *obtener_primer_proceso_de_new();
+void transicionar_a_new(struct pcb *proceso);
+void incrementar_var_global_id_proceso();
 bool consultar_si_puede_entrar(struct pcb *proceso);
 bool menor_por_rafaga(void* a, void* b);
 int buscar_en_lista(t_list *lista,int pid);
