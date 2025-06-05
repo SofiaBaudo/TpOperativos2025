@@ -79,7 +79,7 @@ typedef struct
 } t_paquete;
 
 struct instancia_de_cpu{
-    int* id_cpu;
+    int id_cpu;
     bool puede_usarse;
     struct pcb *proceso_ejecutando;
     t_list *procesos_esperando;

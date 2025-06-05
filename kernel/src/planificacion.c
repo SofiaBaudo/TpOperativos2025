@@ -72,20 +72,28 @@ void *planificador_largo_plazo_fifo(){
 void *planificador_corto_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-        //semaforo de cpus libres
-        sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
+        log_debug(kernel_debug_log,"Ya pase pero no hay cpus");
+        //sem_wait(&CPUS_LIBRES);
+        //sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
+        usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         cambiarEstado(proceso,READY,EXEC);
-        poner_a_ejecutar(proceso);
-        sem_post(&INGRESO_DEL_PRIMERO_READY);
+       /* pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+        int pos_cpu = buscar_cpu_libre(cpus_conectadas);
+        struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
+        pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+        log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
+        */
+        //poner_a_ejecutar(proceso);
+        //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
 }   
 
 void *planificador_corto_plazo_sjf_sin_desalojo(){
       while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-        //semaforo de cpus libres
+        //sem_wait(&CPUS_LIBRES);
         //sem_wait(&INGRESO_DEL_PRIMERO_READY); //Preguntar si es necesario pero creeriamos que con el de cantProcesos y el de las cpus ya esta
         usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
@@ -93,7 +101,12 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
         list_sort(colaEstados[READY],menor_por_rafaga);
         pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
-        //buscar cpu libre.
+        /*pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+        int pos_cpu = buscar_cpu_libre(cpus_conectadas);
+        struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
+        pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+        log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
+        */
         cambiarEstado(proceso,READY,EXEC);
         //poner_a_ejecutar(proceso);
         //sem_post(&INGRESO_DEL_PRIMERO_READY);
@@ -114,6 +127,7 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
     //pcb -> rafaga_actual_cpu = calcular_rafaga(pcb); despues descomentar
     return pcb;
 }
+
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *)){
  list_sort(lista,comparador); 
 }
@@ -178,6 +192,25 @@ int buscar_en_lista(t_list *lista, int pid) {
 
     list_iterator_destroy(aux); // destruyo el iterador creado por mas que no haya encontrado el proceso que queriamos.
     printf("El proceso con PID %d no se encuentra en la lista\n", pid);
+    return -1;
+}
+
+int buscar_cpu_libre(t_list *lista) {
+    if (lista == NULL) { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
+    printf("Lista nula\n");
+    return -1;
+    }
+    t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
+    int pos = 0;
+    while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
+        struct instancia_de_cpu *cpu_aux = list_iterator_next(aux);
+        if (cpu_aux->puede_usarse) { // comparo al pid que estoy apuntando con el pid que busco.
+            cpu_aux->puede_usarse = false;
+            list_iterator_destroy(aux); //delete del iterador.
+            return pos; // devuelvo la posicion en la que se encuentra porque nos va a servir para usar el list_get mas facil
+        }
+        pos++;
+    }
     return -1;
 }
 

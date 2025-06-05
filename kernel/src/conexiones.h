@@ -1,6 +1,6 @@
 #include <k_vglobales.h>
 #include <pthread.h>
-
+#include <semaforos.h> // para poder hacer el sem_post en cpu
 
 
 void atender_kernel_dispatch();

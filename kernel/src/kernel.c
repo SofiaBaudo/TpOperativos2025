@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
    //atender_kernel_dispatch();
    crear_proceso(5,"f1");
    crear_proceso(2,"f3");
-   crear_proceso(1,"f4");
+   crear_proceso(100,"f4");
    crear_proceso(23,"f");
   
 
@@ -25,8 +25,8 @@ int main(int argc, char* argv[]){
    pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
    //hilos para cpus e ios. Ios se pueden agregar durante la ejecucion y las cpus son fijas
    pthread_t hilo_plani_corto_plazo;
+   //pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL); //Creamos el hilo
    pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL); //Creamos el hilo
-   
    pthread_join(hilo_plani_largo_plazo,NULL);
    pthread_join(hilo_plani_corto_plazo,NULL);
    

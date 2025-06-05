@@ -49,6 +49,7 @@ void incrementar_var_global_id_proceso();
 bool consultar_si_puede_entrar(struct pcb *proceso);
 bool menor_por_rafaga(void* a, void* b);
 int buscar_en_lista(t_list *lista,int pid);
+int buscar_cpu_libre(t_list *lista);
 void esperar_enter_por_pantalla();
 void *planificador_proceso_mas_chico_primero();
 void *planificador_largo_plazo_fifo();
