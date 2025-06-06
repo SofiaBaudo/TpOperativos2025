@@ -46,7 +46,7 @@ struct pcb *obtener_primer_proceso_de_new();
 void transicionar_a_new(struct pcb *proceso);
 void incrementar_var_global_id_proceso();
 bool consultar_si_puede_entrar(struct pcb *proceso);
-bool menor_por_estimacion(void* a, void* b)
+bool menor_por_estimacion(void* a, void* b);
 int buscar_en_lista(t_list *lista,int pid);
 int buscar_cpu_libre(t_list *lista);
 void esperar_enter_por_pantalla();
