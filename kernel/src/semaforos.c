@@ -2,7 +2,7 @@
 
 pthread_mutex_t mx_identificador_del_proceso;
 pthread_mutex_t mx_avisar_que_entro_el_primero;
-pthread_mutex_t mx_ultimo_en_entrar;
+pthread_mutex_t mx_proximo_a_consultar;
 //pthread_mutex_t mx_usar_cola_new;
 //pthread_mutex_t mx_usar_cola_ready;
 pthread_mutex_t mx_usar_cola_estado[7];
@@ -18,7 +18,7 @@ sem_t CPUS_LIBRES;
 void inicializar_sincronizacion() {
     pthread_mutex_init(&mx_identificador_del_proceso, NULL);
     pthread_mutex_init(&mx_avisar_que_entro_el_primero,NULL);
-    pthread_mutex_init(&mx_ultimo_en_entrar,NULL);
+    pthread_mutex_init(&mx_proximo_a_consultar,NULL);
     //pthread_mutex_init(&mx_usar_cola_new,NULL);
     //pthread_mutex_init(&mx_usar_cola_ready,NULL);
      for(int i=0; i<2; i++){

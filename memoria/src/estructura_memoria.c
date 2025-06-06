@@ -6,6 +6,7 @@
 #include <variables_globales_memoria.h>
 
 // Declaracion de Variables Globales
+
 int TAM_PAGINA;
 int CANTIDAD_NIVELES;
 int TAM_MEMORIA;
@@ -16,12 +17,13 @@ int informacion;
 t_metricas listado_metricas;
 
 // Variables de Paginacion Procesos
+
 int tabla_dir_logica[5][2];
 int pagina_proceso[64][2];
 int** tabla_paginas = NULL;
 float tamanio_marco;
 
-void inicializar_tabla_dir_logica() {
+void inicializar_tabla_dir_logica(){
     tamanio_marco = (float) TAM_PAGINA / 64.0;
     tabla_paginas = malloc(CANTIDAD_NIVELES * sizeof(int*));
     for (int i = 0; i < CANTIDAD_NIVELES; i++) {

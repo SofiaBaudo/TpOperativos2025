@@ -5,16 +5,15 @@
 t_list* procesos = NULL;
 t_list* colaEstados[7]={NULL};
 int identificador_del_proceso = 0;
-struct pcb *ultimo_proceso_en_entrar;
-int rafaga_de_prueba = 4;
-
+struct pcb *proximo_a_consultar;
+int estimacion_de_prueba = 4;
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
     struct pcb* pcb = malloc(sizeof(struct pcb));
     pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo);
     //pcb -> estado = NEW; // seguramente no sirva mucho
     transicionar_a_new(pcb); //aca esta lo de ultimo proceso en entrar
     log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
-    log_info(kernel_logger,"Su rafaga es de: %i",rafaga_de_prueba);
+    log_debug(kernel_debug_log,"Su proxima estimacion es: %i",pcb->proxima_estimacion);
     incrementar_var_global_id_proceso();
   return; 
 }
@@ -26,19 +25,14 @@ void *planificador_proceso_mas_chico_primero(){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR);
         struct pcb* primer_proceso = obtener_primer_proceso_de_new();
-        if(primer_proceso->pid == ultimo_proceso_en_entrar->pid){
+        if(primer_proceso->pid == proximo_a_consultar->pid){
                 bool respuesta = consultar_si_puede_entrar(primer_proceso);
                 log_debug(kernel_debug_log,"Conexion con memoria cerrada");
                 if(respuesta == true){
                     struct pcb *proceso = sacar_primero_de_la_lista(NEW);
                     cambiarEstado(proceso,NEW,READY);
                     sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
-                    struct pcb *primer_proceso_actualizado = obtener_primer_proceso_de_new();
-                    if(primer_proceso_actualizado!=NULL){
-                        pthread_mutex_lock(&mx_ultimo_en_entrar);
-                        ultimo_proceso_en_entrar = primer_proceso_actualizado;
-                        pthread_mutex_unlock(&mx_ultimo_en_entrar);
-                    }
+                    actualizar_proximo_a_consultar();
                 }
         }
         sem_post(&INTENTAR_INICIAR);
@@ -85,7 +79,7 @@ void *planificador_corto_plazo_fifo(){
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
         
-        //poner_a_ejecutar(proceso);
+        //poner_a_ejecutar(proceso); //estaria bueno mandar tambien la cpu que usa 
         //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
 }   
@@ -98,7 +92,7 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
         usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         pthread_mutex_lock(&mx_usar_cola_estado[READY]); //Preguntar en el soporte si tiene sentido el mutex
-        list_sort(colaEstados[READY],menor_por_rafaga);
+        list_sort(colaEstados[READY],menor_por_estimacion);
         pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
@@ -120,11 +114,10 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
     pcb -> pc = 0;
     pcb -> tamanio = tamanio;
     pcb -> ruta_del_archivo_de_pseudocodigo = ruta_archivo;
-    pcb->ya_ejecuto_en_cpu = false;
     pcb->ultima_estimacion = atoi(ESTIMACION_INICIAL);
-    pcb->rafaga_actual_cpu = rafaga_de_prueba;
-    rafaga_de_prueba--;
-    //pcb -> rafaga_actual_cpu = calcular_rafaga(pcb); despues descomentar
+    //pcb->proxima_estimacion = atoi(ESTIMACION_INICIAL);
+    pcb->proxima_estimacion = estimacion_de_prueba;
+    estimacion_de_prueba--;
     return pcb;
 }
 
@@ -138,9 +131,9 @@ void transicionar_a_new(struct pcb *pcb){
         list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
     //}else{
         //insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
-        //pthread_mutex_lock(&mx_ultimo_en_entrar);
-        //ultimo_proceso_en_entrar = pcb;
-        //pthread_mutex_unlock(&mx_ultimo_en_entrar);
+        //pthread_mutex_lock(&mx_proximo_a_consultar);
+        //proximo_a_consultar = pcb;
+        //pthread_mutex_unlock(&mx_proximo_a_consultar);
     //}
     pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
     sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
@@ -173,8 +166,16 @@ bool consultar_si_puede_entrar(struct pcb *proceso){
     return respuesta;
 }
 
+void actualizar_proximo_a_consultar(){
+    struct pcb *primer_proceso_actualizado = obtener_primer_proceso_de_new();
+    if(primer_proceso_actualizado!=NULL){
+        pthread_mutex_lock(&mx_proximo_a_consultar);
+        proximo_a_consultar = primer_proceso_actualizado;
+        pthread_mutex_unlock(&mx_proximo_a_consultar);
+    }
+}
+
 int buscar_en_lista(t_list *lista, int pid) {
-   
     if (!lista) {
         printf("La lista no tiene ningan proceso\n");
         return -1;
@@ -214,22 +215,18 @@ int buscar_cpu_libre(t_list *lista) {
     return -1;
 }
 
-int calcular_rafaga(struct pcb *proceso){
-    if(proceso->ya_ejecuto_en_cpu){
-        int rafaga;
+int calcular_proxima_estimacion(struct pcb *proceso){
+        int prox_estimacion;
         float alfa = (float)atof(ALFA);
-        rafaga = alfa * proceso->duracion_ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
-        return rafaga;
-    }
-    else{
-        return (atoi(ESTIMACION_INICIAL));
-    }
+        prox_estimacion = alfa * proceso->duracion_ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
+        //capaz agregar que proceso->ultima_estimacion sea esta
+        return prox_estimacion;
 }
 
-bool menor_por_rafaga(void* a, void* b){
+bool menor_por_estimacion(void* a, void* b){
     struct pcb* p1 = (struct pcb*) a;
     struct pcb* p2 = (struct pcb*) b;
-    return p1->rafaga_actual_cpu < p2->rafaga_actual_cpu;
+    return p1->proxima_estimacion < p2->proxima_estimacion;
 }
 
 bool menor_por_tamanio(void* a, void* b) {
