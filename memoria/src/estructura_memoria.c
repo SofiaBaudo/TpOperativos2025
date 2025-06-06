@@ -1,20 +1,101 @@
-#include <estructura_memoria.h>
+#include "estructura_memoria.h"
 #include <commons/collections/list.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <variables_globales_memoria.h>
 
-//Declaracion de Variables Globales
-
-int pagina [1] [2];
-
+// Declaracion de Variables Globales
+int TAM_PAGINA;
+int CANTIDAD_NIVELES;
+int TAM_MEMORIA;
 char* info_a_escribir;
 char* info_a_leer;
-
+int info_a_buscar;
+int informacion;
 t_metricas listado_metricas;
 
-/*Estructuras: La memoria contará principalmente con 4 estructuras:*/
+// Variables de Paginacion Procesos
+int tabla_dir_logica[5][2];
+int pagina_proceso[64][2];
+int** tabla_paginas = NULL;
+float tamanio_marco;
+
+void inicializar_tabla_dir_logica() {
+    tamanio_marco = (float) TAM_PAGINA / 64.0;
+    tabla_paginas = malloc(CANTIDAD_NIVELES * sizeof(int*));
+    for (int i = 0; i < CANTIDAD_NIVELES; i++) {
+        tabla_paginas[i] = malloc(2 * sizeof(int));
+    }
+}
+
+void liberar_tabla_dir_logica() {
+    for (int i = 0; i < CANTIDAD_NIVELES; i++) {
+        free(tabla_paginas[i]);
+    }
+    free(tabla_paginas);
+}
+
+bool buscar_en_pagina(int info_a_buscar) {
+    for (int i = 0; i < 64; i++) {
+        if (pagina_proceso[i][1] == info_a_buscar) {
+            return true;
+        }
+    }
+    return false;
+}
+
+char* funcion_escritura(int pagina, char* info_a_escribir, int direccion) {
+    for (int i = 0; i < 64; i++) {
+        if (pagina_proceso[i][0] == pagina && pagina_proceso[i][1] == direccion) {
+            return "OK";
+        }
+    }
+    return "No OK";
+}
+
+char* funcion_lectura(int pagina, int tamanio, int direccion) {
+    static char info_leida[64];
+
+    for (int i = 0; i < 64; i++) {
+        if (pagina_proceso[i][0] == pagina && pagina_proceso[i][1] == direccion) {
+            snprintf(info_leida, sizeof(info_leida), "Dato en [%d][%d]", i, 1);
+            return info_leida;
+        }
+    }
+
+    snprintf(info_leida, sizeof(info_leida), "0");
+    return info_leida;
+}
+
+bool actualizar_pagina(int pagina_usuario, int info) {
+    for (int i = 0; i < 64; i++) {
+        if (pagina_proceso[i][0] == pagina_usuario && pagina_proceso[i][1] == info) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
+//Las tablas de páginas, que representarán el espacio de Kernel.
+
+void* tabla_de_paginas(int ENTRADAS_POR_TABLA){
+    //Paginacion
+}
+*/
+
+
+/*
+//leer txt
+void memory_dump(){
+
+}
+*/
+
+
+//Estructuras: La memoria contará principalmente con 4 estructuras:
+
 /*
 //Un espacio contiguo de memoria (representado por un void*). Este representará el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
 void* espacio_usuario(int pid, int pc, char* proceso_lectura_escritura){
@@ -28,25 +109,6 @@ void* espacio_usuario(int pid, int pc, char* proceso_lectura_escritura){
         //Log error
     }
     return NULL; //cuando quede implementada hay que chequear que devolver
-}
-
-*/
-/*
-//Función escritura en Memoria de usuario (viene de cpu)
-
-void* funcion_escritura(char* info_a_escribir){
- 
-}
-
-//Función lectura en Memoria de Usuario (viene de cpu)
-void* funcion_lectura(char* info_a_leer){
-    
-}
-
-//Las tablas de páginas, que representarán el espacio de Kernel.
-
-void* tabla_de_paginas(int ENTRADAS_POR_TABLA){
-    //Paginacion
 }
 
 */
@@ -73,35 +135,6 @@ Cantidad de Lecturas de memoriaMore actions
 Cantidad de Escrituras de memoria
 */
 
-/*
-void* metricas_proceso(int pid,int pagina){
-    switch (listado_metricas.pid)
-    {
-    case listado_metricas.cant_acceso_tabla_pagina:
-        listado_metricas.cant_acceso_tabla_pagina++;
-    break;
-    case listado_metricas.instrucciones_solicitadas:
-        listado_metricas.instrucciones_solicitadas++;
-    break;
-    case listado_metricas.bajadas_swap:
-        listado_metricas.bajadas_swap++;
-    break;
-    case listado_metricas.cant_subidas_memoria_principal:
-        listado_metricas.cant_subidas_memoria_principal++;
-    break;
-    case listado_metricas.cant_lecturas_memoria:
-        listado_metricas.cant_lecturas_memoria++;
-    break;
-    case listado_metricas.cant_escrituras_memoria:
-        listado_metricas.cant_escrituras_memoria++;
-    break;
-    default:
-    //log_error 
-    break;
-    }
-}  
-*/
-
 void* metricas_proceso(int pid, tipo_metrica metrica) {
     switch (metrica) {
         case ACCESO_TABLA:
@@ -123,11 +156,11 @@ void* metricas_proceso(int pid, tipo_metrica metrica) {
             listado_metricas.cant_escrituras_memoria++;
             break;
         default:
-            // log_error
             break;
     }
     return NULL;
 }
+
 
 /*
 DESTRUCCION DE PROCESO
