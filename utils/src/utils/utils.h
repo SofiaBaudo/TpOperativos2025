@@ -12,7 +12,7 @@
 #include <commons/config.h>
 #include <string.h> // para usar, por ejemplo, la funcion memset en iniciar conexion
 #include <unistd.h> // para funciones como por ejemplo close(linea 105 utils.c)
-
+#include <semaphore.h>
 typedef enum op_code
 {
 	// Handshakes
@@ -93,6 +93,7 @@ struct instancia_de_io{
     struct pcb *proceso_ejecutando;
     t_list *procesos_esperando;
 	int cantInstancias;
+	sem_t hay_procesos_esperando;
 };
 typedef enum{
   REC_CPU,

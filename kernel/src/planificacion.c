@@ -107,6 +107,20 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
     }
 }
 
+/*void *planificador_corto_plazo_sjf_con_desalojo(){
+    //llega el proceso
+    // pregunto si hay cpu libre
+    //si hay, 
+        //ejecuto en esa cpu
+    //si no hay,
+        // comparo la estimacion con la de los demas
+            //si es mas grande 
+                // siguen ejecutando los que estaaban
+                //reanudo su tiempo de ejecucion
+            //caso contrario, 
+                //desalojo al proceso de mayor tiempo restante y le resto a la est. inicial lo que ya ejecutó
+}*/
+
 //FUNCIONES AUXILIARES
 
 struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo){
@@ -300,16 +314,18 @@ int manejar_dump(struct pcb *aux){
     return respuesta;
 }
 
-int finalizar_proceso(struct pcb*aux){
+void finalizar_proceso(struct pcb*aux){
     cambiarEstado(aux,EXEC,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(EXIT,buffer,socket);
-    int confirmacion = recibir_entero(socket);
-    return confirmacion;
+    free(aux);
+    //int confirmacion = recibir_entero(socket);
+    //return confirmacion;
 }
 
 void poner_a_ejecutar(struct pcb* aux){
+    //iniciar cronometro
     bool bloqueante = false;
     while(!bloqueante){
         mandar_paquete_a_cpu(aux);
@@ -326,7 +342,6 @@ void poner_a_ejecutar(struct pcb* aux){
                 //int confirmacion = finalizarProceso(aux); descomentar despues
                 //preguntar si puede llegar a pasar que se rechace
                 //tener en cuenta lo del mediano plazo
-                free(aux);
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
@@ -346,19 +361,14 @@ void poner_a_ejecutar(struct pcb* aux){
                 //agregar mutex
                 int posicionIO = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
                 if(posicionIO == -1){ //quiere decir que no hay ninguna syscall con ese nombre
-                    cambiarEstado(aux,EXEC,EXIT_ESTADO);
+                    finalizar_proceso(aux);
                 }else{
                     cambiarEstado(aux,EXEC,BLOCKED);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,posicionIO);
-                    if(io_aux->cantInstancias > 0){
-                        //crear paquete con el pid y los milisegundos y mandarlo a IO.
-                        pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                    }
-                    else{
-                        list_add(io_aux->procesos_esperando,aux);
-                        pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                    }
+                    list_add(io_aux->procesos_esperando,aux);
+                    sem_post(&io_aux->semaforo);
+                    pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 }
                 bloqueante = true;
                 break;

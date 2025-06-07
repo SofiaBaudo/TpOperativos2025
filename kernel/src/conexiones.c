@@ -143,7 +143,7 @@ void* manejar_kernel_io(void *socket_io){
        case HANDSHAKE_IO:
            //LOG_INFO : ES EL LOG OBLIGATORIO
             log_info(kernel_logger, "## IO Conectado - FD del socket: %d", io);
-                printf("\n");
+            printf("\n");
             enviar_op_code(io, HANDSHAKE_ACCEPTED); 
             struct instancia_de_io *aux = malloc(sizeof(struct instancia_de_io)); 
             t_paquete *paquete = recibir_paquete(io);
@@ -155,6 +155,8 @@ void* manejar_kernel_io(void *socket_io){
             if(pos == -1){
                 aux->nombre = nombre;
                 aux->cantInstancias = 1;
+                sem_init(&aux->hay_procesos_esperando,0,0);
+                log_debug(kernel_debug_log,"Inicialice el semaforo");
                 list_add(ios_conectados,aux);
                 log_debug(kernel_debug_log,"Se conecto la primera instancia de la IO: %s",nombre);
             }
@@ -164,13 +166,7 @@ void* manejar_kernel_io(void *socket_io){
                 log_debug(kernel_debug_log,"Se conecto una nueva instancia de la IO %s y ahora hay %i instancias",nombre,aux->cantInstancias);
             }
             pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-            /*aux->nombre = nombre;
-            aux->puede_usarse = true;
-            log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
-            log_info(kernel_logger,"se conecto el io con nombre; %s",aux->nombre); // %s espera un puntero a char
-            list_add(ios_conectados,aux);
-            log_debug(kernel_debug_log,"Se agrego el io %s a la lista",aux->nombre);
-            */
+            //create hilo io
         break;
         default:
             log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL
@@ -178,6 +174,16 @@ void* manejar_kernel_io(void *socket_io){
    }
    return NULL;
 }
+
+/*void io(void *puntero de io) {
+    while (true)
+        sem_wait //positovs = cant procesos esperando, negativo = cant ios disponibles
+        //cuando encuentra
+        sacar primer proceso de la lista de procesos bloqueados
+        mandar mensaje a io
+        recibir respuesta
+        volver
+}*/
 
 int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);

@@ -8,7 +8,8 @@ int main(int argc, char* argv[]){
  //argc es la cantidad de argumentos y argv que contiene cada argumento
   
    inicializar_kernel();
-  
+   atender_kernel_io();
+  /*
    struct instancia_de_cpu *cpu_1 = malloc(sizeof(struct instancia_de_cpu));
    struct instancia_de_cpu *cpu_2 = malloc(sizeof(struct instancia_de_cpu));
    cpu_1->id_cpu = 1;
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]){
   
    pthread_join(hilo_plani_largo_plazo,NULL);
    pthread_join(hilo_plani_corto_plazo,NULL);
-   
+   */
    //pthread_detach(hilo_plani_largo_plazo);//El hilo se desacopla del hilo principal.
 
 // ¿wait y signal para que espere a que se cree un proceso?

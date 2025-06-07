@@ -4,7 +4,7 @@
 #include <conexiones.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <commons/temporal.h>
 typedef enum{
   NEW, //0
   READY,//1
@@ -47,6 +47,7 @@ void transicionar_a_new(struct pcb *proceso);
 void incrementar_var_global_id_proceso();
 bool consultar_si_puede_entrar(struct pcb *proceso);
 bool menor_por_estimacion(void* a, void* b);
+//void *planificador_corto_plazo_sjf_con_desalojo();
 int buscar_en_lista(t_list *lista,int pid);
 int buscar_cpu_libre(t_list *lista);
 void esperar_enter_por_pantalla();
@@ -66,7 +67,7 @@ void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 void mandar_paquete_a_cpu(struct pcb *prcoeso);
 int manejar_dump(struct pcb *aux);
 int calcular_proxima_estimacion(struct pcb *proceso);
-int finalizar_proceso(struct pcb*aux);
+void finalizar_proceso(struct pcb*aux);
 void poner_a_ejecutar(struct pcb* aux);
 
 // podria armar algo parecido que devuelva la rafaga
