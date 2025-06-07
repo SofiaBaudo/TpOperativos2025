@@ -107,11 +107,13 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
     }
 }
 
-void *planificador_corto_plazo_sjf_con_desalojo(){
+/*void *planificador_corto_plazo_sjf_con_desalojo(){
     sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-    int pos = buscar_cpu_libre()
-
-    /*/llega el proceso
+    pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+    int pos_cpu = buscar_cpu_libre(cpus_conectadas);
+    struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
+    pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+    /llega el proceso
     // pregunto si hay cpu libre
     //si hay, 
         //ejecuto en esa cpu
@@ -122,8 +124,8 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
                 //reanudo su tiempo de ejecucion
             //caso contrario, 
                 //desalojo al proceso de mayor tiempo restante y le resto a la est. inicial lo que ya ejecutó
-                */
-}
+                
+}*/
 
 //FUNCIONES AUXILIARES
 
