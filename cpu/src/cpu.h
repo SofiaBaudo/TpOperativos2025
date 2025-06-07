@@ -8,6 +8,7 @@
 t_log *cpu_logger;
 t_log *cpu_log_debug;
 t_config *cpu_config; 
+t_log *logs;
 
 //Variables Globales CPU
 int tamPag;
