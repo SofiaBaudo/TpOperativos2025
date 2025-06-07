@@ -107,8 +107,11 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
     }
 }
 
-/*void *planificador_corto_plazo_sjf_con_desalojo(){
-    //llega el proceso
+void *planificador_corto_plazo_sjf_con_desalojo(){
+    sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
+    int pos = buscar_cpu_libre()
+
+    /*/llega el proceso
     // pregunto si hay cpu libre
     //si hay, 
         //ejecuto en esa cpu
@@ -119,7 +122,8 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
                 //reanudo su tiempo de ejecucion
             //caso contrario, 
                 //desalojo al proceso de mayor tiempo restante y le resto a la est. inicial lo que ya ejecutó
-}*/
+                */
+}
 
 //FUNCIONES AUXILIARES
 
@@ -325,7 +329,7 @@ void finalizar_proceso(struct pcb*aux){
 }
 
 void poner_a_ejecutar(struct pcb* aux){
-    //iniciar cronometro
+    t_temporal *cronometro = temporal_create();
     bool bloqueante = false;
     while(!bloqueante){
         mandar_paquete_a_cpu(aux);

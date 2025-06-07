@@ -175,13 +175,19 @@ void* manejar_kernel_io(void *socket_io){
    return NULL;
 }
 
-/*void io(void *puntero de io) {
+/*void io(void *instancia_de_io) { //el aux
+    instancia_io *io = instancia_de_io;
     while (true)
         sem_wait //positovs = cant procesos esperando, negativo = cant ios disponibles
         //cuando encuentra
         sacar primer proceso de la lista de procesos bloqueados
         mandar mensaje a io
         recibir respuesta
+        switch:
+        si ok: retorno proceso a READY
+        si not ok:
+        si desconecto: finalizo el proceso; me fijo si hay otros IOs, sino mato
+        //el mensaje de desconexion lo recibe por el socket, no hace falta hardcodearlo desde el IO
         volver
 }*/
 
