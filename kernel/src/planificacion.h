@@ -29,8 +29,8 @@ struct rafaga{
 struct pcb{
   int pid;
   int pc;
-  int proxima_estimacion;
-  int ultima_estimacion;
+  int proxima_estimacion; //deberia ser float
+  int ultima_estimacion; //deberia ser float
   int duracion_ultima_rafaga; //capaz deberia ser un long por el tema del gettime
   //despues terminar lo de las metricas de estado y la otra metrica
   //Estado estado;

@@ -363,7 +363,6 @@ void poner_a_ejecutar(struct pcb* aux){
             case IO:
                 //int milisegundos = deserializar_cant_segundos(paquete);
                 char *nombre_io_a_usar = deserializar_nombre_syscall_io(paquete);
-                //agregar mutex
                 int posicionIO = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
                 if(posicionIO == -1){ //quiere decir que no hay ninguna syscall con ese nombre
                     finalizar_proceso(aux);
