@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <variables_globales_memoria.h>
+#include <inicializar_memoria.h>
 
 // Declaracion de Variables Globales
 
@@ -18,23 +19,38 @@ t_metricas listado_metricas;
 
 // Variables de Paginacion Procesos
 
-int tabla_dir_logica[5][2];
+int** tabla_dir_logica;
 int pagina_proceso[64][2];
 int** tabla_paginas = NULL;
 float tamanio_marco;
 
-void inicializar_tabla_dir_logica(){
+
+//valores leídos en leer_config() y los copia a variables globales y lo podemos usar en todo el módulo 
+void inicializar_variables_globales() {
+    TAM_PAGINA = memoria_config.TAM_PAGINA;
+    CANTIDAD_NIVELES = memoria_config.CANTIDAD_NIVELES;
+    TAM_MEMORIA = memoria_config.TAM_MEMORIA;
+}
+
+//cambie la funcion pero la adapte a cantidad_niveles con la dir logic y la tp
+void inicializar_tabla_dir_logica() {
     tamanio_marco = (float) TAM_PAGINA / 64.0;
+
+    tabla_dir_logica = malloc(CANTIDAD_NIVELES * sizeof(int*));
     tabla_paginas = malloc(CANTIDAD_NIVELES * sizeof(int*));
+
     for (int i = 0; i < CANTIDAD_NIVELES; i++) {
+        tabla_dir_logica[i] = malloc(2 * sizeof(int));
         tabla_paginas[i] = malloc(2 * sizeof(int));
     }
 }
 
 void liberar_tabla_dir_logica() {
     for (int i = 0; i < CANTIDAD_NIVELES; i++) {
+        free(tabla_dir_logica[i]);
         free(tabla_paginas[i]);
     }
+    free(tabla_dir_logica);
     free(tabla_paginas);
 }
 
