@@ -11,6 +11,8 @@ t_config *cpu_config;
 
 //Variables Globales CPU
 int tamPag;
+int cantNiveles;
+int entradasTabla;
 int fd_conexion_dispatch_memoria;
 int fd_conexion_kernel_dispatch;
 int fd_conexion_kernel_interrupt;

@@ -1,6 +1,7 @@
 //Incluir las librerias
-
+#include <conexiones.h>
 #include <inicializar_cpu.h>
+#include <pthread.h>
 
 
 //Funcion de Inicializacion de CPU
@@ -14,7 +15,18 @@ void* inicializar_CPU(int id){
     //iniciar_conexion_kernel_interrupt(valor_id);
     //pthread_create(&hilosCPU[0],NULL, iniciar_conexion_kernel_interrupt, valor_id); //interrupt
     //pthread_create(&hilosCPU[1],NULL, ejecutar_instrucciones, NULL);
-    inicializar(id);
+    /*
+    pthread_t hilo_cliente_mem;
+    pthread_t hilo_cliente_kernel;
+    pthread_create(&hilo_cliente_mem, NULL, inicializar, (void*) valor_id);
+    pthread_detach(hilo_cliente_mem);
+    pthread_create(&hilo_cliente_kernel, NULL, inicializar_memoria, (void*) valor_id);
+    pthread_detach(hilo_cliente_kernel);
+    int status = pthread_create(&hilo_cliente_mem, NULL, inicializar, (void*) valor_id);
+    if (status != 0){
+    log_error(cpu_logger, "Error al crear hilo de inicialización");
+    */
+    inicializar_memoria(valor_id);
     
     return NULL;
 }

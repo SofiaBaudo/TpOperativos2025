@@ -50,6 +50,7 @@ typedef enum op_code
 	RESPUESTA_INSTRUCCION,
 	ENVIO_PID_Y_PC,
 	ENVIO_PID_Y_NUMPAG,
+	ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES,
 	//enums instrucciones
 	NOOP,
 	WRITE,
@@ -132,4 +133,6 @@ int deserializar_pid(t_paquete *paquete);
 int deserializar_pc(t_paquete *paquete);
 int deserializar_tamanio(t_paquete *paquete);
 char *deserializar_nombre_archivo(t_paquete *paquete);
+t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradasTabla, int cantNiveles);
+void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasTabla, int* cantNiveles);
 #endif

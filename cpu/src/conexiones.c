@@ -1,5 +1,6 @@
-//Incluir las librerias
-
+//Incluir las librerias        // Para printf, sprintf, etc.
+#include <stdlib.h>       // Para malloc, free, exit
+#include <string.h>       // (opcional, si usás funciones de string)
 #include <conexiones.h>
 
 // Funcion Iniciar Conexion Kernel
@@ -42,13 +43,20 @@ void* iniciar_conexion_kernel_interrupt(void *arg){
 }
 
 //Iniciar conexion Memoria
+//deserializar tamPag, entradasTabla,cantNiveles
 
-void iniciar_conexion_memoria_dispatch(int identificador_cpu){
+void iniciar_conexion_memoria_dispatch(int identificador_cpu, int *tamPag, int *entradasTabla, int *cantNiveles){
     fd_conexion_dispatch_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
     enviar_op_code(fd_conexion_dispatch_memoria, HANDSHAKE_CPU);                  //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_dispatch_memoria);            //recibe un entero que devuelve el kernel cuando la conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
         log_info(cpu_logger ,"Conexion con la memoria establecida correctamente");
+        t_paquete* paquete = recibir_paquete(fd_conexion_dispatch_memoria);
+    if (!paquete || !paquete->buffer || !paquete->buffer->stream) {
+        log_error(cpu_logger, "Error: paquete recibido inválido o buffer vacío");
+        exit(1);
+    }
+    deserializar_config_memoria(paquete, tamPag, entradasTabla, cantNiveles);
     }
     else{
         log_error(cpu_logger, "Error en la conexion con memoria");
@@ -56,9 +64,11 @@ void iniciar_conexion_memoria_dispatch(int identificador_cpu){
     }
 }
 
+
 //Inicializar las CPUs pedidas por el Config
 
-void inicializar(int id){    
+void* inicializar_memoria(void* arg){
+    int id = *((int*) arg);
     t_log* logger;
     char archivo_log_cpu[50];
     sprintf(archivo_log_cpu, "cpu_%d.log", id);
@@ -69,11 +79,29 @@ void inicializar(int id){
         printf("No se pudo crear el archivo de log para la CPU %d\n", id);
         exit(1);
     }
+    iniciar_conexion_memoria_dispatch(id, &tamPag, &entradasTabla, &cantNiveles);
+    log_info(logger, "iniciarlizar_CPU %d", id);
+    return NULL;
+}
+
+void* inicializar(void* arg){ 
+    int id = *((int*) arg);   
+    t_log* logger;
+    char archivo_log_cpu[50];
+    sprintf(archivo_log_cpu, "cpu_%d.log", id);
+    char nombre_cpu[200];
+    sprintf(nombre_cpu, "cpu_%d", id);
+    logger = log_create(archivo_log_cpu, nombre_cpu, true, LOG_LEVEL_INFO);
+
+    if (logger == NULL) {
+        printf("No se pudo crear el archivo de log para la CPU %d\n", id);
+        exit(1);
+    }
     iniciar_conexion_kernel_dispatch(id, logger);
     log_info(logger, "Iniciando CPU %d", id);   
     log_destroy(logger);
+    return NULL;
 }
-
 
 //Inicializar el enviar id de la CPU
 

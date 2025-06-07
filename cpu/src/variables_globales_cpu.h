@@ -35,6 +35,8 @@ extern int ENTRADAS_TLB;
 extern int ENTRADAS_CACHE;
 extern int RETARDO_CACHE;
 extern int tamPag;
+extern int cantNiveles;
+extern int entradasTabla;
 
 //Declaracion Variables Globales
 

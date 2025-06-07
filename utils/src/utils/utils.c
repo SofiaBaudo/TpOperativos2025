@@ -181,7 +181,36 @@ t_buffer * devolver_pid_a_kernel(int pid){
 	buffer_aux -> stream = buffer_aux-> stream;
 	return buffer_aux;
 }
+t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradasTabla, int cantNiveles){
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 3*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &tamPag, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &entradasTabla, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &cantNiveles, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+}
 
+void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasTabla, int* cantNiveles) {
+	void* stream = paquete->buffer->stream;
+
+	memcpy(tamPag, stream, sizeof(int));
+	stream += sizeof(int);
+
+	memcpy(entradasTabla, stream, sizeof(int));
+	stream += sizeof(int);
+
+	memcpy(cantNiveles, stream, sizeof(int));
+
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+}
 
 
 t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria){
@@ -202,6 +231,7 @@ t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamani
 
 	return buffer_aux;
 }
+
 t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos){
 	t_buffer *buffer_aux = crear_buffer();
 	int longitud = strlen(nombre);

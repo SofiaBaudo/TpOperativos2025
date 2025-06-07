@@ -1,5 +1,7 @@
 #include "servidor_memoria.h"
 #include "instrucciones.h"
+#include "variables_globales_memoria.h"
+#include "inicializar_memoria.h"
 
 //Incluir las Variables Globales
 
@@ -34,7 +36,10 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
 }
 
 void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión con el cliente dependiendo de que modulo venga
-{
+{   
+    int tamPag = memoria_config.TAM_PAGINA;
+    int entradasTabla = memoria_config.ENTRADAS_POR_TABLA;
+    int cantNiveles = memoria_config.CANTIDAD_NIVELES;
     int cliente = *((int *)socketCliente); // Desreferencio el puntero para obtener el socket del cliente
     free(socketCliente);
     op_code cliente_id = recibir_op_code(cliente); // !!!!!!!!!!DESPUES VER DE UNIFICAR LA FUNCION Q HIZO JERE EN EL UTILS DE RECIBIR CON UN CODE_OP PERO QUE SEA OP_CODE!!!!!!!!!!!!!!!!
@@ -50,8 +55,11 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
             //manejar_cliente_kernel(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS. 
             break;
         case HANDSHAKE_CPU:
+
             log_debug(logger_memoria, "Se conecto CPU");
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
+            t_buffer* buffer = crear_buffer_tamPag_entradasTabla_cantNiveles(tamPag, entradasTabla, cantNiveles);
+            crear_paquete(ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES,buffer, cliente);
             //manejar_cpu(cpu);
             break;
         default:
