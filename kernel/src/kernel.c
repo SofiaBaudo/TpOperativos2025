@@ -8,8 +8,15 @@ int main(int argc, char* argv[]){
  //argc es la cantidad de argumentos y argv que contiene cada argumento
   
    inicializar_kernel();
+
+   t_temporal *cronometro = temporal_create();
+   usleep(3000000);
+   temporal_stop(cronometro);
+   int64_t tiempo = temporal_gettime(cronometro);
+   log_debug(kernel_debug_log,"El tiempo obtenido fue de: %ld",tiempo);
+   temporal_destroy(cronometro);
    //atender_kernel_io();
-   atender_kernel_dispatch();
+   //atender_kernel_dispatch();
   /*
    struct instancia_de_cpu *cpu_1 = malloc(sizeof(struct instancia_de_cpu));
    struct instancia_de_cpu *cpu_2 = malloc(sizeof(struct instancia_de_cpu));

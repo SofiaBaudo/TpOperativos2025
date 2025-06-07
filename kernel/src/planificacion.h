@@ -31,7 +31,7 @@ struct pcb{
   int pc;
   int proxima_estimacion;
   int ultima_estimacion;
-  int duracion_ultima_rafaga;
+  int duracion_ultima_rafaga; //capaz deberia ser un long por el tema del gettime
   //despues terminar lo de las metricas de estado y la otra metrica
   //Estado estado;
   int tamanio;
