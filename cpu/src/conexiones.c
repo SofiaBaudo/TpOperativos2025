@@ -7,16 +7,18 @@
 
 void* iniciar_conexion_kernel_dispatch(void *arg){
     int identificador_cpu = *((int*) arg);
+    log_debug(cpu_log_debug,"El id es: %i",identificador_cpu);
     free(arg);
     fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
     enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU_DISPATCH);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
+    log_debug(cpu_log_debug,"La respuesta recibida es: %i",respuesta);
     if (respuesta == HANDSHAKE_ACCEPTED){
-        log_info(logs, "Conexion con el kernel dispatch establecida correctamente");
+        log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
         enviar_id(fd_conexion_kernel_dispatch, identificador_cpu);
     }
     else{
-        log_error(logs, "Error en la conexion con el kernel dispatch");
+        log_error(cpu_logger, "Error en la conexion con el kernel dispatch");
         exit(EXIT_FAILURE);
     }
    
@@ -82,7 +84,6 @@ void* inicializar_memoria(int id){
     }
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
-
     pthread_t hilo_cliente_mem;
     pthread_create(&hilo_cliente_mem, NULL, iniciar_conexion_memoria_dispatch,valor_id);
     pthread_join(hilo_cliente_mem, NULL); //esto hace que espere a que termine el hilo hijo para terminar el programa. 
@@ -116,7 +117,7 @@ void* inicializar_kernel(int id){
     *valor_id = id;
     pthread_create(&hilo_cliente_kernel, NULL, iniciar_conexion_kernel_dispatch, valor_id);
     pthread_join(hilo_cliente_kernel, NULL);
-    log_info(logger, "CPU %d: Conexión con Kernel establecida", id);
+    log_debug(cpu_log_debug,"Por entrar al while");
     while(1){
         op_code terminar = recibir_op_code(fd_conexion_kernel_dispatch);
         if(terminar == -1){

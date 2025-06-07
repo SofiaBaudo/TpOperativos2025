@@ -26,9 +26,9 @@ void inicializar_CPU(int id){
     if (status != 0){
     log_error(cpu_logger, "Error al crear hilo de inicialización");
     */
-
-    inicializar_memoria(id);
     inicializar_kernel(id);
+    inicializar_memoria(id);
+   
 }
 
 //Funcion de Inicializacion de Logs

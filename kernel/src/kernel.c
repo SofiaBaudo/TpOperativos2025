@@ -8,7 +8,8 @@ int main(int argc, char* argv[]){
  //argc es la cantidad de argumentos y argv que contiene cada argumento
   
    inicializar_kernel();
-   atender_kernel_io();
+   //atender_kernel_io();
+   atender_kernel_dispatch();
   /*
    struct instancia_de_cpu *cpu_1 = malloc(sizeof(struct instancia_de_cpu));
    struct instancia_de_cpu *cpu_2 = malloc(sizeof(struct instancia_de_cpu));
@@ -21,7 +22,7 @@ int main(int argc, char* argv[]){
    list_add(cpus_conectadas,cpu_2);
    sem_post(&CPUS_LIBRES);
    //atender_kernel_io();
-   //atender_kernel_dispatch();
+ 
 
 
    crear_proceso(5,"f1");

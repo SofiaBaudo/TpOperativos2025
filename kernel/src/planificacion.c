@@ -331,7 +331,7 @@ void finalizar_proceso(struct pcb*aux){
 }
 
 void poner_a_ejecutar(struct pcb* aux){
-    t_temporal *cronometro = temporal_create();
+    //t_temporal *cronometro = temporal_create();
     bool bloqueante = false;
     while(!bloqueante){
         mandar_paquete_a_cpu(aux);
@@ -345,8 +345,7 @@ void poner_a_ejecutar(struct pcb* aux){
                 //avisar que termine
                 break;
             case EXIT:
-                //int confirmacion = finalizarProceso(aux); descomentar despues
-                //preguntar si puede llegar a pasar que se rechace
+                finalizar_proceso(aux);
                 //tener en cuenta lo del mediano plazo
                 bloqueante = true;
                 break;
@@ -373,7 +372,7 @@ void poner_a_ejecutar(struct pcb* aux){
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,posicionIO);
                     list_add(io_aux->procesos_esperando,aux);
-                    sem_post(&io_aux->semaforo);
+                    sem_post(&io_aux->hay_procesos_esperando);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 }
                 bloqueante = true;
