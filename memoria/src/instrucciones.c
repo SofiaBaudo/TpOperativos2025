@@ -78,6 +78,7 @@ t_instruccion* obtener_instruccion(int pid, int pc) {
             return list_get(p->instrucciones, pc);
         }
     }
+    //log_info("## PID: <%d> - Obtener instrucción: <%d> - Instrucción: <INSTRUCCIÓN> <...ARGS>", pid, pc, lista_procesos_instrucciones);
     return NULL;
 }
 

@@ -25,7 +25,6 @@ typedef struct {
 extern t_list* lista_procesos_instrucciones; //lista global
 op_code string_a_instruccion(char* token);
 
-
 t_list* cargar_instrucciones_desde_archivo(char* path);
 t_instruccion* obtener_instruccion(int pid, int pc);
 

@@ -9,26 +9,16 @@
 void inicializar_CPU(int id){
     inicializar_logs();
     inicializar_configs();
-    
-    //pthread_t hilosCPU[2]; // interrupt, para instrucciones
+    int* valor_id = malloc(sizeof(int));
+    *valor_id = id;
+    pthread_t hiloKernel;
+    pthread_t hiloMemoria;
 
-    //iniciar_conexion_kernel_interrupt(valor_id);
-    //pthread_create(&hilosCPU[0],NULL, iniciar_conexion_kernel_interrupt, valor_id); //interrupt
-    //pthread_create(&hilosCPU[1],NULL, ejecutar_instrucciones, NULL);
-    /*
-    
-    pthread_t hilo_cliente_kernel;
-    pthread_create(&hilo_cliente_mem, NULL, inicializar, (void*) valor_id);
-    pthread_detach(hilo_cliente_mem);
-    pthread_create(&hilo_cliente_kernel, NULL, inicializar_memoria, (void*) valor_id);
-    pthread_detach(hilo_cliente_kernel);
-    int status = pthread_create(&hilo_cliente_mem, NULL, inicializar, (void*) valor_id);
-    if (status != 0){
-    log_error(cpu_logger, "Error al crear hilo de inicialización");
-    */
-    inicializar_kernel(id);
-    inicializar_memoria(id);
-   
+    pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
+    pthread_join(hiloKernel, NULL);
+    //inicializar_kernel(id);
+    pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);
+    pthread_join(hiloMemoria, NULL);
 }
 
 //Funcion de Inicializacion de Logs

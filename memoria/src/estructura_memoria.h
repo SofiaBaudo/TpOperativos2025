@@ -26,6 +26,6 @@ void* metricas_proceso(int pid, tipo_metrica metrica);
 char* funcion_lectura(int pagina, int tamanio, int direccion);
 char* funcion_escritura(int pagina, char* info_a_escribir, int direccion);
 bool buscar_en_pagina(int info_a_buscar);
-bool actualizar_pagina(int pagina_usuario, int informacion);
+bool actualizar_pagina(int pagina, int informacion);
 
 #endif

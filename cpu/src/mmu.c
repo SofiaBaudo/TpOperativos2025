@@ -15,7 +15,6 @@ struct nivel{
     int tamanio;
     void* tablaDeNivel[400]; //es puntero generico porque hay veces que apunta a una pagina y veces que apunta a un prox nivel
 };
-
 /*
 void creacionNivelesN(int n){
    nivel* niveles[n]; 
@@ -27,6 +26,7 @@ int traduccion(int direccion, int pid){ //te tendria que devolver la dir fisica
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int numeroMarco;
+    navegarNiveles(numPag);
     numeroMarco = accederATp(numPag, pid);
     //SEGUIR
     return numeroMarco; //lo pongo esto para que no tire warning
@@ -37,11 +37,11 @@ void enviarValoresMem(int numPag, int pid){
     crear_paquete(ENVIO_PID_Y_NUMPAG, buffer,fd_conexion_dispatch_memoria);
 }
 
-int accederATp(int numPag, int pid){
-    int numMarco = 0;
-    //send(fd_conexion_dispatch_memoria, &numPag, sizeof(int), 0); TB TIENE Q MANDAR EL PID
-    enviarValoresMem(numPag, pid);
-    //solo recibo el num de marco, no me importa el pid porque ya lo se
-    recv(fd_conexion_dispatch_memoria, &numMarco, sizeof(int), 0);
-    return numMarco;
+void navegarNiveles(int numPag){
+    int marcoDeNiveles[cantNiveles];
+    for(int i = 0; i < cantNiveles; i++){
+        double entradaNivel = floor(numPag/entradasTabla^(cantNiveles-i)) % entradasTabla;
+        marcoDeNiveles[i] = entradaNivel;
+        //guardo la entrada nivel por cada 
+    }
 }

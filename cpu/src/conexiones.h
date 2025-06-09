@@ -6,8 +6,8 @@
 void cerrar_conexion(int socket);
 void* iniciar_conexion_kernel_dispatch(void *arg);
 void* iniciar_conexion_kernel_interrupt(void *arg);
-void* inicializar_kernel(int id);
+void* inicializar_kernel(void *arg);
 void enviar_id(int fd_conexion, int identificador_cpu);
 void* iniciar_conexion_memoria_dispatch(void *arg);
-void* inicializar_memoria(int id);
+void* inicializar_memoria(void *arg);
 

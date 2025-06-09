@@ -71,7 +71,8 @@ void* iniciar_conexion_memoria_dispatch(void* arg){
 }
 //Inicializar las CPUs pedidas por el Config
 
-void* inicializar_memoria(int id){
+void* inicializar_memoria(void* arg){
+    int id = *(int *)arg;
     t_log* logger;
     char archivo_log_cpu[50];
     sprintf(archivo_log_cpu, "cpu_%d.log", id);
@@ -101,7 +102,8 @@ void* inicializar_memoria(int id){
     return NULL;
 }
 
-void* inicializar_kernel(int id){   
+void* inicializar_kernel(void* arg){   
+    int id = *(int *)arg;
     t_log* logger;
     char archivo_log_cpu[50];
     sprintf(archivo_log_cpu, "cpu_%d.log", id);

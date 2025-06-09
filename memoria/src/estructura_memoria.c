@@ -25,7 +25,8 @@ int** tabla_paginas = NULL;
 float tamanio_marco;
 
 
-//valores leídos en leer_config() y los copia a variables globales y lo podemos usar en todo el módulo 
+//valores leídos en leer_config() y los copia a variables globales y lo podemos usar en todo el módulo
+
 void inicializar_variables_globales() {
     TAM_PAGINA = memoria_config.TAM_PAGINA;
     CANTIDAD_NIVELES = memoria_config.CANTIDAD_NIVELES;
@@ -33,12 +34,11 @@ void inicializar_variables_globales() {
 }
 
 //cambie la funcion pero la adapte a cantidad_niveles con la dir logic y la tp
-void inicializar_tabla_dir_logica() {
-    tamanio_marco = (float) TAM_PAGINA / 64.0;
 
+void inicializar_tabla_dir_logica() {
+    tamanio_marco = (float) TAM_PAGINA / 64;
     tabla_dir_logica = malloc(CANTIDAD_NIVELES * sizeof(int*));
     tabla_paginas = malloc(CANTIDAD_NIVELES * sizeof(int*));
-
     for (int i = 0; i < CANTIDAD_NIVELES; i++) {
         tabla_dir_logica[i] = malloc(2 * sizeof(int));
         tabla_paginas[i] = malloc(2 * sizeof(int));
@@ -63,8 +63,34 @@ bool buscar_en_pagina(int info_a_buscar) {
     return false;
 }
 
+//Leer Página completa
+//Se deberá devolver el contenido correspondiente de la página a partir del byte enviado como dirección física dentro de la Memoria de Usuario, que deberá coincidir con la posición del byte 0 de la página.
+//PREGUNTAR POSICION BYTE 0 SOPORTE
+
+int* leer_pagina(){
+    static int contenido_pagina[64];
+    for(int i = 0; i < 64; i++){
+            contenido_pagina [i] = pagina_proceso [i][1];
+            return contenido_pagina;
+    }
+    snprintf(contenido_pagina, sizeof(contenido_pagina), "0");
+    return contenido_pagina;
+}
+
+//Acceso a tabla de páginas
+//responder con el número de marco
+//tener en cuenta la cantidad de niveles de tablas de páginas accedido, debiendo considerar un acceso (con su respectivo conteo de métricas y retardo de acceso) por cada nivel de tabla de páginas accedido.
+
+/*
+int acceso_tabla_paginas(int pagina_proceso)
+{
+    int num_marco;
+    return num_marco;
+}
+*/
+
 char* funcion_escritura(int pagina, char* info_a_escribir, int direccion) {
-    for (int i = 0; i < 64; i++) {
+    for(int i = 0; i < 64; i++) {
         if (pagina_proceso[i][0] == pagina && pagina_proceso[i][1] == direccion) {
             return "OK";
         }
@@ -75,25 +101,27 @@ char* funcion_escritura(int pagina, char* info_a_escribir, int direccion) {
 char* funcion_lectura(int pagina, int tamanio, int direccion) {
     static char info_leida[64];
 
-    for (int i = 0; i < 64; i++) {
-        if (pagina_proceso[i][0] == pagina && pagina_proceso[i][1] == direccion) {
+    for (int i = 0; i < 64; i++){
+        if (pagina_proceso [i][0] == pagina && pagina_proceso[i][1] == direccion) {
             snprintf(info_leida, sizeof(info_leida), "Dato en [%d][%d]", i, 1);
             return info_leida;
         }
     }
 
-    snprintf(info_leida, sizeof(info_leida), "0");
+    printf(info_leida, sizeof(info_leida), "0");
     return info_leida;
 }
 
-bool actualizar_pagina(int pagina_usuario, int info) {
+bool actualizar_pagina(int pagina,int info) {
     for (int i = 0; i < 64; i++) {
-        if (pagina_proceso[i][0] == pagina_usuario && pagina_proceso[i][1] == info) {
+        if (pagina_proceso[i][0] == pagina && pagina_proceso[i][1] == info) {
+            // Hacer algo
             return true;
         }
     }
     return false;
 }
+
 
 /*
 //Las tablas de páginas, que representarán el espacio de Kernel.
@@ -106,7 +134,7 @@ void* tabla_de_paginas(int ENTRADAS_POR_TABLA){
 
 /*
 //leer txt
-void memory_dump(){
+void memory_dump(int proceso){
 
 }
 */
