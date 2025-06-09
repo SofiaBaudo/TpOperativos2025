@@ -147,14 +147,14 @@ t_buffer * crear_buffer_cpu(int pc, int pid){ //esto se lo manda kernel a cpu
 	return buffer_aux;
 }
 
-t_buffer * crear_buffer_paginaMem(int pid, int numPag){
+t_buffer * crear_buffer_MarcoMem(int pid, int entradaNivel){
 	t_buffer *buffer_aux = crear_buffer();
 	buffer_aux->size = 2*sizeof(int);
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
 	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &numPag, sizeof(int)); //como un fwrite.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &entradaNivel, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
 	buffer_aux -> stream = buffer_aux-> stream;
 	return buffer_aux;
@@ -193,6 +193,18 @@ t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradas
 	memcpy(buffer_aux->stream + buffer_aux->offset, &cantNiveles, sizeof(int));
 	buffer_aux->offset += sizeof(int);
 	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+}
+
+t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel){
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 2*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &entradaNivel, sizeof(int));
+	buffer_aux->offset += sizeof(int);
 	return buffer_aux;
 }
 
@@ -365,7 +377,16 @@ int deserializar_pc(t_paquete *paquete){
     free(paquete);
 	return pc;
 }
-
+int deserializar_entradaNivel(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+	stream+=sizeof(int);
+	int entradaNivel;
+	memcpy(&entradaNivel, stream, sizeof(int));
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+	return entradaNivel;
+}
 int deserializar_tamanio(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int tamanio;

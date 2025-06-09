@@ -5,8 +5,9 @@
 
 void creacionNivelesN(int n);
 int traduccion(int direccion, int pid);
-void enviarValoresMem(int numPag, int pid);
+void enviarValoresMem(int entradaNivel, int pid);
 int accederATp(int numPag, int pid);
-void navegarNiveles(int numPag);
+int navegarNiveles(int numPag, int pid);
+int conseguirMarco();
 
 #endif

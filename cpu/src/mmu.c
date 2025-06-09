@@ -25,23 +25,34 @@ void creacionNivelesN(int n){
 int traduccion(int direccion, int pid){ //te tendria que devolver la dir fisica
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
-    int numeroMarco;
-    navegarNiveles(numPag);
-    numeroMarco = accederATp(numPag, pid);
-    //SEGUIR
-    return numeroMarco; //lo pongo esto para que no tire warning
+    int marco;
+    marco = navegarNiveles(numPag, pid);
+    int direccionFisica = marco*tamPag + desplazamiento;
+
+    return direccionFisica; 
 }
 
-void enviarValoresMem(int numPag, int pid){
-    t_buffer *buffer = crear_buffer_paginaMem(pid,numPag);
-    crear_paquete(ENVIO_PID_Y_NUMPAG, buffer,fd_conexion_dispatch_memoria);
+void enviarValoresMem(int entradaNivel, int pid){
+    t_buffer *buffer = crear_buffer_MarcoMem(pid,entradaNivel);
+    crear_paquete(ENVIO_PID_Y_ENTRADANIVEL, buffer,fd_conexion_dispatch_memoria);
 }
 
-void navegarNiveles(int numPag){
-    int marcoDeNiveles[cantNiveles];
-    for(int i = 0; i < cantNiveles; i++){
-        double entradaNivel = floor(numPag/entradasTabla^(cantNiveles-i)) % entradasTabla;
-        marcoDeNiveles[i] = entradaNivel;
+int navegarNiveles(int numPag, int pid){
+    int numMarco;
+    for(int i = 1; i < cantNiveles+1; i++){
+        int elevado = pow(entradasTabla, cantNiveles-i);
+        int entradaNivel = floor((numPag/elevado) % entradasTabla);
+        enviarValoresMem(entradaNivel, pid);
+        numMarco = conseguirMarco();
         //guardo la entrada nivel por cada 
     }
+    //el numero de marco que tenemos despues del if es el num de marco final(el ultimo de todos --> es el marco fisico)
+    int marcoFinal = numMarco;
+    return marcoFinal;
+}
+int conseguirMarco(){
+    int numMarco;
+    recv(fd_conexion_dispatch_memoria, &numMarco, sizeof(int), 0);
+    //se envia el paquete con la entradaNivel y el pid, memoria lo deseerializa y me envia el numero de marco unicamente, entonces no hace falta hacer un paquete. 
+    return numMarco;
 }

@@ -49,7 +49,7 @@ typedef enum op_code
 	SOLCITAR_INSTRUCCION,
 	RESPUESTA_INSTRUCCION,
 	ENVIO_PID_Y_PC,
-	ENVIO_PID_Y_NUMPAG,
+	ENVIO_PID_Y_ENTRADANIVEL,
 	ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES,
 	//enums instrucciones
 	NOOP,
@@ -120,7 +120,7 @@ void enviar_mensaje(int socket, char* mensaje);
 
 t_buffer *crear_buffer();
 t_buffer * crear_buffer_cpu(int pc, int pid);
-t_buffer * crear_buffer_paginaMem(int pid, int numPag);
+t_buffer * crear_buffer_MarcoMem(int pid, int entradaNivel);
 t_buffer *mandar_pid_a_memoria(int pid);
 t_buffer * devolver_pid_a_kernel(int pid);
 t_buffer *crear_buffer_vacio();
@@ -136,4 +136,6 @@ int deserializar_tamanio(t_paquete *paquete);
 char *deserializar_nombre_archivo(t_paquete *paquete);
 t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradasTabla, int cantNiveles);
 void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasTabla, int* cantNiveles);
+t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
+int deserializar_entradaNivel(t_paquete *paquete);
 #endif

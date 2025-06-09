@@ -71,8 +71,11 @@ void* iniciar_conexion_memoria_dispatch(void* arg){
 }
 //Inicializar las CPUs pedidas por el Config
 
+// me parece que primero tendria que hacer el handshake y despues inicializar memoria. Y lo mismo con kernel. 
+
 void* inicializar_memoria(void* arg){
     int id = *(int *)arg;
+  
     t_log* logger;
     char archivo_log_cpu[50];
     sprintf(archivo_log_cpu, "cpu_%d.log", id);
@@ -104,6 +107,7 @@ void* inicializar_memoria(void* arg){
 
 void* inicializar_kernel(void* arg){   
     int id = *(int *)arg;
+    log_debug(cpu_log_debug, "entre a kernel");
     t_log* logger;
     char archivo_log_cpu[50];
     sprintf(archivo_log_cpu, "cpu_%d.log", id);
