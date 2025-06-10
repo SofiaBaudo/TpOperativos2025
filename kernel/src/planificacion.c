@@ -7,13 +7,15 @@ t_list* colaEstados[7]={NULL};
 int identificador_del_proceso = 0;
 struct pcb *proximo_a_consultar;
 int estimacion_de_prueba = 4;
+
+
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
     struct pcb* pcb = malloc(sizeof(struct pcb));
     pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo);
     //pcb -> estado = NEW; // seguramente no sirva mucho
     transicionar_a_new(pcb); //aca esta lo de ultimo proceso en entrar
     log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
-    log_debug(kernel_debug_log,"Su proxima estimacion es: %i",pcb->proxima_estimacion);
+    log_debug(kernel_debug_log,"Su proxima estimacion es: %f",pcb->proxima_estimacion);
     incrementar_var_global_id_proceso();
   return; 
 }
@@ -107,25 +109,86 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
     }
 }
 
-/*void *planificador_corto_plazo_sjf_con_desalojo(){
-    sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
+void *planificador_corto_plazo_sjf_con_desalojo(){
+    while(1){
+       sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
+        //sem_wait(hay_cpu_conectada)
+        log_debug(kernel_debug_log,"Entre aca al plani");
+        pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+        int pos_cpu = buscar_cpu_libre(cpus_conectadas);
+        pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+        pthread_mutex_lock(&mx_usar_cola_estado[READY]); //Preguntar en el soporte si tiene sentido el mutex
+        list_sort(colaEstados[READY],menor_por_estimacion);
+        struct pcb *proceso = list_get(colaEstados[READY],0);
+        pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
+        if(pos_cpu!=-1){ //Quiere decir que hay una cpu libre, seria "el caso facil"
+            log_debug(kernel_debug_log,"Entre al if");
+            pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+            struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
+            pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+            //poner_a_ejecutar(proceso); //esta funcion tambien va a recibir la cpu
+        }
+        else{
+            log_debug(kernel_debug_log,"Entre al else");
+            bool desalojo = ver_si_hay_que_desalojar(proceso);
+            if(desalojo){
+                desalojar_el_mas_grande();
+                //poner_a_ejecutar(proceso);
+                //poner ultima_cpu->proceso_ejecutando = aux;
+                //reanudar cronometros de todos menos la ultima posicion
+            }
+            else{
+            log_debug(kernel_debug_log,"No se desaloja");
+            //reanudar_cronometro();
+            }
+        }
+} 
+    }
+    
+
+
+//FUNCIONES AUXILIARES PARA EL SJF CON DESALOJO
+
+
+bool ver_si_hay_que_desalojar(struct pcb *proceso){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
-    int pos_cpu = buscar_cpu_libre(cpus_conectadas);
-    struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
+    frenar_y_restar_cronometros(cpus_conectadas);
+    ordenar_lista_segun(cpus_conectadas,menor_por_estimacion_de_los_que_ya_estan_ejecutando);
+    struct instancia_de_cpu *primer_cpu = list_get(cpus_conectadas,0);
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-    /llega el proceso
-    // pregunto si hay cpu libre
-    //si hay, 
-        //ejecuto en esa cpu
-    //si no hay,
-        // comparo la estimacion con la de los demas
-            //si es mas grande 
-                // siguen ejecutando los que estaaban
-                //reanudo su tiempo de ejecucion
-            //caso contrario, 
-                //desalojo al proceso de mayor tiempo restante y le resto a la est. inicial lo que ya ejecutó
-                
-}*/
+    if(proceso->proxima_estimacion<primer_cpu->proceso_ejecutando->proxima_estimacion){
+        return true;
+    }
+    else{
+        return false;
+    }
+    
+
+}
+
+void desalojar_el_mas_grande(){
+    pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+    struct instancia_de_cpu *ultima_cpu = list_get(cpus_conectadas,list_size(cpus_conectadas)-1);
+    struct pcb *aux = ultima_cpu->proceso_ejecutando;
+    pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+    log_debug(kernel_debug_log,"Se desaloja al proceso con id: %i",aux->pid);
+    cambiarEstado(aux,EXEC,READY);
+}
+void frenar_y_restar_cronometros(t_list *lista){
+    t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
+    while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
+        struct instancia_de_cpu *cpu_aux = list_iterator_next(aux);
+        temporal_stop(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
+        int a_restar = temporal_gettime(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
+        cpu_aux->proceso_ejecutando->proxima_estimacion -= a_restar; //a la estimacion le resto lo que ya ejecuto
+    }
+}
+
+bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b){
+    struct instancia_de_cpu* i1 = (struct instancia_de_cpu*) a;
+    struct instancia_de_cpu* i2 = (struct instancia_de_cpu*) b;
+    return i1->proceso_ejecutando->proxima_estimacion < i2->proceso_ejecutando->proxima_estimacion;
+}
 
 //FUNCIONES AUXILIARES
 
@@ -218,7 +281,7 @@ int buscar_en_lista(t_list *lista, int pid) {
 
 int buscar_cpu_libre(t_list *lista) {
     if (lista == NULL) { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
-    printf("Lista nula\n");
+        printf("Lista nula\n");
     return -1;
     }
     t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
@@ -235,10 +298,11 @@ int buscar_cpu_libre(t_list *lista) {
     return -1;
 }
 
-int calcular_proxima_estimacion(struct pcb *proceso){
-        int prox_estimacion;
+float calcular_proxima_estimacion(struct pcb *proceso){
+       float prox_estimacion;
+        long ultima_rafaga = temporal_gettime(proceso->duracion_ultima_rafaga);
         float alfa = (float)atof(ALFA);
-        prox_estimacion = alfa * proceso->duracion_ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
+        prox_estimacion = alfa * ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
         //capaz agregar que proceso->ultima_estimacion sea esta
         return prox_estimacion;
 }
@@ -260,7 +324,6 @@ void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparad
     list_add_sorted(lista, proceso, comparador);
 }
 
-       
 void esperar_enter_por_pantalla(){
     char *line;
 printf("Se esta esperando un enter por pantalla");

@@ -29,9 +29,9 @@ struct rafaga{
 struct pcb{
   int pid;
   int pc;
-  int proxima_estimacion; //deberia ser float
-  int ultima_estimacion; //deberia ser float
-  int duracion_ultima_rafaga; //capaz deberia ser un long por el tema del gettime
+  float proxima_estimacion; //deberia ser float
+  float ultima_estimacion; //deberia ser float
+  t_temporal *duracion_ultima_rafaga; //capaz deberia ser un long por el tema del gettime
   //despues terminar lo de las metricas de estado y la otra metrica
   //Estado estado;
   int tamanio;
@@ -50,6 +50,7 @@ bool menor_por_estimacion(void* a, void* b);
 //void *planificador_corto_plazo_sjf_con_desalojo();
 int buscar_en_lista(t_list *lista,int pid);
 int buscar_cpu_libre(t_list *lista);
+bool ver_si_hay_que_desalojar(struct pcb*proceso);
 void esperar_enter_por_pantalla();
 void actualizar_proximo_a_consultar();
 void *planificador_proceso_mas_chico_primero();
@@ -66,10 +67,12 @@ void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 //int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 void mandar_paquete_a_cpu(struct pcb *prcoeso);
 int manejar_dump(struct pcb *aux);
-int calcular_proxima_estimacion(struct pcb *proceso);
+float calcular_proxima_estimacion(struct pcb *proceso);
 void finalizar_proceso(struct pcb*aux);
 void poner_a_ejecutar(struct pcb* aux);
-
+void frenar_y_restar_cronometros(t_list *lista);
+bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b);
+void desalojar_el_mas_grande();
 // podria armar algo parecido que devuelva la rafaga
-
+void *planificador_corto_plazo_sjf_con_desalojo();
 
