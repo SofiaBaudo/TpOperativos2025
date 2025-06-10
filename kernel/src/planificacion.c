@@ -126,6 +126,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
             struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
             pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+            cambiarEstado(proceso,READY,EXEC);
             //poner_a_ejecutar(proceso); //esta funcion tambien va a recibir la cpu
         }
         else{

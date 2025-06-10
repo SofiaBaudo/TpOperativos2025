@@ -22,15 +22,16 @@ int main(int argc, char* argv[]){
    struct instancia_de_cpu *cpu_1 = malloc(sizeof(struct instancia_de_cpu));
    struct instancia_de_cpu *cpu_2 = malloc(sizeof(struct instancia_de_cpu));
    cpu_1->id_cpu = 1;
-   cpu_1->puede_usarse = false;
-   cpu_1->proceso_ejecutando = pruebita1;
+   cpu_1->puede_usarse = true;
+   //cpu_1->proceso_ejecutando = pruebita1;
    cpu_2->id_cpu = 2;
-   cpu_2->puede_usarse = false;
-   cpu_2->proceso_ejecutando = pruebita2;
+   cpu_2->puede_usarse = true;
+   //cpu_2->proceso_ejecutando = pruebita2;
    list_add(cpus_conectadas,cpu_1);
    sem_post(&CPUS_LIBRES);
    list_add(cpus_conectadas,cpu_2);
    sem_post(&CPUS_LIBRES);
+   
    //atender_kernel_io();
    crear_proceso(1,"f4");
    pthread_t hilo_plani_largo_plazo;
