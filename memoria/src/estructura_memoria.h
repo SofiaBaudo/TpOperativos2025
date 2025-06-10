@@ -17,15 +17,16 @@ extern int pagina_proceso[64][2]; // sigue siendo fijo
 extern int** tabla_dir_logica;
 extern int** tabla_paginas;
 
-// Prototipos de funciones
-void inicializar_variables_globales();
-void inicializar_tabla_dir_logica();
-void liberar_tabla_dir_logica();
+void* espacio_usuario(int pid, int pc, char* proceso_lectura_escritura);
+char* funcion_escritura(int pagina, char* info_a_escribir, int direccion);
+char* funcion_lectura(int pagina, int tamanio, int direccion);
+void inicializar_tabla_multinivel();
+void inicializar_paginas();
+bool buscar_en_pagina(int info_a_buscar);
+int* leer_pagina();
+bool actualizar_pagina(int pagina, int info);
 void* metricas_proceso(int pid, tipo_metrica metrica);
 
-char* funcion_lectura(int pagina, int tamanio, int direccion);
-char* funcion_escritura(int pagina, char* info_a_escribir, int direccion);
-bool buscar_en_pagina(int info_a_buscar);
-bool actualizar_pagina(int pagina, int informacion);
+
 
 #endif

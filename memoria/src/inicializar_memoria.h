@@ -8,6 +8,7 @@
 #include <commons/log.h>
 #include <commons/config.h>
 
+
 //Declaracion los Logs de Inicializar memoria
 
 extern t_memoria_config memoria_config; // agrego el extern para que no de error de redefinicion
