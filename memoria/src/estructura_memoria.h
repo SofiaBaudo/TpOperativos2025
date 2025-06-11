@@ -1,32 +1,40 @@
+// estructura_memoria.h
 #ifndef ESTRUCTURA_MEMORIA_H
 #define ESTRUCTURA_MEMORIA_H
 
-#include <commons/log.h>
-#include <commons/collections/list.h>
-#include "utils/utils.h"
-#include <pthread.h>
-#include <variables_globales_memoria.h>
+#include <stdbool.h>
+#include "variables_globales_memoria.h"
 
-// Variables globales
-extern int TAM_PAGINA;
-extern int CANTIDAD_NIVELES;
-extern int TAM_MEMORIA;
-extern float tamanio_marco;
+// Estructura de tabla de páginas multinivel
+typedef struct Tabla {
+    struct Tabla** punteros; // Niveles intermedios
+    int* valores;            // Último nivel: marcos
+} Tabla;
 
-extern int pagina_proceso[64][2]; // sigue siendo fijo
-extern int** tabla_dir_logica;
-extern int** tabla_paginas;
+extern Tabla* tabla_de_paginas_raiz;
 
-void* espacio_usuario(int pid, int pc, char* proceso_lectura_escritura);
-char* funcion_escritura(int pagina, char* info_a_escribir, int direccion);
-char* funcion_lectura(int pagina, int tamanio, int direccion);
-void inicializar_tabla_multinivel();
-void inicializar_paginas();
-bool buscar_en_pagina(int info_a_buscar);
-int* leer_pagina();
-bool actualizar_pagina(int pagina, int info);
+// Funciones principales
+Tabla* crear_tabla(int nivel_actual, int cantidad_niveles, int entradas_por_tabla);
+void liberar_tabla(Tabla* tabla, int nivel_actual, int cantidad_niveles, int entradas_por_tabla);
+
+// Inicialización de memoria de usuario
+void inicializar_espacio_usuario();
+
+// Funciones de acceso por direcciones físicas
+char* funcion_lectura_fisica(unsigned int direccion_fisica, int tamanio);
+char* funcion_escritura_fisica(unsigned int direccion_fisica, char* valor, int tamanio);
+
+// Funciones de página completa
+char* leer_pagina_completa(unsigned int direccion_fisica);
+char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido);
+
+/*
+memoria usa esto para responder a la CPU cuando le pide la traducción de una dirección loguca
+devuelve solo el número de marco (sin desplazamiento).
+*/
+int obtener_marco(int direccion_logica, int tam_pagina, int cantidad_niveles, int entradas_por_tabla, Tabla* tabla);
+
+// Métricas por proceso
 void* metricas_proceso(int pid, tipo_metrica metrica);
-
-
 
 #endif
