@@ -45,8 +45,8 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
 void incrementar_var_global_id_proceso();
 void esperar_enter_por_pantalla();
 void actualizar_proximo_a_consultar();
-void poner_a_ejecutar(struct pcb* aux);
-void finalizar_proceso(struct pcb*aux);
+void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
+void finalizar_proceso(struct pcb*aux, struct instancia_de_cpu *cpu, Estado estadoInicial);
 
 
 //CAMBIO Y TRANSICION DE ESTADOS
@@ -60,9 +60,11 @@ void transicionar_a_new(struct pcb *proceso);
 void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
 void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *));
+void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
 
 //CPU
 int buscar_cpu_libre(t_list *lista);
+struct instancia_de_cpu *obtener_cpu(int posicion);
 
 //LISTA
 int buscar_en_lista(t_list *lista,int pid);
@@ -80,4 +82,5 @@ bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct 
 
 //MANEJO DE SYSCALLS
 void mandar_paquete_a_cpu(struct pcb *proceso);
-int manejar_dump(struct pcb *aux);
+int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta);
+void liberar_cpu(struct instancia_de_cpu *cpu);

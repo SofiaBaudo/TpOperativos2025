@@ -84,7 +84,7 @@ void *planificador_corto_plazo_fifo(){
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         cambiarEstado(proceso,READY,EXEC);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
-        //poner_a_ejecutar(proceso); //estaria bueno mandar tambien la cpu que usa 
+        //poner_a_ejecutar(proceso,cpu_aux); //estaria bueno mandar tambien la cpu que usa 
         //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
 }   
@@ -104,7 +104,7 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
         cambiarEstado(proceso,READY,EXEC);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
         
-        //poner_a_ejecutar(proceso);
+        //poner_a_ejecutar(proceso,cpu_aux);
         //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
 }
@@ -120,12 +120,10 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         struct pcb *proceso = obtener_copia_primer_proceso_de(READY);
         if(pos_cpu!=-1){ //Quiere decir que hay una cpu libre, seria "el caso facil"
-            pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
-            //struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
-            pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+            //struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
             proceso = sacar_primero_de_la_lista(READY);
             cambiarEstado(proceso,READY,EXEC);
-            //poner_a_ejecutar(proceso); //esta funcion tambien va a recibir la cpu
+            //poner_a_ejecutar(proceso,cpu_aux); //esta funcion tambien va a recibir la cpu
         }
         else{
             bool desalojo = ver_si_hay_que_desalojar(proceso);
@@ -133,7 +131,8 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
                 proceso = sacar_primero_de_la_lista(READY);
                 cambiarEstado(proceso,READY,EXEC);
                 desalojar_el_mas_grande(proceso);
-                //poner_a_ejecutar(proceso);
+                //struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
+                //poner_a_ejecutar(proceso,cpu_aux);
                 //poner ultima_cpu->proceso_ejecutando = aux;
                 //reanudar cronometros de todos menos la ultima posicion
             }
@@ -146,7 +145,6 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
         sem_post(&CPUS_LIBRES); // es para que no se bloquee, pero hay que preguntar en el soporte si las cpus se conectan primero
     }
 }
-    
 //FUNCIONES AUXILIARES PARA EL SJF CON DESALOJO
 
 bool ver_si_hay_que_desalojar(struct pcb *proceso){
@@ -265,6 +263,13 @@ int buscar_cpu_libre(t_list *lista) {
         pos++;
     }
     return -1;
+}
+
+struct instancia_de_cpu *obtener_cpu(int posicion){
+    pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+    struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,posicion);
+    pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+    return cpu_aux;
 }
 
 
@@ -424,31 +429,31 @@ bool menor_por_tamanio(void* a, void* b) {
 
 //MANEJO DE SYSCALLS
 
+void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado){
+    pthread_mutex_lock(&mx_usar_cola_estado[estado]);
+    int pos = buscar_en_lista(colaEstados[estado],proceso->pid);
+    list_remove(colaEstados[estado],pos);
+    pthread_mutex_unlock(&mx_usar_cola_estado[estado]);
+}
+
 void mandar_paquete_a_cpu(struct pcb *proceso){
         t_buffer *buffer = crear_buffer_cpu(proceso->pc,proceso->pid);
         crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
 }
 
-int manejar_dump(struct pcb *aux){
+int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(DUMP_MEMORY,buffer,socket);
+    sacar_de_cola_de_estado(aux,EXEC);
+    liberar_cpu(cpu_en_la_que_ejecuta);
     cambiarEstado(aux,EXEC,BLOCKED);
     int respuesta = recibir_entero(socket);
     return respuesta;
 }
 
-void finalizar_proceso(struct pcb*aux){
-    cambiarEstado(aux,EXEC,EXIT_ESTADO);
-    int socket = iniciar_conexion_kernel_memoria();
-    t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
-    crear_paquete(EXIT,buffer,socket);
-    free(aux);
-    //int confirmacion = recibir_entero(socket);
-    //return confirmacion;
-}
 
-void poner_a_ejecutar(struct pcb* aux){
+void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
     //t_temporal *cronometro = temporal_create();
     bool bloqueante = false;
     while(!bloqueante){
@@ -463,17 +468,18 @@ void poner_a_ejecutar(struct pcb* aux){
                 //avisar que termine
                 break;
             case EXIT:
-                finalizar_proceso(aux);
+                //Hay que sacarlo de la lista de exit
+                finalizar_proceso(aux,cpu_en_la_que_ejecuta,EXEC);
                 //tener en cuenta lo del mediano plazo
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
-                int respuesta = manejar_dump(aux); //esta funcion manda el proceso a BLOCKED
+                int respuesta = manejar_dump(aux,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED
                 if(respuesta == DUMP_ACEPTADO){
-                  cambiarEstado(aux,BLOCKED,READY);  
+                transicionar_a_ready(aux,BLOCKED);
                 }
                 else{
-                  cambiarEstado(aux,BLOCKED,EXIT);
+                  finalizar_proceso(aux,cpu_en_la_que_ejecuta,BLOCKED);
                 }
                 bloqueante = true; // a chequear
                 break;
@@ -483,9 +489,11 @@ void poner_a_ejecutar(struct pcb* aux){
                 char *nombre_io_a_usar = deserializar_nombre_syscall_io(paquete);
                 int posicionIO = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
                 if(posicionIO == -1){ //quiere decir que no hay ninguna syscall con ese nombre
-                    finalizar_proceso(aux);
+                    finalizar_proceso(aux,cpu_en_la_que_ejecuta,EXEC);
                 }else{
+                    sacar_de_cola_de_estado(aux,EXEC);
                     cambiarEstado(aux,EXEC,BLOCKED);
+                    liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,posicionIO);
                     list_add(io_aux->procesos_esperando,aux);
@@ -501,3 +509,20 @@ void poner_a_ejecutar(struct pcb* aux){
     }
 }
 
+void liberar_cpu(struct instancia_de_cpu *cpu){
+    cpu->puede_usarse = true;
+    cpu->proceso_ejecutando = NULL;
+    sem_post(&CPUS_LIBRES);
+}
+
+void finalizar_proceso(struct pcb*aux, struct instancia_de_cpu *cpu, Estado estadoInicial){
+    sacar_de_cola_de_estado(aux,estadoInicial);
+    cambiarEstado(aux,estadoInicial,EXIT_ESTADO);
+    int socket = iniciar_conexion_kernel_memoria();
+    t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
+    crear_paquete(EXIT,buffer,socket);
+    free(aux);
+    liberar_cpu(cpu);
+    //int confirmacion = recibir_entero(socket);
+    //return confirmacion;
+}
