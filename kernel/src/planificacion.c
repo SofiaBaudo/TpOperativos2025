@@ -20,7 +20,30 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
   return; 
 }
 
-void *planificador_proceso_mas_chico_primero(){
+void *planificador_largo_plazo_fifo(){
+    esperar_enter_por_pantalla();
+    log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
+    while(1){
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
+        sem_wait(&INTENTAR_INICIAR); //que los demas esperen a que uno entre
+        struct pcb* primer_proceso = obtener_primer_proceso_de(NEW); //no lo sacamos de la lista todavia
+        bool respuesta = consultar_si_puede_entrar(primer_proceso);
+        log_debug(kernel_debug_log,"Conexion con memoria cerrada");
+        if (respuesta == true){
+            struct pcb *aux = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
+            cambiarEstado(aux,NEW,READY);
+            sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
+            sem_post(&INTENTAR_INICIAR);
+        }   
+        else{
+            log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
+            sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW); 
+        }
+    } 
+    return NULL;
+}
+
+void *planificador_largo_plazo_proceso_mas_chico_primero(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
     while(1){
@@ -41,30 +64,6 @@ void *planificador_proceso_mas_chico_primero(){
     }
 }
 
-void *planificador_largo_plazo_fifo(){
-    esperar_enter_por_pantalla();
-    log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
-    while(1){
-        sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
-        sem_wait(&INGRESO_DEL_PRIMERO); //que los demas esperen a que uno entre
-        struct pcb* primer_proceso = obtener_primer_proceso_de_new(); //no lo sacamos de la lista todavia
-        bool respuesta = consultar_si_puede_entrar(primer_proceso);
-        log_debug(kernel_debug_log,"Conexion con memoria cerrada");
-        if (respuesta == true){
-            struct pcb *aux = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
-            cambiarEstado(aux,NEW,READY);
-            sem_post(&INGRESO_DEL_PRIMERO);
-            sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
-        }   
-        else{
-            log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
-            //aca va un semaforo, esperando para entrar a memoria una vez que termine otro proceso.
-            //sem_post(&INGRESO_DEL_PRIMERO); 
-        }
-          } 
-    
-    return NULL;
-    }
 
 void *planificador_corto_plazo_fifo(){
     while(1){
@@ -75,7 +74,7 @@ void *planificador_corto_plazo_fifo(){
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         cambiarEstado(proceso,READY,EXEC);
-       pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+        pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas);
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
@@ -124,7 +123,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
         if(pos_cpu!=-1){ //Quiere decir que hay una cpu libre, seria "el caso facil"
             log_debug(kernel_debug_log,"Entre al if");
             pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
-            struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
+            //struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
             pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
             cambiarEstado(proceso,READY,EXEC);
             //poner_a_ejecutar(proceso); //esta funcion tambien va a recibir la cpu
@@ -143,8 +142,8 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             //reanudar_cronometro();
             }
         }
-} 
-    }
+    } 
+}
     
 
 
@@ -163,8 +162,6 @@ bool ver_si_hay_que_desalojar(struct pcb *proceso){
     else{
         return false;
     }
-    
-
 }
 
 void desalojar_el_mas_grande(){
@@ -193,6 +190,7 @@ bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b){
 
 //FUNCIONES AUXILIARES
 
+//CREACION DE PROCESOS
 struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo){
     pcb -> pid = identificador_del_proceso; //ver lo de la variable global
     pcb -> pc = 0;
@@ -205,58 +203,29 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
     return pcb;
 }
 
-void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *)){
- list_sort(lista,comparador); 
-}
-
-void transicionar_a_new(struct pcb *pcb){
- pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
-    //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
-        list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
-    //}else{
-        //insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
-        //pthread_mutex_lock(&mx_proximo_a_consultar);
-        //proximo_a_consultar = pcb;
-        //pthread_mutex_unlock(&mx_proximo_a_consultar);
-    //}
-    pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
-    sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
-    //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
-}
-
 void incrementar_var_global_id_proceso(){
     pthread_mutex_lock(&mx_identificador_del_proceso);
     identificador_del_proceso++; 
     pthread_mutex_unlock(&mx_identificador_del_proceso);
 }
 
-struct pcb *obtener_primer_proceso_de_new(){
-   if(list_is_empty(colaEstados[NEW])){
-        return NULL;
-    }
-    else{
-    pthread_mutex_lock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
-        t_list *aux = colaEstados[NEW];
-        struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
-    pthread_mutex_unlock(&mx_usar_cola_estado[NEW]); // es una variable global asi que la protegemos (mejor un mx)
-    return proceso;
-    }
-    }
-
-bool consultar_si_puede_entrar(struct pcb *proceso){
-    int socket = iniciar_conexion_kernel_memoria();
-    bool respuesta = solicitar_permiso_a_memoria(socket,proceso->tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
-    cerrar_conexion(socket);
-    return respuesta;
+void esperar_enter_por_pantalla(){
+    char *line;
+    printf("Se esta esperando un enter por pantalla");
+    do {
+        line = readline("");
+    } while (strlen(line) != 0); // si la longitud es mayor a 0 quiere decir que no se ingreso solo un enter
+    free(line);  
 }
 
-void actualizar_proximo_a_consultar(){
-    struct pcb *primer_proceso_actualizado = obtener_primer_proceso_de_new();
-    if(primer_proceso_actualizado!=NULL){
-        pthread_mutex_lock(&mx_proximo_a_consultar);
-        proximo_a_consultar = primer_proceso_actualizado;
-        pthread_mutex_unlock(&mx_proximo_a_consultar);
-    }
+//FUNCIONES CON LISTAS
+void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *)){
+    list_sort(lista,comparador); 
+}
+
+void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparador)(void *, void *)) {
+    list_add_sorted(lista, proceso, comparador);
+
 }
 
 int buscar_en_lista(t_list *lista, int pid) {
@@ -299,48 +268,77 @@ int buscar_cpu_libre(t_list *lista) {
     return -1;
 }
 
-float calcular_proxima_estimacion(struct pcb *proceso){
-       float prox_estimacion;
-        long ultima_rafaga = temporal_gettime(proceso->duracion_ultima_rafaga);
-        float alfa = (float)atof(ALFA);
-        prox_estimacion = alfa * ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
-        //capaz agregar que proceso->ultima_estimacion sea esta
-        return prox_estimacion;
-}
 
-bool menor_por_estimacion(void* a, void* b){
-    struct pcb* p1 = (struct pcb*) a;
-    struct pcb* p2 = (struct pcb*) b;
-    return p1->proxima_estimacion < p2->proxima_estimacion;
-}
 
-bool menor_por_tamanio(void* a, void* b) {
-    
-    struct pcb* p1 = (struct pcb*) a;
-    struct pcb* p2 = (struct pcb*) b;
-    return p1->tamanio < p2->tamanio;
-}
+//LISTAS DE ESTADOS
 
-void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparador)(void *, void *)) {
-    list_add_sorted(lista, proceso, comparador);
+struct pcb *obtener_primer_proceso_de(Estado estado){
+   if(list_is_empty(colaEstados[estado])){
+        return NULL;
+    }
+    else{
+    pthread_mutex_lock(&mx_usar_cola_estado[estado]); // es una variable global asi que la protegemos (mejor un mx)
+        t_list *aux = colaEstados[estado];
+        struct pcb *proceso = list_get(aux, 0);  // Obtener el primer elemento pero sin sacarlo de la lista todavia
+    pthread_mutex_unlock(&mx_usar_cola_estado[estado]); // es una variable global asi que la protegemos (mejor un mx)
+    return proceso;
+    }
 }
-
-void esperar_enter_por_pantalla(){
-    char *line;
-printf("Se esta esperando un enter por pantalla");
-    do {
-        line = readline("");
-    } while (strlen(line) != 0); // si la longitud es mayor a 0 quiere decir que no se ingreso solo un enter
-    free(line);  
-}
-
 
 struct pcb *sacar_primero_de_la_lista(Estado estado){
     struct pcb *aux;
     pthread_mutex_lock(&mx_usar_cola_estado[estado]);
-    aux =list_remove(colaEstados[estado],0); //como el list add agrerga al final, sacamos del principio para no romper el comportamiento de la cola
+    aux = list_remove(colaEstados[estado],0); //como el list add agrerga al final, sacamos del principio para no romper el comportamiento de la cola
     pthread_mutex_unlock(&mx_usar_cola_estado[estado]);
     return aux;
+}
+
+//CAMBIOS DE ESTADO
+
+void transicionar_a_new(struct pcb *pcb){
+ pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
+    //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
+        list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+    //}else{
+        //insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
+        //pthread_mutex_lock(&mx_proximo_a_consultar);
+        //proximo_a_consultar = pcb;
+        //pthread_mutex_unlock(&mx_proximo_a_consultar);
+    //}
+    pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
+    sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
+    //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
+}
+
+
+void transicionar_a_ready(struct pcb *pcb){
+ pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
+    //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
+        cambiarEstado(pcb,NEW,READY);
+    //}else{
+        cambiarEstadoOrdenado(pcb,NEW,READY,menor_por_estimacion);
+     //}
+    pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
+    sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
+    //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
+}
+
+void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
+    char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
+    char *string_estado_anterior = cambiar_a_string(estadoAnterior);
+    log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",pcb->pid,string_estado_anterior,string_estado_nuevo);
+    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
+    list_add(colaEstados[estadoNuevo],pcb); //preguntar si hay que usar mutex
+    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
+}
+
+void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *)){
+    char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
+    char *string_estado_anterior = cambiar_a_string(estadoAnterior);
+    log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",pcb->pid,string_estado_anterior,string_estado_nuevo);
+    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
+    list_add_sorted(colaEstados[estadoNuevo],pcb,comparador); //preguntar si hay que usar mutex
+    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
 }
 
  char *cambiar_a_string(Estado estado) {
@@ -361,14 +359,54 @@ struct pcb *sacar_primero_de_la_lista(Estado estado){
     return nombres_estados[estado];
 }
 
-void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
-    char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
-    char *string_estado_anterior = cambiar_a_string(estadoAnterior);
-    log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",pcb->pid,string_estado_anterior,string_estado_nuevo);
-    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
-    list_add(colaEstados[estadoNuevo],pcb); //preguntar si hay que usar mutex
-    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
+
+bool consultar_si_puede_entrar(struct pcb *proceso){
+    int socket = iniciar_conexion_kernel_memoria();
+    bool respuesta = solicitar_permiso_a_memoria(socket,proceso->tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
+    cerrar_conexion(socket);
+    return respuesta;
 }
+
+void actualizar_proximo_a_consultar(){
+    struct pcb *primer_proceso_actualizado = obtener_primer_proceso_de_new();
+    if(primer_proceso_actualizado!=NULL){
+        pthread_mutex_lock(&mx_proximo_a_consultar);
+        proximo_a_consultar = primer_proceso_actualizado;
+        pthread_mutex_unlock(&mx_proximo_a_consultar);
+    }
+}
+
+
+//CALCULAR PROXIMA ESTIMACION
+
+float calcular_proxima_estimacion(struct pcb *proceso){
+    float prox_estimacion;
+    long ultima_rafaga = temporal_gettime(proceso->duracion_ultima_rafaga);
+    float alfa = (float)atof(ALFA);
+    prox_estimacion = alfa * ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
+    //capaz agregar que proceso->ultima_estimacion sea esta
+    return prox_estimacion;
+}
+
+
+//COMPARADORES
+
+bool menor_por_estimacion(void* a, void* b){
+    struct pcb* p1 = (struct pcb*) a;
+    struct pcb* p2 = (struct pcb*) b;
+    return p1->proxima_estimacion < p2->proxima_estimacion;
+}
+
+bool menor_por_tamanio(void* a, void* b) {
+    
+    struct pcb* p1 = (struct pcb*) a;
+    struct pcb* p2 = (struct pcb*) b;
+    return p1->tamanio < p2->tamanio;
+}
+
+
+
+//MANEJO DE SYSCALLS
 
 void mandar_paquete_a_cpu(struct pcb *proceso){
         t_buffer *buffer = crear_buffer_cpu(proceso->pc,proceso->pid);

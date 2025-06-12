@@ -8,7 +8,10 @@ int main(int argc, char* argv[]){
  //argc es la cantidad de argumentos y argv que contiene cada argumento
   
    inicializar_kernel();
-   struct pcb *pruebita1 = malloc(sizeof(struct pcb));
+
+   //PRUEBA PARA PLANIFICADOR DE CORTO PLAZO SJF SIN/CON DESALOJO
+
+   /*struct pcb *pruebita1 = malloc(sizeof(struct pcb));
    pruebita1->pid = 1;
    pruebita1->proxima_estimacion = 1;
    pruebita1->duracion_ultima_rafaga = temporal_create();
@@ -43,6 +46,7 @@ int main(int argc, char* argv[]){
   
    pthread_join(hilo_plani_largo_plazo,NULL);
    pthread_join(hilo_plani_corto_plazo,NULL);
+   */
 /*
    crear_proceso(5,"f1");
    crear_proceso(2,"f3");
