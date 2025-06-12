@@ -50,14 +50,14 @@ void finalizar_proceso(struct pcb*aux);
 
 
 //CAMBIO Y TRANSICION DE ESTADOS
-struct pcb *obtener_primer_proceso_de(Estado estado);
+struct pcb *obtener_copia_primer_proceso_de(Estado estado);
 bool consultar_si_puede_entrar(struct pcb *proceso);
 struct pcb *sacar_primero_de_la_lista(Estado estado);
 void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparador)(void *, void *));
 bool menor_por_tamanio(void* a, void* b);
 char *cambiar_a_string(Estado estado);
 void transicionar_a_new(struct pcb *proceso);
-void transicionar_a_ready(struct pcb *pcb);
+void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
 void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *));
 
@@ -74,7 +74,7 @@ float calcular_proxima_estimacion(struct pcb *proceso);
 bool menor_por_estimacion(void* a, void* b);
 bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b);
 bool ver_si_hay_que_desalojar(struct pcb*proceso);
-void desalojar_el_mas_grande();
+void desalojar_el_mas_grande(struct pcb*proceso);
 
 //MANEJO DE SYSCALLS
 void mandar_paquete_a_cpu(struct pcb *proceso);

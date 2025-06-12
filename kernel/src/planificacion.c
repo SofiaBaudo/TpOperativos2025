@@ -6,7 +6,7 @@ t_list* procesos = NULL;
 t_list* colaEstados[7]={NULL};
 int identificador_del_proceso = 0;
 struct pcb *proximo_a_consultar;
-int estimacion_de_prueba = 4;
+int estimacion_de_prueba = 50;
 
 
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
@@ -26,13 +26,14 @@ void *planificador_largo_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR); //que los demas esperen a que uno entre
-        struct pcb* primer_proceso = obtener_primer_proceso_de(NEW); //no lo sacamos de la lista todavia
+        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); //no lo sacamos de la lista todavia pero obtenemos una referencia
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
-            struct pcb *aux = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
-            cambiarEstado(aux,NEW,READY);
-            sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
+            primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
+            //cambiarEstado(aux,NEW,READY);
+            //sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
+            transicionar_a_ready(primer_proceso,NEW);
             sem_post(&INTENTAR_INICIAR);
         }   
         else{
@@ -49,21 +50,24 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR);
-        struct pcb* primer_proceso = obtener_primer_proceso_de_new();
+        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW);
         if(primer_proceso->pid == proximo_a_consultar->pid){
-                bool respuesta = consultar_si_puede_entrar(primer_proceso);
-                log_debug(kernel_debug_log,"Conexion con memoria cerrada");
-                if(respuesta == true){
-                    struct pcb *proceso = sacar_primero_de_la_lista(NEW);
-                    cambiarEstado(proceso,NEW,READY);
-                    sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
-                    actualizar_proximo_a_consultar();
-                }
+            bool respuesta = consultar_si_puede_entrar(primer_proceso);
+            log_debug(kernel_debug_log,"Conexion con memoria cerrada");
+            if(respuesta == true){
+                primer_proceso = sacar_primero_de_la_lista(NEW);
+                transicionar_a_ready(primer_proceso,NEW);
+                actualizar_proximo_a_consultar();
+            }
+            else{
+                sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
+            }
         }
-        sem_post(&INTENTAR_INICIAR);
+        else{
+            sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
+        }
     }
 }
-
 
 void *planificador_corto_plazo_fifo(){
     while(1){
@@ -72,14 +76,13 @@ void *planificador_corto_plazo_fifo(){
         //sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
         usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
-        struct pcb* proceso = sacar_primero_de_la_lista(READY);
-        cambiarEstado(proceso,READY,EXEC);
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas);
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+        struct pcb* proceso = sacar_primero_de_la_lista(READY);
+        cambiarEstado(proceso,READY,EXEC);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
-        
         //poner_a_ejecutar(proceso); //estaria bueno mandar tambien la cpu que usa 
         //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
@@ -92,17 +95,14 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
         //sem_wait(&INGRESO_DEL_PRIMERO_READY); //Preguntar si es necesario pero creeriamos que con el de cantProcesos y el de las cpus ya esta
         usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
-        pthread_mutex_lock(&mx_usar_cola_estado[READY]); //Preguntar en el soporte si tiene sentido el mutex
-        list_sort(colaEstados[READY],menor_por_estimacion);
-        pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
-        struct pcb* proceso = sacar_primero_de_la_lista(READY);
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas);
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+        struct pcb* proceso = sacar_primero_de_la_lista(READY);
+        cambiarEstado(proceso,READY,EXEC);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
         
-        cambiarEstado(proceso,READY,EXEC);
         //poner_a_ejecutar(proceso);
         //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
@@ -110,21 +110,20 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
 
 void *planificador_corto_plazo_sjf_con_desalojo(){
     while(1){
-       sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-        //sem_wait(hay_cpu_conectada)
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
+        sem_wait(&CPUS_LIBRES);
+        usleep(200000);
         log_debug(kernel_debug_log,"Entre aca al plani");
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-        pthread_mutex_lock(&mx_usar_cola_estado[READY]); //Preguntar en el soporte si tiene sentido el mutex
-        list_sort(colaEstados[READY],menor_por_estimacion);
-        struct pcb *proceso = list_get(colaEstados[READY],0);
-        pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
+        struct pcb *proceso = obtener_copia_primer_proceso_de(READY);
         if(pos_cpu!=-1){ //Quiere decir que hay una cpu libre, seria "el caso facil"
             log_debug(kernel_debug_log,"Entre al if");
             pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
             //struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
             pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+            proceso = sacar_primero_de_la_lista(READY);
             cambiarEstado(proceso,READY,EXEC);
             //poner_a_ejecutar(proceso); //esta funcion tambien va a recibir la cpu
         }
@@ -132,46 +131,55 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             log_debug(kernel_debug_log,"Entre al else");
             bool desalojo = ver_si_hay_que_desalojar(proceso);
             if(desalojo){
-                desalojar_el_mas_grande();
+                log_debug(kernel_debug_log,"Entre al if del else");
+                proceso = sacar_primero_de_la_lista(READY);
+                desalojar_el_mas_grande(proceso);
+                cambiarEstado(proceso,READY,EXEC);
                 //poner_a_ejecutar(proceso);
                 //poner ultima_cpu->proceso_ejecutando = aux;
                 //reanudar cronometros de todos menos la ultima posicion
             }
             else{
             log_debug(kernel_debug_log,"No se desaloja");
+            sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
             //reanudar_cronometro();
             }
         }
-    } 
+    }
 }
     
-
-
 //FUNCIONES AUXILIARES PARA EL SJF CON DESALOJO
-
 
 bool ver_si_hay_que_desalojar(struct pcb *proceso){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
     frenar_y_restar_cronometros(cpus_conectadas);
     ordenar_lista_segun(cpus_conectadas,menor_por_estimacion_de_los_que_ya_estan_ejecutando);
-    struct instancia_de_cpu *primer_cpu = list_get(cpus_conectadas,0);
+    //struct instancia_de_cpu *primer_cpu = list_get(cpus_conectadas,0);
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-    if(proceso->proxima_estimacion<primer_cpu->proceso_ejecutando->proxima_estimacion){
+    //Recorrer 
+    /*                             //Hay que modificar esta parte.
+    if(proceso->proxima_estimacion < primer_cpu->proceso_ejecutando->proxima_estimacion){
         return true;
     }
     else{
+        //recorrer lista
         return false;
-    }
+    }*/
 }
 
-void desalojar_el_mas_grande(){
+void desalojar_el_mas_grande(struct pcb *proceso){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
     struct instancia_de_cpu *ultima_cpu = list_get(cpus_conectadas,list_size(cpus_conectadas)-1);
-    struct pcb *aux = ultima_cpu->proceso_ejecutando;
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+    struct pcb *aux = ultima_cpu->proceso_ejecutando;
+    ultima_cpu->proceso_ejecutando = proceso;
+    proceso->duracion_ultima_rafaga = temporal_create(); //esto despues hay que sacarlo pero es para probar
     log_debug(kernel_debug_log,"Se desaloja al proceso con id: %i",aux->pid);
-    cambiarEstado(aux,EXEC,READY);
+    int pos = buscar_en_lista(colaEstados[EXEC],aux->pid);
+    list_remove(colaEstados[EXEC],pos);
+    transicionar_a_ready(aux,EXEC);
 }
+
 void frenar_y_restar_cronometros(t_list *lista){
     t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
     while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
@@ -199,7 +207,7 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
     pcb->ultima_estimacion = atoi(ESTIMACION_INICIAL);
     //pcb->proxima_estimacion = atoi(ESTIMACION_INICIAL);
     pcb->proxima_estimacion = estimacion_de_prueba;
-    estimacion_de_prueba--;
+    estimacion_de_prueba-=30;
     return pcb;
 }
 
@@ -272,7 +280,7 @@ int buscar_cpu_libre(t_list *lista) {
 
 //LISTAS DE ESTADOS
 
-struct pcb *obtener_primer_proceso_de(Estado estado){
+struct pcb *obtener_copia_primer_proceso_de(Estado estado){
    if(list_is_empty(colaEstados[estado])){
         return NULL;
     }
@@ -298,12 +306,13 @@ struct pcb *sacar_primero_de_la_lista(Estado estado){
 void transicionar_a_new(struct pcb *pcb){
  pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
     //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
-        list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+        //list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
     //}else{
-        //insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
-        //pthread_mutex_lock(&mx_proximo_a_consultar);
-        //proximo_a_consultar = pcb;
-        //pthread_mutex_unlock(&mx_proximo_a_consultar);
+        insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
+        pthread_mutex_lock(&mx_proximo_a_consultar);
+        proximo_a_consultar = pcb;
+        pthread_mutex_unlock(&mx_proximo_a_consultar);
+        sem_post(&INTENTAR_INICIAR);
     //}
     pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
     sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
@@ -311,12 +320,13 @@ void transicionar_a_new(struct pcb *pcb){
 }
 
 
-void transicionar_a_ready(struct pcb *pcb){
- pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
+void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial){
+ pthread_mutex_lock(&mx_usar_cola_estado[READY]); 
     //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
-        cambiarEstado(pcb,NEW,READY);
+        //cambiarEstado(pcb,estadoInicial,READY);
     //}else{
-        cambiarEstadoOrdenado(pcb,NEW,READY,menor_por_estimacion);
+        sem_post(&CPUS_LIBRES);
+        cambiarEstadoOrdenado(pcb,estadoInicial,READY,menor_por_estimacion);
      //}
     pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
     sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
@@ -368,7 +378,7 @@ bool consultar_si_puede_entrar(struct pcb *proceso){
 }
 
 void actualizar_proximo_a_consultar(){
-    struct pcb *primer_proceso_actualizado = obtener_primer_proceso_de_new();
+    struct pcb *primer_proceso_actualizado = obtener_copia_primer_proceso_de(NEW);
     if(primer_proceso_actualizado!=NULL){
         pthread_mutex_lock(&mx_proximo_a_consultar);
         proximo_a_consultar = primer_proceso_actualizado;
@@ -403,7 +413,6 @@ bool menor_por_tamanio(void* a, void* b) {
     struct pcb* p2 = (struct pcb*) b;
     return p1->tamanio < p2->tamanio;
 }
-
 
 
 //MANEJO DE SYSCALLS
