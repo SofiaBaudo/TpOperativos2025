@@ -147,6 +147,19 @@ t_buffer * crear_buffer_cpu(int pc, int pid){ //esto se lo manda kernel a cpu
 	return buffer_aux;
 }
 
+t_buffer * crear_buffer_para_ejecucion_de_io(int pid, int milisegundos){ //esto se lo manda kernel a cpu
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 2*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &milisegundos, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+}
+
 t_buffer * crear_buffer_MarcoMem(int pid, int entradaNivel){
 	t_buffer *buffer_aux = crear_buffer();
 	buffer_aux->size = 2*sizeof(int);

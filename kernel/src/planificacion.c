@@ -469,36 +469,39 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
                 break;
             case EXIT:
                 //Hay que sacarlo de la lista de exit
-                finalizar_proceso(aux,cpu_en_la_que_ejecuta,EXEC);
+                finalizar_proceso(aux,EXEC);
+                liberar_cpu(cpu_en_la_que_ejecuta);
                 //tener en cuenta lo del mediano plazo
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
-                int respuesta = manejar_dump(aux,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED
+                int respuesta = manejar_dump(aux,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
                 transicionar_a_ready(aux,BLOCKED);
                 }
                 else{
-                  finalizar_proceso(aux,cpu_en_la_que_ejecuta,BLOCKED);
+                  finalizar_proceso(aux,BLOCKED);
                 }
                 bloqueante = true; // a chequear
                 break;
                 
             case IO:
-                //int milisegundos = deserializar_cant_segundos(paquete);
+                int milisegundos = deserializar_cant_segundos(paquete);
+                aux->proxima_rafaga_io = milisegundos;
                 char *nombre_io_a_usar = deserializar_nombre_syscall_io(paquete);
                 int posicionIO = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
                 if(posicionIO == -1){ //quiere decir que no hay ninguna syscall con ese nombre
-                    finalizar_proceso(aux,cpu_en_la_que_ejecuta,EXEC);
+                    finalizar_proceso(aux,EXEC);
+                    liberar_cpu(cpu_en_la_que_ejecuta);
                 }else{
                     sacar_de_cola_de_estado(aux,EXEC);
                     cambiarEstado(aux,EXEC,BLOCKED);
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,posicionIO);
+                    pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     list_add(io_aux->procesos_esperando,aux);
                     sem_post(&io_aux->hay_procesos_esperando);
-                    pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 }
                 bloqueante = true;
                 break;
@@ -515,14 +518,15 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
     sem_post(&CPUS_LIBRES);
 }
 
-void finalizar_proceso(struct pcb*aux, struct instancia_de_cpu *cpu, Estado estadoInicial){
+void finalizar_proceso(struct pcb*aux, Estado estadoInicial){
     sacar_de_cola_de_estado(aux,estadoInicial);
     cambiarEstado(aux,estadoInicial,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(EXIT,buffer,socket);
     free(aux);
-    liberar_cpu(cpu);
+    // semaforo que llame al planificador de mediano plazo.
+    sem_post(&INTENTAR_INICIAR); //SOLO SI SUSP_READY ESTA VACIA !!
     //int confirmacion = recibir_entero(socket);
     //return confirmacion;
 }

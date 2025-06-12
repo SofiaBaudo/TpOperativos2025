@@ -63,9 +63,12 @@ typedef enum op_code
 
 	//RESPUESTAS
 	DUMP_ACEPTADO,
-	DUMP_RECHAZADO
-}op_code;
+	DUMP_RECHAZADO,
 
+	//INTERACCION ENTRE KERNEL E IO
+	RAFAGA_DE_IO,
+	FIN_DE_IO
+}op_code;
 typedef struct
 {
 	int size;
@@ -138,4 +141,5 @@ t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradas
 void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasTabla, int* cantNiveles);
 t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
 int deserializar_entradaNivel(t_paquete *paquete);
+t_buffer * crear_buffer_para_ejecucion_de_io(int pid, int milisegundos);
 #endif

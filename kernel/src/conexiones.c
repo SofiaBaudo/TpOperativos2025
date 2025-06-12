@@ -1,6 +1,7 @@
 
 #include <conexiones.h>
 
+
 //sacamos los close porque se recibe mas de un io y mas de una cpu
 
 t_list *ios_conectados = NULL; // variable global
@@ -175,29 +176,34 @@ void* manejar_kernel_io(void *socket_io){
    return NULL;
 }
 
-/*void io(void *instancia_de_io) { //el aux
-    instancia_io *io = instancia_de_io;
-    while (true)
-        sem_wait //positovs = cant procesos esperando, negativo = cant ios disponibles
-        //cuando encuentra
-        sacar primer proceso de la lista de procesos bloqueados
-        mandar mensaje a io
-        recibir respuesta
-        switch:
-        si ok: retorno proceso a READY
-        si not ok:
-        si desconecto: finalizo el proceso; me fijo si hay otros IOs, sino mato
-        //el mensaje de desconexion lo recibe por el socket, no hace falta hardcodearlo desde el IO
-        volver
-}*/
+void *io(void *instancia_de_io) { //el aux
+    struct instancia_de_io *io_aux = instancia_de_io;
+    while (true){
+
+        sem_wait(&io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
+        //struct pcb *proceso = obtener_primero(io_aux->procesos_esperando); //y sacarlo
+        //t_buffer *buffer = crear_buffer_para_ejecucion_de_io(proceso->pid,proceso->proxima_rafaga_io);
+        //crear_paquete(RAFAGA_DE_IO,buffer,cliente_io);
+        int respuesta = recibir_entero(cliente_io);
+        switch(respuesta){
+            case 41: //Corresponde al enum de fin de IO
+                //transicionar_a_ready(proceso,BLOCKED);
+                break;
+            case -1: //desconexion de la instancia con la que estamos trabajando
+                //finalizar_proceso(proceso,BLOCKED);
+                io_aux->cantInstancias--;
+                if(io_aux->cantInstancias == 0){
+                    //recorrer la lista de bloqueados por esta IO y finalizarlos
+                }
+                break;
+                
+        }
+    }
+}
 
 int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
-
-
    enviar_op_code(fd_kernel_memoria, HANDSHAKE_KERNEL); //avisa que es Kernel.
-
-
    op_code respuesta = recibir_op_code(fd_kernel_memoria); //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
    if (respuesta == HANDSHAKE_ACCEPTED){
        log_info(kernel_logger, "Conexion con memoria establecida correctamente");

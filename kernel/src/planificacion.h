@@ -30,6 +30,7 @@ struct pcb{
   //Estado estado;
   int tamanio;
   char *ruta_del_archivo_de_pseudocodigo; // a chequear
+  int proxima_rafaga_io;
 };
 
 //PLANIFICADORES
@@ -46,7 +47,7 @@ void incrementar_var_global_id_proceso();
 void esperar_enter_por_pantalla();
 void actualizar_proximo_a_consultar();
 void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
-void finalizar_proceso(struct pcb*aux, struct instancia_de_cpu *cpu, Estado estadoInicial);
+void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
 
 
 //CAMBIO Y TRANSICION DE ESTADOS
