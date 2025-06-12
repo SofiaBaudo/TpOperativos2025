@@ -68,6 +68,7 @@ int buscar_cpu_libre(t_list *lista);
 int buscar_en_lista(t_list *lista,int pid);
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *));
 
+
 //SJF CON DESALOJO Y SIN DESALOJO
 void frenar_y_restar_cronometros(t_list *lista);
 float calcular_proxima_estimacion(struct pcb *proceso);
@@ -75,6 +76,7 @@ bool menor_por_estimacion(void* a, void* b);
 bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b);
 bool ver_si_hay_que_desalojar(struct pcb*proceso);
 void desalojar_el_mas_grande(struct pcb*proceso);
+bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct pcb *proceso);
 
 //MANEJO DE SYSCALLS
 void mandar_paquete_a_cpu(struct pcb *proceso);

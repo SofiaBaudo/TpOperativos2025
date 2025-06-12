@@ -34,9 +34,9 @@ int main(int argc, char* argv[]){
    cpu_2->puede_usarse = false;
    cpu_2->proceso_ejecutando = pruebita2;
    list_add(cpus_conectadas,cpu_1);
-   //sem_post(&CPUS_LIBRES);
+   sem_post(&CPUS_LIBRES);
    list_add(cpus_conectadas,cpu_2);
-   //sem_post(&CPUS_LIBRES);
+   sem_post(&CPUS_LIBRES);
    //crear_proceso(3,"f4");
    crear_proceso(2,"f1");
    //atender_kernel_io();
