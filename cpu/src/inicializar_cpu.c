@@ -50,4 +50,10 @@ void inicializar_configs(){
     PUERTO_MEMORIA = config_get_string_value(cpu_config,"PUERTO_MEMORIA");
     PUERTO_KERNEL_DISPATCH = config_get_string_value(cpu_config,"PUERTO_KERNEL_DISPATCH");
     PUERTO_KERNEL_INTERRUPT = config_get_string_value(cpu_config,"PUERTO_KERNEL_INTERRUPT");
+    ENTRADAS_TLB= config_get_int_value(cpu_config, "ENTRADAS_TLB");
+    REEMPLAZO_TLB = config_get_string_value(cpu_config, "REEMPLAZO_TLB");
+    ENTRADAS_CACHE = config_get_int_value(cpu_config, "ENTRADAS_CACHE");
+    REEMPLAZO_CACHE = config_get_string_value(cpu_config, "REEMPLAZO_CACHE");
+    RETARDO_CACHE = config_get_int_value(cpu_config, "RETARDO_CACHE");
+    LOG_LEVEL = config_get_string_value(cpu_config, "LOG_LEVEL");
 }
