@@ -12,4 +12,5 @@ void agregarEntradaATLB(int numPag, int numMarco);
 void implementarAlgoritmoFIFO(int numPag, int numMarco);
 void implementarAlgoritmoLRU(int numPag, int numMarco);
 void inicializarTLB();
+void imprimirTLB();
 #endif

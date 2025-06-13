@@ -90,33 +90,54 @@ void agregarEntradaATLB(int numPag, int numMarco){
         implementarAlgoritmoLRU(numPag, numMarco);
     }
 }
-
+NodoEntradasTLB *punteroPos = NULL;
 void implementarAlgoritmoFIFO(int numPag, int numMarco){
-//TODO
+    if (punteroPos == NULL){
+        log_debug(cpu_log_debug, "pelotudita");
+    }
+    punteroPos->info.numPag = numPag;
+    punteroPos->info.numMarco = numMarco;
+    punteroPos = punteroPos->sgte; //hacemos que avance para la proxima que le agregues una 
 }
 
+
 void implementarAlgoritmoLRU(int numPag, int numMarco){
-//TODO
+    
 }
 
 void inicializarTLB(){
     listaTlb = NULL;
-    NodoEntradasTLB *aux = listaTlb;
-    NodoEntradasTLB *ant = NULL;
+    NodoEntradasTLB *ultimoNodo = NULL;
     for(int i = 0; i < ENTRADAS_TLB; i++){
         NodoEntradasTLB* nuevo = malloc(sizeof(NodoEntradasTLB));
         nuevo->info.numPag = -1;
         nuevo->info.numMarco = -1;
         //mediante esta forma vemos cuales son los que estan vacios y cuales no
-        nuevo->sgte = NULL;
     
-        if(ant == NULL){
-            listaTlb = nuevo;
+        if(ultimoNodo == NULL){ //entonces la lista esta vacia
+            listaTlb = nuevo; //apuntamos el primer nodo
+            ultimoNodo = nuevo;
         }
         else{
-            ant->sgte = nuevo;
-            ant = aux;
+            ultimoNodo->sgte = nuevo;
         }
-        nuevo->sgte = aux;
+        ultimoNodo = nuevo;        
+    }
+    if(ultimoNodo != NULL){
+        ultimoNodo->sgte = listaTlb;
+    }
+   
+    punteroPos = listaTlb;
+}
+void imprimirTLB() {
+    if (listaTlb == NULL) {
+        log_debug(cpu_log_debug, "TLB vacía.\n");
+        return;
+    }
+
+    NodoEntradasTLB* actual = listaTlb;
+    for(int i = 0; i < ENTRADAS_TLB; i++){
+        log_debug(cpu_log_debug, "Entrada %d: Pagina = %d, Marco = %d\n", i, actual->info.numPag, actual->info.numMarco);
+        actual = actual->sgte;
     }
 }

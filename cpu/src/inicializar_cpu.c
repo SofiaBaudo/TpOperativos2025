@@ -2,6 +2,7 @@
 #include <conexiones.h>
 #include <inicializar_cpu.h>
 #include <pthread.h>
+#include "traduccion.h"
 
 
 //Funcion de Inicializacion de CPU
@@ -11,6 +12,18 @@ void inicializar_CPU(int id){
     inicializar_configs();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
+
+    inicializarTLB();
+
+    implementarAlgoritmoFIFO(1, 100);
+    implementarAlgoritmoFIFO(2, 200);
+    implementarAlgoritmoFIFO(3, 300);
+    implementarAlgoritmoFIFO(4, 400);
+    implementarAlgoritmoFIFO(5, 500); 
+    implementarAlgoritmoFIFO(6, 600);
+    imprimirTLB();
+    /*
+    
     pthread_t hiloKernel;
     pthread_t hiloMemoria;
 
@@ -18,6 +31,7 @@ void inicializar_CPU(int id){
     pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);
     pthread_join(hiloMemoria, NULL);
     pthread_join(hiloKernel, NULL);
+    */
      
 }
 
