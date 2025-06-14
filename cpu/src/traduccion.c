@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
-#include <commons/collections/list.h>//para LRU 
+
 
 /*
 Las direcciones logicas estarian compuestas de esta manera. 
@@ -83,7 +83,6 @@ int buscarTlb(int numPag, int pid){
         }
         aux = aux->sgte;
    }
-    
     log_info(logger,"PID: <%d> - TLB MISS - Pagina: <%d>", pid, numPag);
     return -1;
 }
@@ -108,20 +107,29 @@ void implementarAlgoritmoFIFO(int numPag, int numMarco){
 
 void implementarAlgoritmoLRU(int numPag, int numMarco){
     NodoEntradasTLB *nodoAReemplazar = listaTlb;
-    if(hayEspacioLibre()){
+    if(estaYaEnTlb(numPag)->info.apareceEnTLB){
+        estaYaEnTlb(numPag)->info.tiempoSinReferencia = 0;
+    }
+    else{
+        if(hayEspacioLibre()){
             nodoAReemplazar = retornarEspacioLibre();
+            log_debug(cpu_log_debug, "hola");
             nodoAReemplazar->info.numPag = numPag;
             nodoAReemplazar->info.numMarco = numMarco;
             nodoAReemplazar->info.tiempoSinReferencia = 0;
+            nodoAReemplazar->info.apareceEnTLB = true;
         }   
         else{
         nodoAReemplazar = encontrarNodoConMenosReferencia();
         nodoAReemplazar->info.numMarco = numMarco;
         nodoAReemplazar->info.numPag = numPag;
         nodoAReemplazar->info.tiempoSinReferencia = 0;
+         nodoAReemplazar->info.apareceEnTLB = true;
         }
-  
+    }
 }
+  
+
 
 //si ya fue referenciado entonces hubiera sido un tlb hit ?? no entienod porque usarias el lru, tipo funciona exactamente igual
 void modificarReferencia(int numPag){
@@ -129,6 +137,7 @@ void modificarReferencia(int numPag){
     for(int i = 0; i < ENTRADAS_TLB; i++){
         if(aux->info.numPag == numPag){
             aux->info.tiempoSinReferencia = 0;
+            aux->info.apareceEnTLB = true;
         }
         else{
             aux->info.tiempoSinReferencia = aux->info.tiempoSinReferencia + 1; //es un contador
@@ -136,7 +145,6 @@ void modificarReferencia(int numPag){
         aux = aux->sgte;
     }
 }
-
 
 void inicializarTLB(){
     listaTlb = NULL;
@@ -146,6 +154,7 @@ void inicializarTLB(){
         nuevo->info.numPag = -1;
         nuevo->info.numMarco = -1;
         nuevo->info.tiempoSinReferencia = 0;
+        nuevo->info.apareceEnTLB = false;
         //mediante esta forma vemos cuales son los que estan vacios y cuales no
     
         if(ultimoNodo == NULL){ //entonces la lista esta vacia
@@ -209,13 +218,14 @@ NodoEntradasTLB *retornarEspacioLibre(){
     }
     return NULL;
 }
-bool noHay(int numPag){
+NodoEntradasTLB *estaYaEnTlb(int numPag){
     NodoEntradasTLB *aux = listaTlb;
     for(int i = 0; i < ENTRADAS_TLB; i++){
         if(aux->info.numPag == numPag){
-            return false;
+            return aux;
         }
         aux = aux->sgte;
     }
-    return true;
+    aux->info.apareceEnTLB = false;
+    return aux;
 }

@@ -7,6 +7,7 @@ typedef struct NodoEntradasTLB {
         int numPag;
         int numMarco;
         int tiempoSinReferencia;
+        bool apareceEnTLB;
     } info;
     struct NodoEntradasTLB *sgte;
 } NodoEntradasTLB;
