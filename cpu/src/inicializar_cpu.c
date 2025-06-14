@@ -13,6 +13,8 @@ void inicializar_CPU(int id){
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
 
+    
+
     log_debug(cpu_log_debug, "Valor de tamPag: %d", 4096);
     inicializarTLB();
 
@@ -61,8 +63,8 @@ void inicializar_CPU(int id){
     implementarAlgoritmoLRU(7, 70);
     imprimirTLB();
    
-    /*
     
+    /*
     pthread_t hiloKernel;
     pthread_t hiloMemoria;
 

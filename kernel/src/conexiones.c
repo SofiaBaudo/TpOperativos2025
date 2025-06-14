@@ -7,7 +7,7 @@
 t_list *ios_conectados = NULL; // variable global
 t_list *cpus_conectadas = NULL;
 int cliente_dispatch;
-void atender_kernel_dispatch(){
+void *atender_kernel_dispatch(){
    int servidor_kernel = iniciar_servidor(PUERTO_ESCUCHA_DISPATCH,kernel_logger,"El kernel se conecto y esta esperando al dispatch");
    if (servidor_kernel == -1) {
        log_error(kernel_logger, "Error al iniciar el servidor de kernel");

@@ -448,6 +448,7 @@ int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta)
     sacar_de_cola_de_estado(aux,EXEC);
     liberar_cpu(cpu_en_la_que_ejecuta);
     cambiarEstado(aux,EXEC,BLOCKED);
+    //liberar cpu aca
     int respuesta = recibir_entero(socket);
     return respuesta;
 }
@@ -477,14 +478,13 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
             case DUMP_MEMORY:
                 int respuesta = manejar_dump(aux,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
-                transicionar_a_ready(aux,BLOCKED);
+                    transicionar_a_ready(aux,BLOCKED);
                 }
                 else{
-                  finalizar_proceso(aux,BLOCKED);
+                    finalizar_proceso(aux,BLOCKED);
                 }
                 bloqueante = true; // a chequear
-                break;
-                
+                break;   
             case IO:
                 int milisegundos = deserializar_cant_segundos(paquete);
                 aux->proxima_rafaga_io = milisegundos;
@@ -518,15 +518,18 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
     sem_post(&CPUS_LIBRES);
 }
 
-void finalizar_proceso(struct pcb*aux, Estado estadoInicial){
+void finalizar_proceso(struct pcb *aux, Estado estadoInicial){
     sacar_de_cola_de_estado(aux,estadoInicial);
     cambiarEstado(aux,estadoInicial,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(EXIT,buffer,socket);
-    free(aux);
+    free(aux); //free de todos los punteros, lo demas se va con el free (aux)
     // semaforo que llame al planificador de mediano plazo.
     sem_post(&INTENTAR_INICIAR); //SOLO SI SUSP_READY ESTA VACIA !!
     //int confirmacion = recibir_entero(socket);
     //return confirmacion;
 }
+
+//para el de mediano plazo hay que buscarle la vuelta para no quemar la cpu con un gettime todo el tiempo
+//buscar en el foro

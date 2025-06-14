@@ -3,7 +3,7 @@
 #include <semaforos.h> // para poder hacer el sem_post en cpu
 
 //ATENCION DE CLIENTES
-void atender_kernel_dispatch();
+void *atender_kernel_dispatch();
 void atender_kernel_io();
 void atender_kernel_interrupt();
 
