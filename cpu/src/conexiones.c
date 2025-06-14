@@ -55,13 +55,15 @@ void* iniciar_conexion_memoria_dispatch(void* arg){
     enviar_op_code(fd_conexion_dispatch_memoria, HANDSHAKE_CPU);                  //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_dispatch_memoria);            //recibe un entero que devuelve el kernel cuando la conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
-        log_info(cpu_logger ,"Conexion con la memoria establecida correctamente");
+        log_debug(cpu_log_debug ,"Conexion con la memoria establecida correctamente");
         t_paquete* paquete = recibir_paquete(fd_conexion_dispatch_memoria);
+        log_debug(cpu_log_debug,"paquete recibido");
     if (!paquete || !paquete->buffer || !paquete->buffer->stream) {
-        log_error(cpu_logger, "Error: paquete recibido inválido o buffer vacío");
+        log_error(cpu_log_debug, "Error: paquete recibido inválido o buffer vacío");
         exit(1);
     }
     deserializar_config_memoria(paquete, &tamPag, &entradasTabla, &cantNiveles);
+    log_debug(cpu_log_debug, "recibi como cantNiveles %d, entradclas %d, tamPag %d ", cantNiveles, entradasTabla, tamPag);
     }
     else{
         log_error(cpu_logger, "Error en la conexion con memoria");

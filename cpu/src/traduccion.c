@@ -35,12 +35,16 @@ int traduccion(int direccion, int pid){ //te tendria que devolver la dir fisica
     int marco;
     int tlbrespuesta;
     tlbrespuesta = buscarTlb(pid, numPag);
+    //actualizarContadores(numPag);
     if(tlbrespuesta == -1){
         //osea que no se encontro
         marco = navegarNiveles(numPag, pid);
+        agregarEntradaATLB(numPag, marco);
     }
     else{
         marco = tlbrespuesta;
+        //aca no actualizas la referencia porque ya llamas modificarRefenrecia en buscarEnTLB
+        //aca solo actualizo --> si en el config esta lru
     }
     int direccionFisica = marco*tamPag + desplazamiento;
     return direccionFisica; 
@@ -58,7 +62,7 @@ int navegarNiveles(int numPag, int pid){
         int entradaNivel = floor((numPag/elevado) % entradasTabla);
         enviarValoresMem(entradaNivel, pid);
         numMarco = conseguirMarco(pid);
-        agregarEntradaATLB(numPag, numMarco);
+        //
         //guardo la entrada nivel por cada 
     }
     //el numero de marco que tenemos despues del if es el num de marco final(el ultimo de todos --> es el marco fisico)
@@ -87,12 +91,21 @@ int buscarTlb(int numPag, int pid){
     return -1;
 }
 void agregarEntradaATLB(int numPag, int numMarco){
+    NodoEntradasTLB *nodoexistente = dondeEstaenTLB(numPag);
+    if(nodoexistente != NULL){
+        nodoexistente->info.numMarco = numMarco;
+        modificarReferencia(numPag);
+        actualizarContadores(numPag);
+        return;
+    }
+    else{
     if(strcmp(REEMPLAZO_TLB, "FIFO") == 0){
         implementarAlgoritmoFIFO(numPag, numMarco);
     }
     else if(strcmp(REEMPLAZO_TLB, "LRU") == 0){
         implementarAlgoritmoLRU(numPag, numMarco);
         modificarReferencia(numPag);
+    }
     }
 }
 NodoEntradasTLB *punteroPos = NULL;
@@ -107,10 +120,8 @@ void implementarAlgoritmoFIFO(int numPag, int numMarco){
 
 void implementarAlgoritmoLRU(int numPag, int numMarco){
     NodoEntradasTLB *nodoAReemplazar = listaTlb;
-    if(estaYaEnTlb(numPag)->info.apareceEnTLB){
-        estaYaEnTlb(numPag)->info.tiempoSinReferencia = 0;
-    }
-    else{
+   // if(estaYaEnTlb(numPag)->info.apareceEnTLB){
+       // estaYaEnTlb(numPag)->info.tiempoSinReferencia = 0;
         if(hayEspacioLibre()){
             nodoAReemplazar = retornarEspacioLibre();
             log_debug(cpu_log_debug, "hola");
@@ -126,10 +137,8 @@ void implementarAlgoritmoLRU(int numPag, int numMarco){
         nodoAReemplazar->info.tiempoSinReferencia = 0;
          nodoAReemplazar->info.apareceEnTLB = true;
         }
-    }
+    actualizarContadores(numPag);
 }
-  
-
 
 //si ya fue referenciado entonces hubiera sido un tlb hit ?? no entienod porque usarias el lru, tipo funciona exactamente igual
 void modificarReferencia(int numPag){
@@ -140,7 +149,7 @@ void modificarReferencia(int numPag){
             aux->info.apareceEnTLB = true;
         }
         else{
-            aux->info.tiempoSinReferencia = aux->info.tiempoSinReferencia + 1; //es un contador
+            aux->info.tiempoSinReferencia++;
         }
         aux = aux->sgte;
     }
@@ -179,7 +188,7 @@ void imprimirTLB() {
 
     NodoEntradasTLB* actual = listaTlb;
     for(int i = 0; i < ENTRADAS_TLB; i++){
-        log_debug(cpu_log_debug, "Entrada %d: Pagina = %d, Marco = %d\n", i, actual->info.numPag, actual->info.numMarco);
+        log_debug(cpu_log_debug, "Entrada %d: Pagina = %d, Marco = %d, Rerencia = %d\n", i, actual->info.numPag, actual->info.numMarco, actual->info.tiempoSinReferencia);
         actual = actual->sgte;
     }
 }
@@ -218,14 +227,34 @@ NodoEntradasTLB *retornarEspacioLibre(){
     }
     return NULL;
 }
-NodoEntradasTLB *estaYaEnTlb(int numPag){
+bool estaYaEnTlb(int numPag){
     NodoEntradasTLB *aux = listaTlb;
+    for(int i = 0; i < ENTRADAS_TLB; i++){
+        if(aux->info.numPag == numPag){
+            return true;
+        }
+        aux = aux->sgte;
+    }
+    return false;
+}
+NodoEntradasTLB *dondeEstaenTLB(int numPag){
+    NodoEntradasTLB *aux = listaTlb;
+    if(estaYaEnTlb(numPag)){
     for(int i = 0; i < ENTRADAS_TLB; i++){
         if(aux->info.numPag == numPag){
             return aux;
         }
         aux = aux->sgte;
     }
-    aux->info.apareceEnTLB = false;
-    return aux;
+    }
+    return NULL;
+}
+void actualizarContadores(int numPag) {
+    NodoEntradasTLB *aux = listaTlb;
+    for (int i = 0; i < ENTRADAS_TLB; i++) {
+        if (aux->info.numPag != -1 && aux->info.numPag != numPag) {
+            aux->info.tiempoSinReferencia++;
+        }
+        aux = aux->sgte;
+    }
 }

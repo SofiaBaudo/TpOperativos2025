@@ -2,6 +2,17 @@
 #define VARIABLES_GLOBALES_CPU_H
 
 // Incluir las librerías
+
+#include <utils/utils.h>
+#include <stdio.h>
+#include <commons/config.h>
+#include <commons/log.h>
+#include <commons/string.h>
+#include <commons/collections/list.h>
+#include <pthread.h>
+#include <stdbool.h>
+
+
 typedef struct NodoEntradasTLB {
     struct {
         int numPag;
@@ -11,14 +22,6 @@ typedef struct NodoEntradasTLB {
     } info;
     struct NodoEntradasTLB *sgte;
 } NodoEntradasTLB;
-
-#include <utils/utils.h>
-#include <stdio.h>
-#include <commons/config.h>
-#include <commons/log.h>
-#include <commons/string.h>
-#include <commons/collections/list.h>
-#include <pthread.h>
 
 // Inicialización Logs CPU
 

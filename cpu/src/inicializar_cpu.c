@@ -12,9 +12,7 @@ void inicializar_CPU(int id){
     inicializar_configs();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
-
-    /*
-
+/*
     log_debug(cpu_log_debug, "Valor de tamPag: %d", 4096);
     inicializarTLB();
 
@@ -62,17 +60,20 @@ void inicializar_CPU(int id){
 
     implementarAlgoritmoLRU(7, 70);
     imprimirTLB();
+    */
+    
+    
+    //pthread_t hiloKernel;
+   // pthread_t hiloMemoria;
+    inicializar_memoria(valor_id);
+    traduccion(679, 1);
+    
+    //pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
+    //pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);
+    //pthread_detach(hiloKernel);
+    //pthread_join(hiloMemoria, NULL);
+    
    
-   */
-    
-    
-    pthread_t hiloKernel;
-    pthread_t hiloMemoria;
-
-    pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
-    pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);
-    pthread_detach(hiloMemoria, NULL);
-    pthread_join(hiloKernel, NULL);
     
      
 }
