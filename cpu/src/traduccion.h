@@ -19,4 +19,5 @@ NodoEntradasTLB *retornarEspacioLibre();
 bool hayEspacioLibre();
 NodoEntradasTLB *encontrarNodoConMenosReferencia();
 void modificarReferencia(int numPag);
+bool noHay(int numPag);
 #endif

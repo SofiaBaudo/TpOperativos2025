@@ -107,19 +107,20 @@ void implementarAlgoritmoFIFO(int numPag, int numMarco){
 }
 
 void implementarAlgoritmoLRU(int numPag, int numMarco){
-    NodoEntradasTLB *nodoAReemplazar;
+    NodoEntradasTLB *nodoAReemplazar = listaTlb;
     if(hayEspacioLibre()){
-        nodoAReemplazar = retornarEspacioLibre();
-        nodoAReemplazar->info.numPag = numPag;
+            nodoAReemplazar = retornarEspacioLibre();
+            nodoAReemplazar->info.numPag = numPag;
+            nodoAReemplazar->info.numMarco = numMarco;
+            nodoAReemplazar->info.tiempoSinReferencia = 0;
+        }   
+        else{
+        nodoAReemplazar = encontrarNodoConMenosReferencia();
         nodoAReemplazar->info.numMarco = numMarco;
+        nodoAReemplazar->info.numPag = numPag;
         nodoAReemplazar->info.tiempoSinReferencia = 0;
-    }
-    else{
-    nodoAReemplazar = encontrarNodoConMenosReferencia();
-    nodoAReemplazar->info.numMarco = numMarco;
-    nodoAReemplazar->info.numPag = numPag;
-    nodoAReemplazar->info.tiempoSinReferencia = 0;
-    }
+        }
+  
 }
 
 //si ya fue referenciado entonces hubiera sido un tlb hit ?? no entienod porque usarias el lru, tipo funciona exactamente igual
@@ -207,4 +208,14 @@ NodoEntradasTLB *retornarEspacioLibre(){
         aux= aux->sgte;
     }
     return NULL;
+}
+bool noHay(int numPag){
+    NodoEntradasTLB *aux = listaTlb;
+    for(int i = 0; i < ENTRADAS_TLB; i++){
+        if(aux->info.numPag == numPag){
+            return false;
+        }
+        aux = aux->sgte;
+    }
+    return true;
 }
