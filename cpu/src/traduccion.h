@@ -3,6 +3,8 @@
 
 #include <variables_globales_cpu.h>
 
+
+
 int traduccion(int direccion, int pid);
 void enviarValoresMem(int entradaNivel, int pid);
 int navegarNiveles(int numPag, int pid);
@@ -13,4 +15,8 @@ void implementarAlgoritmoFIFO(int numPag, int numMarco);
 void implementarAlgoritmoLRU(int numPag, int numMarco);
 void inicializarTLB();
 void imprimirTLB();
+NodoEntradasTLB *retornarEspacioLibre();
+bool hayEspacioLibre();
+NodoEntradasTLB *encontrarNodoConMenosReferencia();
+void modificarReferencia(int numPag);
 #endif

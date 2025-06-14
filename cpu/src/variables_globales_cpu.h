@@ -2,6 +2,14 @@
 #define VARIABLES_GLOBALES_CPU_H
 
 // Incluir las librerías
+typedef struct NodoEntradasTLB {
+    struct {
+        int numPag;
+        int numMarco;
+        int tiempoSinReferencia;
+    } info;
+    struct NodoEntradasTLB *sgte;
+} NodoEntradasTLB;
 
 #include <utils/utils.h>
 #include <stdio.h>

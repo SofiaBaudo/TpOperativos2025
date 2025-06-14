@@ -13,15 +13,54 @@ void inicializar_CPU(int id){
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
 
+    log_debug(cpu_log_debug, "Valor de tamPag: %d", 4096);
     inicializarTLB();
 
-    implementarAlgoritmoFIFO(1, 100);
-    implementarAlgoritmoFIFO(2, 200);
-    implementarAlgoritmoFIFO(3, 300);
-    implementarAlgoritmoFIFO(4, 400);
-    implementarAlgoritmoFIFO(5, 500); 
-    implementarAlgoritmoFIFO(6, 600);
+    printf("Algoritmo de reemplazo TLB: %s\n", REEMPLAZO_TLB);
+
+    inicializarTLB();
     imprimirTLB();
+
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(1, 10);
+    imprimirTLB();
+
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(2, 20);
+    imprimirTLB();
+
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(3, 30);
+    imprimirTLB();
+
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(4, 40);
+    imprimirTLB();
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(5, 50); // reemplaza la primera entrada
+    imprimirTLB();
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(4, 40);
+    imprimirTLB();
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(6, 60);
+    imprimirTLB();
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(2, 20);
+    imprimirTLB();
+    log_debug(cpu_log_debug, ".........................................................");
+
+    implementarAlgoritmoLRU(7, 70);
+    imprimirTLB();
+   
     /*
     
     pthread_t hiloKernel;
