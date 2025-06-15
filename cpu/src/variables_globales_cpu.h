@@ -23,13 +23,15 @@ typedef struct NodoEntradasTLB {
     struct NodoEntradasTLB *sgte;
 } NodoEntradasTLB;
 
+extern NodoEntradasTLB *listaTlb; 
+
 // Inicialización Logs CPU
 
 extern t_log *cpu_logger;
 extern t_log *cpu_log_debug;
 extern t_config *cpu_config; 
 extern t_log *logger;
-extern t_log* logs;
+
 
 // Declaración Variables Globales CPU
 

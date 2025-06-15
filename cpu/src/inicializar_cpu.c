@@ -61,21 +61,12 @@ void inicializar_CPU(int id){
     implementarAlgoritmoLRU(7, 70);
     imprimirTLB();
     */
-    
-    
     //pthread_t hiloKernel;
    // pthread_t hiloMemoria;
-    inicializar_memoria(valor_id);
-    traduccion(679, 1);
-    
     //pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
     //pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);
     //pthread_detach(hiloKernel);
     //pthread_join(hiloMemoria, NULL);
-    
-   
-    
-     
 }
 
 //Funcion de Inicializacion de Logs
@@ -103,7 +94,7 @@ void inicializar_configs(){
         perror("No se pudo crear la configuracion");
         exit(EXIT_FAILURE);
     }
-    IP_MEMORIA = config_get_string_value(cpu_config,"IP MEMORIA");
+    IP_MEMORIA = config_get_string_value(cpu_config,"IP_MEMORIA");
     PUERTO_MEMORIA = config_get_string_value(cpu_config,"PUERTO_MEMORIA");
     PUERTO_KERNEL_DISPATCH = config_get_string_value(cpu_config,"PUERTO_KERNEL_DISPATCH");
     PUERTO_KERNEL_INTERRUPT = config_get_string_value(cpu_config,"PUERTO_KERNEL_INTERRUPT");
@@ -113,4 +104,6 @@ void inicializar_configs(){
     REEMPLAZO_CACHE = config_get_string_value(cpu_config, "REEMPLAZO_CACHE");
     RETARDO_CACHE = config_get_int_value(cpu_config, "RETARDO_CACHE");
     LOG_LEVEL = config_get_string_value(cpu_config, "LOG_LEVEL");
+
+    log_debug(cpu_log_debug, "llegue");
 }

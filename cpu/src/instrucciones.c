@@ -4,7 +4,7 @@
 #include <instrucciones.h>
 //Inicializacion de los Loggers
 
-t_log *logger;
+
 //Declaracion Variables Globales
 
 char* instruccion_recibida;
@@ -34,7 +34,7 @@ void obtenerDelKernelPcPid(int *pid, int *pc){
     *pid = deserializar_pid(paquete); 
     *pc = deserializar_pc(paquete);
     if(pc < 0){
-    log_error(logger, "El program Counter no puede ser negativo");
+    log_error(cpu_logger, "El program Counter no puede ser negativo");
     }
 }
 
@@ -43,7 +43,7 @@ void obtenerDelKernelPcPid(int *pid, int *pc){
 char* fetch(int pid,int pc){
     //Mando confirmacion de cpu a memoria, espero la instruccion a realizar de memoria.
     //LOG OBLIGATORIO
-    log_info(logger, "## PID: <PID> - FETCH - Program Counter: <%d>", pc);
+    log_info(cpu_logger,"## PID: <PID> - FETCH - Program Counter: <%d>", pc);
     //send(fd_conexion_dispatch_memoria,&id,sizeof(int),0);
     send(fd_conexion_dispatch_memoria,&pc,sizeof(int),0);
     send(fd_conexion_dispatch_memoria,&pid,sizeof(int),0);
@@ -96,7 +96,7 @@ void execute(t_instruccion instruccion){
     }
     else{
         //ERROR
-        log_error(logger, "Error en la Sintaxis o en el ingreso de la Instruccion");
+        log_error(cpu_logger, "Error en la Sintaxis o en el ingreso de la Instruccion");
     }
 }
 
@@ -111,15 +111,15 @@ void instruccion_noop(void){
 //Ejecucion Write.
 
 void instruccion_write(int direccion, char* param2){
-    log_info(logger,"## PID: %d - Ejecutando: <WRITE>",pid);
-    log_info(logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%d> - Valor: <%s>",pid,direccion, param2);
+    log_info(cpu_logger,"## PID: %d - Ejecutando: <WRITE>",pid);
+    log_info(cpu_logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%d> - Valor: <%s>",pid,direccion, param2);
 }
 
 //Ejecucion Read.
 
 void instruccion_read(int direccion, char* param2){
-    log_info(logger,"## PID: %d - Ejecutando: <READ>",pid);
-    log_info(logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%d> - Valor: <%s>",pid,direccion,param2);
+    log_info(cpu_logger,"## PID: %d - Ejecutando: <READ>",pid);
+    log_info(cpu_logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%d> - Valor: <%s>",pid,direccion,param2);
 }
 
 //Ejecucion Go to.
@@ -128,7 +128,7 @@ void instruccion_read(int direccion, char* param2){
 void instruccion_goto(int parametro){
    //Accedo a Memoria y Kernel para actualizar el PC
     pc = parametro;
-    log_info(logger,"## PID: %d - Ejecutando: <GOTO> - <%d>",pid, parametro);
+    log_info(cpu_logger,"## PID: %d - Ejecutando: <GOTO> - <%d>",pid, parametro);
     send(fd_conexion_dispatch_memoria, &pc, sizeof(int), 0);
     send(fd_conexion_kernel_dispatch, &pc,sizeof(int),0);
 }
@@ -145,14 +145,14 @@ void mandar_syscall(t_instruccion instruccion){
 void check_interrupt(void){
     int pid_interrupcion=0;
     recv(fd_conexion_kernel_interrupt, &pid_interrupcion,sizeof(int),0);
-    log_info(logger," ## Llega interrupción al puerto Interrupt <%d>", pid_interrupcion);
+    log_info(cpu_logger," ## Llega interrupción al puerto Interrupt <%d>", pid_interrupcion);
     if(pid_interrupcion != 0){ //recibio una instruccion
         //Hay que Serializar 
         send(fd_conexion_kernel_interrupt, &pid, sizeof(int),0);
         send(fd_conexion_kernel_interrupt, &pc, sizeof(int),0);
-        log_info(logger, "SI hay interrupcion");
+        log_info(cpu_logger, "SI hay interrupcion");
     }
     else{
-        log_info(logger, "NO hay interrupcion");
+        log_info(cpu_logger, "NO hay interrupcion");
     }
 }

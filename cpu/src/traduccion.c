@@ -27,7 +27,6 @@ typedef struct NodoEntradasTLB{
 }NodoEntradasTLB;
 */
 
-NodoEntradasTLB *listaTlb = NULL; 
 
 int traduccion(int direccion, int pid){ //te tendria que devolver la dir fisica
     int numPag = floor(direccion/tamPag);
@@ -72,22 +71,23 @@ int navegarNiveles(int numPag, int pid){
 int conseguirMarco(int pid){
     int numMarco;
     recv(fd_conexion_dispatch_memoria, &numMarco, sizeof(int), 0);
-    log_info(logger,"PID: <%d> - OBTENER MARCO - Página: <NUMERO_PAGINA> - Marco: <%d>", pid, numMarco);
+    log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <NUMERO_PAGINA> - Marco: <%d>", pid, numMarco);
     //se envia el paquete con la entradaNivel y el pid, memoria lo deseerializa y me envia el numero de marco unicamente, entonces no hace falta hacer un paquete. 
     return numMarco;
 }
 int buscarTlb(int numPag, int pid){
     NodoEntradasTLB *aux = listaTlb;
    for(int i = 0; i < ENTRADAS_TLB; i++){  
-        if(aux->info.numPag == numPag){
-            log_info(logger, "PID: <%d> - TLB HIT - Pagina: <%d>", pid, aux->info.numPag);
-            log_info(logger,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", pid, aux->info.numPag, aux->info.numMarco);
+        if(aux->info.numPag == numPag ){
+            
+            log_info(cpu_logger, "PID: <%d> - TLB HIT - Pagina: <%d>", pid, aux->info.numPag);
+            log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", pid, aux->info.numPag, aux->info.numMarco);
             modificarReferencia(numPag);
             return aux->info.numMarco;
         }
         aux = aux->sgte;
    }
-    log_info(logger,"PID: <%d> - TLB MISS - Pagina: <%d>", pid, numPag);
+    log_info(cpu_logger,"PID: <%d> - TLB MISS - Pagina: <%d>", pid, numPag);
     return -1;
 }
 void agregarEntradaATLB(int numPag, int numMarco){
@@ -124,7 +124,6 @@ void implementarAlgoritmoLRU(int numPag, int numMarco){
        // estaYaEnTlb(numPag)->info.tiempoSinReferencia = 0;
         if(hayEspacioLibre()){
             nodoAReemplazar = retornarEspacioLibre();
-            log_debug(cpu_log_debug, "hola");
             nodoAReemplazar->info.numPag = numPag;
             nodoAReemplazar->info.numMarco = numMarco;
             nodoAReemplazar->info.tiempoSinReferencia = 0;
@@ -164,6 +163,7 @@ void inicializarTLB(){
         nuevo->info.numMarco = -1;
         nuevo->info.tiempoSinReferencia = 0;
         nuevo->info.apareceEnTLB = false;
+        nuevo->sgte = NULL;
         //mediante esta forma vemos cuales son los que estan vacios y cuales no
     
         if(ultimoNodo == NULL){ //entonces la lista esta vacia
@@ -173,11 +173,17 @@ void inicializarTLB(){
         else{
             ultimoNodo->sgte = nuevo;
         }
-        ultimoNodo = nuevo;        
+        ultimoNodo = nuevo; 
+          
     }
     if(ultimoNodo != NULL){
         ultimoNodo->sgte = listaTlb;
     }
+    NodoEntradasTLB* temp = listaTlb;
+    for (int i = 0; i < ENTRADAS_TLB; i++) {
+    log_debug(cpu_log_debug, "Nodo %d: %p, sgte = %p", i, temp, temp->sgte);
+    temp = temp->sgte;
+}
     punteroPos = listaTlb;
 }
 void imprimirTLB() {
