@@ -23,6 +23,17 @@ typedef struct NodoEntradasTLB {
     struct NodoEntradasTLB *sgte;
 } NodoEntradasTLB;
 
+typedef struct {
+    int pid;
+    NodoEntradasTLB *sublista; //cada pid tiene su sublista que seria la TLB.
+    NodoEntradasTLB *punteroPos;
+}Enlazador;
+typedef struct EnlazadorTLBPID{
+    Enlazador info;
+    struct EnlazadorTLBPID *sgte;
+}EnlazadorTLBPID; 
+
+extern EnlazadorTLBPID *listaPids;
 extern NodoEntradasTLB *listaTlb; 
 
 // Inicialización Logs CPU

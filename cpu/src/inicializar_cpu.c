@@ -12,55 +12,45 @@ void inicializar_CPU(int id){
     inicializar_configs();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
-/*
+    int pid = 1; // ejemplo para ver si funciona FIFO
     log_debug(cpu_log_debug, "Valor de tamPag: %d", 4096);
-    inicializarTLB();
+    agregarAEnlazador(1);
 
     printf("Algoritmo de reemplazo TLB: %s\n", REEMPLAZO_TLB);
 
-    inicializarTLB();
-    imprimirTLB();
+    imprimirTLB(pid);
 
     log_debug(cpu_log_debug, ".........................................................");
 
-    implementarAlgoritmoLRU(1, 10);
-    imprimirTLB();
+    implementarAlgoritmoFIFO(1, 10,1);
+    imprimirTLB(pid);
 
     log_debug(cpu_log_debug, ".........................................................");
 
-    implementarAlgoritmoLRU(2, 20);
-    imprimirTLB();
+    implementarAlgoritmoFIFO(2, 20,1);
+    imprimirTLB(pid);
 
     log_debug(cpu_log_debug, ".........................................................");
 
-    implementarAlgoritmoLRU(3, 30);
-    imprimirTLB();
+    implementarAlgoritmoFIFO(3, 30,1);
+    imprimirTLB(pid);
 
     log_debug(cpu_log_debug, ".........................................................");
 
-    implementarAlgoritmoLRU(4, 40);
-    imprimirTLB();
+    implementarAlgoritmoFIFO(4, 40,1);
+    imprimirTLB(pid);
     log_debug(cpu_log_debug, ".........................................................");
 
-    implementarAlgoritmoLRU(5, 50); // reemplaza la primera entrada
-    imprimirTLB();
+    implementarAlgoritmoFIFO(5, 50,1);
+    imprimirTLB(pid);
     log_debug(cpu_log_debug, ".........................................................");
 
-    implementarAlgoritmoLRU(4, 40);
-    imprimirTLB();
+    
+    implementarAlgoritmoFIFO(6, 60,1);
+    imprimirTLB(pid);
     log_debug(cpu_log_debug, ".........................................................");
 
-    implementarAlgoritmoLRU(6, 60);
-    imprimirTLB();
-    log_debug(cpu_log_debug, ".........................................................");
-
-    implementarAlgoritmoLRU(2, 20);
-    imprimirTLB();
-    log_debug(cpu_log_debug, ".........................................................");
-
-    implementarAlgoritmoLRU(7, 70);
-    imprimirTLB();
-    */
+        
     //pthread_t hiloKernel;
    // pthread_t hiloMemoria;
     //pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);

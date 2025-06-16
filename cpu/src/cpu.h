@@ -10,6 +10,7 @@ t_log *cpu_log_debug;
 t_config *cpu_config; 
 t_log *logger;
 
+EnlazadorTLBPID *listaPids = NULL;
 NodoEntradasTLB *listaTlb = NULL;
 //Variables Globales CPU
 int tamPag;
