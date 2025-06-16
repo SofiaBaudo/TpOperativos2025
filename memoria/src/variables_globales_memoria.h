@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "utils/utils.h"
+#include <utils/utils.h>
 
 typedef enum {
     ACCESO_TABLA,

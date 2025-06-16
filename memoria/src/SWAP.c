@@ -1,10 +1,6 @@
 //swap = manda a suspendido
 //guardás el contenido de las páginas de los procesos cuando son suspendidos (estado SUSP.BLOCKED)
-#include "SWAP.h"
-#include "stdlib.h"
-#include "string.h"
-#include "inicializar_memoria.h"
-
+#include <SWAP.h>
 
 #define PATH_SWAPFILE "/home/utnso/tp-2025-1c-Sinergia-SO-13/memoria/swapfile.bin"
 

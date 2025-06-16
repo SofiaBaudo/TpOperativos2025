@@ -3,7 +3,10 @@
 
 #include <stdio.h>
 #include <commons/collections/list.h>
-#include "variables_globales_memoria.h"
+#include <variables_globales_memoria.h>
+#include <stdlib.h>
+#include <string.h>
+#include <servidor_memoria.h>
 
 typedef struct {
     int pid;                  // Identificador del proceso dueño de la página

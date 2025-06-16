@@ -1,7 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <memoria.h>
-#include "estructura_memoria.h"
+
 
 //#include <inicializar_memoria.h>
 

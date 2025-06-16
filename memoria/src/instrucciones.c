@@ -1,9 +1,4 @@
-#include "instrucciones.h"
-#include <commons/collections/list.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <estructura_memoria.h>
+#include <instrucciones.h>
 
 t_list* lista_instrucciones;
 t_list* lista_procesos_instrucciones;
@@ -68,7 +63,7 @@ void registrar_instrucciones_proceso(int pid, char* PATH_INSTRUCCIONES) {
     list_add(lista_procesos_instrucciones, nuevo);
 }
 
-//Busca la instrucción número pc (program counter) del proceso con PID pid.
+//Busca la instrucción número pc del proceso con pid.
 //Devuelve el puntero a la instrucción que necesita la CPU ejecutar.
 
 t_instruccion* obtener_instruccion(int pid, int pc) {
