@@ -28,7 +28,12 @@ typedef struct {
 
 extern t_log* logger;
 
+tabla_pagina_nivel* crear_tabla_nivel(int nivel_actual);
 tabla_pagina_nivel* crear_tablas_proceso();
+void agregar_tablas_proceso(int pid);
+tabla_pagina_nivel* buscar_tabla_por_pid(int pid);
+void liberar_tablas(tabla_pagina_nivel* tabla);
+void eliminar_tabla_proceso(int pid);
 int obtener_marco_final(tabla_pagina_nivel* tabla_raiz, int* indices_niveles);
 
 #endif

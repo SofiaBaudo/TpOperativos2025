@@ -21,7 +21,6 @@ void leer_config(){ // Lee la config y guarda todos los values de las key (struc
     memoria_config.DUMP_PATH = strdup(config_get_string_value(config, "DUMP_PATH"));
     config_destroy(config); //destruye luego de guardarse los values
 }
-
 void iniciar_logger_memoria(){
     logger_memoria = log_create("memoria.log", "[Memoria]", true, LOG_LEVEL_TRACE);
     if (logger_memoria == NULL) {
@@ -30,9 +29,6 @@ void iniciar_logger_memoria(){
     }
     //despues ver de cambiar el tipo 
 }
-
-//HACER LA CONEXION CON LOS OTROS MODULOS PARA QUE EL SERVIDOR NO SE QUEDE ESPERANDO
-
 void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender peticiones
     char puerto[6]; // Buffer para almacenar el puerto como cadena (máximo 5 dígitos + '\0')
     sprintf(puerto, "%d", memoria_config.PUERTO_ESCUCHA); // Convierte el puerto a cadena.  A puerto le asigna el valor de memoria_config.puerto_escucha
@@ -60,10 +56,11 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
 }
 
 void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión con el cliente dependiendo de que modulo venga
-{   
+{   /*
     int tamPag = memoria_config.TAM_PAGINA;
     int entradasTabla = memoria_config.ENTRADAS_POR_TABLA;
     int cantNiveles = memoria_config.CANTIDAD_NIVELES;
+    */
     int cliente = *((int *)socketCliente); // Desreferencio el puntero para obtener el socket del cliente
     free(socketCliente);
     op_code cliente_id = recibir_op_code(cliente); // !!!!!!!!!!DESPUES VER DE UNIFICAR LA FUNCION Q HIZO JERE EN EL UTILS DE RECIBIR CON UN CODE_OP PERO QUE SEA OP_CODE!!!!!!!!!!!!!!!!

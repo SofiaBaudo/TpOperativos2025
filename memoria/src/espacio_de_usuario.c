@@ -3,9 +3,6 @@
 
 void* espacio_usuario_memoria = NULL;  // Memoria física simulada
 
-//ver con juanma esta funcion
-//reserva la memoria física simulada que usarán los procesos
-
 void inicializar_espacio_usuario() {
     espacio_usuario_memoria = malloc(memoria_config.TAM_MEMORIA);
     if (!espacio_usuario_memoria) {
@@ -22,8 +19,6 @@ char* leer_pagina_completa(unsigned int direccion_fisica) {
     memcpy(buffer, espacio_usuario_memoria + direccion_fisica, memoria_config.TAM_PAGINA);
     return buffer;
 }
-
-
 //Copia los datos completos (una página) desde contenido al espacio de usuario.
 char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido){
     if (direccion_fisica + memoria_config.TAM_PAGINA > memoria_config.TAM_MEMORIA)

@@ -19,17 +19,13 @@ typedef struct {
 } t_proceso_instrucciones; //tipo de dato
 
 extern t_list* lista_procesos_instrucciones; //lista global
-op_code string_a_instruccion(char* token);
 
-t_list* cargar_instrucciones_desde_archivo(char* path);
-t_instruccion* obtener_instruccion(int pid, int pc);
-
-//Declaracion de Prototipos de Funciones
-
-void registrar_instrucciones_proceso(int pid, char* path);
 void iniciar_lista_procesos_instrucciones();
-
-//tengo q destruir el proceso? al terinar? void destruir_proceso_instrucciones(int pid);
-//void destruir_instruccion(t_instruccion* instr);
+t_instruccion* analizar_linea(char* linea);
+t_instruccion* obtener_instruccion(int pid, int pc);
+t_list* cargar_instrucciones_desde_archivo(char* PATH_INSTRUCCIONES);
+void registrar_instrucciones_proceso(int pid, char* PATH_INSTRUCCIONES);
+void destruir_instruccion(t_instruccion* instr);
+void destruir_proceso_instrucciones(int pid);
 
 #endif
