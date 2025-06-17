@@ -30,8 +30,6 @@ void *planificador_largo_plazo_fifo(){
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
             primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
-            //cambiarEstado(aux,NEW,READY);
-            //sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
             transicionar_a_ready(primer_proceso,NEW);
             sem_post(&INTENTAR_INICIAR);
         }   
@@ -56,8 +54,8 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
             if(respuesta == true){
                 primer_proceso = sacar_primero_de_la_lista(NEW);
                 transicionar_a_ready(primer_proceso,NEW);
-                sem_post(&INTENTAR_INICIAR);
                 actualizar_proximo_a_consultar();
+                sem_post(&INTENTAR_INICIAR);
             }
             else{
                 sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
@@ -145,6 +143,13 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
         sem_post(&CPUS_LIBRES); // es para que no se bloquee, pero hay que preguntar en el soporte si las cpus se conectan primero
     }
 }
+
+/*
+PLANIFICADOR DE MEDIANO PLAZO
+    
+
+*/
+
 //FUNCIONES AUXILIARES PARA EL SJF CON DESALOJO
 
 bool ver_si_hay_que_desalojar(struct pcb *proceso){
@@ -442,12 +447,12 @@ void mandar_paquete_a_cpu(struct pcb *proceso){
 }
 
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
+    temporal_stop(aux->duracion_ultima_rafaga);
+    cambiarEstado(aux,EXEC,BLOCKED);
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(DUMP_MEMORY,buffer,socket);
     sacar_de_cola_de_estado(aux,EXEC);
-    temporal_stop(aux->duracion_ultima_rafaga);
-    cambiarEstado(aux,EXEC,BLOCKED);
     liberar_cpu(cpu_en_la_que_ejecuta);
     int respuesta = recibir_entero(socket);
     return respuesta;
@@ -535,7 +540,7 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
 void finalizar_proceso(struct pcb *aux, Estado estadoInicial){
     sacar_de_cola_de_estado(aux,estadoInicial);
     cambiarEstado(aux,estadoInicial,EXIT_ESTADO);
-    int socket = iniciar_conexion_kernel_memoria();-
+    int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(EXIT,buffer,socket);
     cerrar_conexion(socket);

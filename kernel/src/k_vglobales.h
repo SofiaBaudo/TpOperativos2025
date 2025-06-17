@@ -63,4 +63,8 @@ extern sem_t INGRESO_DEL_PRIMERO_READY;
 extern sem_t CPUS_LIBRES;
 extern sem_t REPLANIFICAR;
 
+//DECLARACIONES
 
+void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
+float calcular_proxima_estimacion(struct pcb *proceso);
+void finalizar_proceso(struct pcb*aux, Estado estadoInicial);

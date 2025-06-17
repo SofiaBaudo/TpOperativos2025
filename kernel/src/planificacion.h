@@ -7,7 +7,7 @@
 #include <commons/temporal.h>
 
 //ESTADOS DEL PROCESO
-typedef enum{
+/*typedef enum{
   NEW, //0
   READY,//1
   BLOCKED,//2
@@ -16,7 +16,7 @@ typedef enum{
   READY_SUSPEND,//5
   BLOCKED_SUSPEND//6
 } Estado;
-
+*/
 
 
 //ESTRUCTURA DEL PROCESO
@@ -47,7 +47,7 @@ void incrementar_var_global_id_proceso();
 void esperar_enter_por_pantalla();
 void actualizar_proximo_a_consultar();
 void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
-void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
+//void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
 void liberar_proceso(struct pcb *aux);
 
 //CAMBIO Y TRANSICION DE ESTADOS
@@ -58,7 +58,7 @@ void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparad
 bool menor_por_tamanio(void* a, void* b);
 char *cambiar_a_string(Estado estado);
 void transicionar_a_new(struct pcb *proceso);
-void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
+//void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
 void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *));
 void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
@@ -73,7 +73,7 @@ void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *));
 
 //SJF CON DESALOJO Y SIN DESALOJO
 void frenar_y_restar_cronometros(t_list *lista);
-float calcular_proxima_estimacion(struct pcb *proceso);
+//float calcular_proxima_estimacion(struct pcb *proceso);
 bool menor_por_estimacion(void* a, void* b);
 bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b);
 bool ver_si_hay_que_desalojar(struct pcb*proceso);

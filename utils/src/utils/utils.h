@@ -97,6 +97,17 @@ struct instancia_de_cpu{
 	int cantInstancias;
 };
 
+typedef enum{
+  NEW, //0
+  READY,//1
+  BLOCKED,//2
+  EXEC,//3
+  EXIT_ESTADO,//4
+  READY_SUSPEND,//5
+  BLOCKED_SUSPEND//6
+} Estado;
+
+
 struct instancia_de_io{
     char* nombre;
     bool puede_usarse;
