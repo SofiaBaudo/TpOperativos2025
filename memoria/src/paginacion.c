@@ -1,61 +1,90 @@
 #include <paginacion.h>
-//Las tablas de páginas, que representarán el espacio de Kernel.
 
-Tabla* tabla_de_paginas_raiz = NULL;   // Raíz del árbol de paginación multinivel
+t_list* lista_tablas_por_proceso;
 
-/*
-estructura tipo árbol con cantidad_niveles de profundidad.
-Si está en el último nivel: reserva un array de marcos (valores).
-Si está en niveles intermedios: crea sub-tablas recursivamente.
-*/
+tabla_pagina_nivel* crear_tabla_nivel(int nivel_actual) {
+    tabla_pagina_nivel* tabla = malloc(sizeof(tabla_pagina_nivel)); //aca creo tabla 1
+    tabla->nivel = nivel_actual;
+    tabla->entradas = malloc(sizeof(entrada_tabla_pagina) * memoria_config.ENTRADAS_POR_TABLA);
 
-Tabla* crear_tabla(int nivel_actual, int cantidad_niveles, int entradas_por_tabla) {
-    if (cantidad_niveles == 0 || entradas_por_tabla == 0) return NULL;
-
-    Tabla* tabla = malloc(sizeof(Tabla));
-
-    if (nivel_actual == cantidad_niveles - 1) {
-        tabla->valores = malloc(sizeof(int) * entradas_por_tabla);
-        tabla->punteros = NULL;
-        for (int i = 0; i < entradas_por_tabla; i++) {
-            tabla->valores[i] = rand() % (memoria_config.TAM_MEMORIA / memoria_config.TAM_PAGINA); // marco aleatorio
-        }
-    } else {
-        tabla->valores = NULL;
-        tabla->punteros = malloc(sizeof(Tabla*) * entradas_por_tabla);
-        for (int i = 0; i < entradas_por_tabla; i++) {
-            tabla->punteros[i] = crear_tabla(nivel_actual + 1, cantidad_niveles, entradas_por_tabla);
+    for (int i = 0; i < memoria_config.ENTRADAS_POR_TABLA; i++) {
+        entrada_tabla_pagina* entrada = &tabla->entradas[i];
+        entrada->nro_entrada = i;
+        entrada->nro_marco = -1;
+        if (nivel_actual < memoria_config.CANTIDAD_NIVELES - 1) {
+            entrada->siguiente_nivel = (void*) crear_tabla_nivel(nivel_actual + 1);
+        } else {
+            entrada->siguiente_nivel = NULL;
+            /*
+            entrada->presencia = false;
+            entrada->nro_marco = -1;
+            */
         }
     }
     return tabla;
 }
-
-//recorre recursivamente las sub-tablas y libera cada una. Se llama al final o al destruir un proceso.
-void liberar_tabla(Tabla* tabla, int nivel_actual, int cantidad_niveles, int entradas_por_tabla) {
-    if (!tabla) return;
-
-    if (nivel_actual == cantidad_niveles - 1) {
-        free(tabla->valores);
-    } else {
-        for (int i = 0; i < entradas_por_tabla; i++) {
-            liberar_tabla(tabla->punteros[i], nivel_actual + 1, cantidad_niveles, entradas_por_tabla);
-        }
-        free(tabla->punteros);
+tabla_pagina_nivel* crear_tablas_proceso() {
+    return crear_tabla_nivel(0); // empieza desde el nivel 0
+}
+void agregar_tablas_proceso(int pid) { // agregar un proceso nuevo
+    t_tabla_proceso* nuevo = malloc(sizeof(t_tabla_proceso));
+    nuevo->pid = pid;
+    nuevo->tabla_raiz = crear_tablas_proceso();
+    list_add(lista_tablas_por_proceso, nuevo);
+}
+tabla_pagina_nivel* buscar_tabla_por_pid(int pid) { //buscar la tabla raíz por PID
+    for (int i = 0; i < list_size(lista_tablas_por_proceso); i++) {
+        t_tabla_proceso* p = list_get(lista_tablas_por_proceso, i);
+        if (p->pid == pid) return p->tabla_raiz;
     }
+    return NULL;
+}
+void liberar_tablas(tabla_pagina_nivel* tabla) {
+    if (tabla == NULL) return;
+    for (int i = 0; i < memoria_config.ENTRADAS_POR_TABLA; i++) {
+        entrada_tabla_pagina* entrada = &tabla->entradas[i];
+
+        // Si hay una tabla enlazada, liberarla recursivamente
+        if (entrada->siguiente_nivel != NULL && tabla->nivel < memoria_config.CANTIDAD_NIVELES - 1) {
+            liberar_tablas((tabla_pagina_nivel*) entrada->siguiente_nivel);
+        }
+    }
+    // Liberar array de entradas y luego la tabla misma
+    free(tabla->entradas);
     free(tabla);
 }
-
-int obtener_marco(int direccion_logica, int tam_pagina, int cantidad_niveles, int entradas_por_tabla, Tabla* tabla) {
-    int nro_pagina = direccion_logica / tam_pagina;
-
-    Tabla* actual = tabla;
-    for (int nivel = 0; nivel < cantidad_niveles - 1; nivel++) {
-        int entrada = (nro_pagina / (int)pow(entradas_por_tabla, cantidad_niveles - 1 - nivel)) % entradas_por_tabla;
-        actual = actual->punteros[entrada];
+void eliminar_tabla_proceso(int pid) {
+    for (int i = 0; i < list_size(lista_tablas_por_proceso); i++) {
+        t_tabla_proceso* p = list_get(lista_tablas_por_proceso, i);
+        if (p->pid == pid) {
+            liberar_tablas(p->tabla_raiz);
+            list_remove(lista_tablas_por_proceso, i);
+            free(p);
+            return;
+        }
     }
-
-    int entrada_final = nro_pagina % entradas_por_tabla;
-    int marco = actual->valores[entrada_final];
-    listado_metricas.cant_acceso_tabla_pagina++;
-    return marco;
+}
+int obtener_marco_final(tabla_pagina_nivel* tabla_raiz, int* indices_niveles) {
+    tabla_pagina_nivel* actual = tabla_raiz;
+    for (int i = 0; i < memoria_config.CANTIDAD_NIVELES - 1; i++) {
+        int idx = indices_niveles[i];
+        if (idx < 0 || idx >= memoria_config.ENTRADAS_POR_TABLA) {
+            log_error(logger_memoria, "Índice %d fuera de rango en nivel %d", idx, i);
+            return -1;
+        }
+        entrada_tabla_pagina entrada = actual->entradas[idx];
+        if (entrada.siguiente_nivel == NULL) {
+            log_error(logger_memoria, "Falta enlace a siguiente nivel en nivel %d", i);
+            return -2;
+        }
+        actual = (tabla_pagina_nivel*) entrada.siguiente_nivel;
+    }
+    // Último nivel
+    int idx_final = indices_niveles[memoria_config.CANTIDAD_NIVELES - 1];
+    if (idx_final < 0 || idx_final >= memoria_config.ENTRADAS_POR_TABLA) {
+        log_error(logger_memoria, "Índice final %d fuera de rango", idx_final);
+        return -1;
+    }
+    entrada_tabla_pagina entrada_final = actual->entradas[idx_final];
+    return entrada_final.nro_marco;
 }

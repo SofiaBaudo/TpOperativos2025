@@ -1,5 +1,6 @@
 #include <utils/utils.h>
 
+
 // FUNCIONES PARA LOS CONFIGS
 t_config *crear_config(char* direccion){
     t_config *nuevo_config = config_create(direccion); // se pasa la ruta del archivo .config
@@ -430,5 +431,55 @@ char *deserializar_nombre_archivo(t_paquete *paquete){
     free(paquete);
 	return nombre;
 }
-
 //para lo de deserializar init proc viene primero el tamanio en memoria
+
+t_buffer* crear_buffer_instruccion(t_instruccion* instr){
+    t_buffer* buffer = crear_buffer();
+    int size_total = sizeof(op_code) + sizeof(int);  // codigo + cantidad de parametros
+    //calculo el tamaño
+    for (int i = 0; i < instr->cantidad_parametros; i++) {
+        size_total += sizeof(int);
+        size_total += strlen(instr->parametros[i]) + 1;
+    }
+    buffer->size = size_total;
+    buffer->offset = 0;
+    buffer->stream = malloc(size_total);
+    memcpy(buffer->stream + buffer->offset, &(instr->codigo), sizeof(op_code));
+    buffer->offset += sizeof(op_code);
+    memcpy(buffer->stream + buffer->offset, &(instr->cantidad_parametros), sizeof(int));
+    buffer->offset += sizeof(int);
+    for (int i = 0; i < instr->cantidad_parametros; i++) {
+        int len = strlen(instr->parametros[i]) + 1;
+        memcpy(buffer->stream + buffer->offset, &len, sizeof(int));
+        buffer->offset += sizeof(int);
+        memcpy(buffer->stream + buffer->offset, instr->parametros[i], len);
+        buffer->offset += len;
+    }
+    return buffer;
+}
+char* instruccion_a_string(op_code codigo){
+    switch (codigo) {
+        case NOOP:
+            return strdup("NOOP");
+        case READ:
+            return strdup("READ");
+        case WRITE:
+            return strdup("WRITE");
+        case IO:
+            return strdup("IO");
+        case EXIT:
+            return strdup("EXIT");
+        case INIT_PROC:
+            return strdup("INIT_PROC");
+        case DUMP_MEMORY:
+            return strdup("DUMP_MEMORY");
+        default:
+            return strdup("INSTRUCCION_DESCONOCIDA");
+    }
+}
+int deserializar_entero_desde_stream(t_paquete* paquete){ //lee un int desde el buffer de un paquete recibido por socket, y avanza el offset interno del buffer para que puedas seguir leyendo otros datos
+    int valor;
+    memcpy(&valor, paquete->buffer->stream + paquete->buffer->offset, sizeof(int));
+    paquete->buffer->offset += sizeof(int);
+    return valor;
+}

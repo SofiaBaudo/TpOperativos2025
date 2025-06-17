@@ -13,6 +13,7 @@
 #include <string.h> // para usar, por ejemplo, la funcion memset en iniciar conexion
 #include <unistd.h> // para funciones como por ejemplo close(linea 105 utils.c)
 #include <semaphore.h>
+
 typedef enum op_code
 {
 	// Handshakes
@@ -67,7 +68,13 @@ typedef enum op_code
 
 	//INTERACCION ENTRE KERNEL E IO
 	RAFAGA_DE_IO,
-	FIN_DE_IO
+	FIN_DE_IO,
+
+	//memoria
+	FETCH_INSTRUCCION,
+	READ_MEMORIA,
+	WRITE_MEMORIA,
+	ENVIO_INSTRUCCION
 }op_code;
 typedef struct
 {
@@ -102,7 +109,11 @@ typedef enum{
   REC_CPU,
   REC_IO
 }Recurso;
-
+typedef struct t_instruccion {
+    op_code codigo;
+    char** parametros;
+    int cantidad_parametros;
+} t_instruccion;
 
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);
@@ -142,4 +153,8 @@ void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasT
 t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
 int deserializar_entradaNivel(t_paquete *paquete);
 t_buffer * crear_buffer_para_ejecucion_de_io(int pid, int milisegundos);
+t_buffer* crear_buffer_instruccion(t_instruccion* instr);
+char* instruccion_a_string(op_code codigo);
+int deserializar_entero_desde_stream(t_paquete* paquete);
+
 #endif

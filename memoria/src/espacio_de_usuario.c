@@ -25,36 +25,26 @@ char* leer_pagina_completa(unsigned int direccion_fisica) {
 
 
 //Copia los datos completos (una página) desde contenido al espacio de usuario.
-char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido) {
+char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido){
     if (direccion_fisica + memoria_config.TAM_PAGINA > memoria_config.TAM_MEMORIA)
         return "Error: fuera de rango";
 
     memcpy(espacio_usuario_memoria + direccion_fisica, contenido, memoria_config.TAM_PAGINA);
     return "OK";
 }
-//Verifica si la dirección es válida.
-//Usa memcpy para copiar el dato al void*.  ----> preguntar a SOPORTE
-//aumenta la métrica de escrituras.
-
-char* funcion_escritura_fisica(unsigned int direccion_fisica, char* valor, int tamanio) {
-    if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA)
-        return "Error: fuera de rango";
-
-    memcpy(espacio_usuario_memoria + direccion_fisica, valor, tamanio);
-    listado_metricas.cant_escrituras_memoria++;
-    return "OK";
-}
-
-//Valida rango.
-//Copia los bytes deseados a un buffer nuevo y lo devuelve.
-
-char* funcion_lectura_fisica(unsigned int direccion_fisica, int tamanio) {
-    if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA)
-        return strdup("Error: fuera de rango");
-
-    char* buffer = malloc(tamanio + 1);
-    memcpy(buffer, espacio_usuario_memoria + direccion_fisica, tamanio);
-    buffer[tamanio] = '\0';
+void leer_espacio_usuario(void* destino, int direccion_fisica, int tamanio){
+    if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
+        log_error(logger_memoria, "Lectura fuera de los límites de memoria");
+        return;
+    }
+    memcpy(destino, espacio_usuario_memoria + direccion_fisica, tamanio);
     listado_metricas.cant_lecturas_memoria++;
-    return buffer;
+}
+void escribir_espacio_usuario(int direccion_fisica, void* origen, int tamanio){
+    if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
+        log_error(logger_memoria, "Escritura fuera de los límites de memoria");
+        return;
+    }
+    memcpy(espacio_usuario_memoria + direccion_fisica, origen, tamanio);
+    listado_metricas.cant_escrituras_memoria++;
 }

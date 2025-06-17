@@ -10,17 +10,25 @@
 #include <servidor_memoria.h>
 #include <math.h>
 
-// Estructura de tabla de páginas multinivel
-typedef struct Tabla {
-    struct Tabla** punteros; // Niveles intermedios
-    int* valores;            // Último nivel: marcos
-} Tabla;
+typedef struct {
+    int nro_entrada;             
+    int nro_marco;               
+    void* siguiente_nivel;       
+} entrada_tabla_pagina;
 
-extern Tabla* tabla_de_paginas_raiz;
+typedef struct {
+    int nivel;
+    entrada_tabla_pagina* entradas;
+} tabla_pagina_nivel;
 
-// Funciones principales
-Tabla* crear_tabla(int nivel_actual, int cantidad_niveles, int entradas_por_tabla);
-void liberar_tabla(Tabla* tabla, int nivel_actual, int cantidad_niveles, int entradas_por_tabla);
-int obtener_marco(int direccion_logica, int tam_pagina, int cantidad_niveles, int entradas_por_tabla, Tabla* tabla);
+typedef struct {
+    int pid;
+    tabla_pagina_nivel* tabla_raiz;
+} t_tabla_proceso;
+
+extern t_log* logger;
+
+tabla_pagina_nivel* crear_tablas_proceso();
+int obtener_marco_final(tabla_pagina_nivel* tabla_raiz, int* indices_niveles);
 
 #endif

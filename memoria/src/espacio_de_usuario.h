@@ -15,8 +15,7 @@ void inicializar_espacio_usuario();
 // Funciones de página completa
 char* leer_pagina_completa(unsigned int direccion_fisica);
 char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido);
-// Funciones de acceso por direcciones físicas
-char* funcion_lectura_fisica(unsigned int direccion_fisica, int tamanio);
-char* funcion_escritura_fisica(unsigned int direccion_fisica, char* valor, int tamanio);
+void escribir_espacio_usuario(int direccion_fisica, void* origen, int tamanio);
+void leer_espacio_usuario(void* destino, int direccion_fisica, int tamanio);
 
 #endif

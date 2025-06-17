@@ -1,4 +1,4 @@
-#include <instrucciones.h>
+#include <instrucciones_memoria.h>
 
 t_list* lista_instrucciones;
 t_list* lista_procesos_instrucciones;
@@ -6,9 +6,7 @@ t_list* lista_procesos_instrucciones;
 void iniciar_lista_procesos_instrucciones(){
     lista_instrucciones = list_create();
 }
-
 //Convierte una línea completa del pseudocódigo, como "READ 10 20", en una estructura t_instruccion con: el enum correspondiente (por ejemplo: READ) una lista de los parámetros como strings (["10", "20"])la cantidad de parámetros (2)
-
 t_instruccion* analizar_linea(char* linea) {
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     char* linea_copia = strdup(linea);
@@ -25,6 +23,18 @@ t_instruccion* analizar_linea(char* linea) {
 
     free(linea_copia);
     return instr;
+}
+//Busca la instrucción número pc del proceso con pid.
+//Devuelve el puntero a la instrucción que necesita la CPU ejecutar.
+t_instruccion* obtener_instruccion(int pid, int pc) {
+    for (int i = 0; i < list_size(lista_procesos_instrucciones); i++) {
+        t_proceso_instrucciones* p = list_get(lista_procesos_instrucciones, i);
+        if (p->pid == pid) {
+            return list_get(p->instrucciones, pc);
+        }
+    }
+    //log_info("## PID: <%d> - Obtener instrucción: <%d> - Instrucción: <INSTRUCCIÓN> <...ARGS>", pid, pc, lista_procesos_instrucciones);
+    return NULL;
 }
 
 //Lee línea por línea un archivo de pseudocódigo (ej: "proceso1") y convierte cada línea en una t_instruccion, agregándolas a una lista.
@@ -61,20 +71,6 @@ void registrar_instrucciones_proceso(int pid, char* PATH_INSTRUCCIONES) {
     nuevo->pid = pid;
     nuevo->instrucciones = cargar_instrucciones_desde_archivo(PATH_INSTRUCCIONES);
     list_add(lista_procesos_instrucciones, nuevo);
-}
-
-//Busca la instrucción número pc del proceso con pid.
-//Devuelve el puntero a la instrucción que necesita la CPU ejecutar.
-
-t_instruccion* obtener_instruccion(int pid, int pc) {
-    for (int i = 0; i < list_size(lista_procesos_instrucciones); i++) {
-        t_proceso_instrucciones* p = list_get(lista_procesos_instrucciones, i);
-        if (p->pid == pid) {
-            return list_get(p->instrucciones, pc);
-        }
-    }
-    //log_info("## PID: <%d> - Obtener instrucción: <%d> - Instrucción: <INSTRUCCIÓN> <...ARGS>", pid, pc, lista_procesos_instrucciones);
-    return NULL;
 }
 
 //Libera toda la memoria usada por una sola t_instruccion
@@ -114,3 +110,4 @@ void destruir_proceso_instrucciones(int pid) {
 
 //log obligatorio de destruccion
 //“## PID: <PID> - Proceso Destruido - Métricas - Acc.T.Pag: <ATP>; Inst.Sol.: <Inst.Sol.>; SWAP: <SWAP>; Mem.Prin.: <Mem.Prin.>; Lec.Mem.: <Lec.Mem.>; Esc.Mem.: <Esc.Mem.>”
+

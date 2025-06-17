@@ -17,6 +17,7 @@ typedef enum {
     ESCRITURAS_MEMORIA
 } tipo_metrica;
 
+extern t_log* logger;
 extern int PUERTO_ESCUCHA;
 extern int TAM_MEMORIA;
 extern int TAM_PAGINA;

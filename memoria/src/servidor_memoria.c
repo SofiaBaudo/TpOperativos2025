@@ -70,8 +70,7 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
     switch (cliente_id)
     {
         case HANDSHAKE_KERNEL:
-            //LOG_INFO : ES EL LOG OBLIGATORIO
-            log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", cliente);
+            log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", cliente); //log oblig
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
             int tamanio = recibir_entero(cliente);
             op_code respuesta = verificar_si_hay_espacio(tamanio);
@@ -79,19 +78,98 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
             //manejar_cliente_kernel(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS. 
             break;
         case HANDSHAKE_CPU:
-
             log_debug(logger_memoria, "Se conecto CPU");
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
-            t_buffer* buffer = crear_buffer_tamPag_entradasTabla_cantNiveles(tamPag, entradasTabla, cantNiveles);
-            crear_paquete(ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES,buffer, cliente);
-            //manejar_cpu(cpu);
-            break;
+            t_buffer* buffer = crear_buffer_tamPag_entradasTabla_cantNiveles(
+                memoria_config.TAM_PAGINA,
+                memoria_config.ENTRADAS_POR_TABLA,
+                memoria_config.CANTIDAD_NIVELES
+            );
+            crear_paquete(ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES, buffer, cliente);
+            //peticiones
+            while (1) {
+                op_code peticion = recibir_op_code(cliente);
+                /*if (peticion == -1) {
+                    log_warning(logger_memoria, "CPU desconectado");
+                    break;
+                }*/
+                switch (peticion) {
+                    case FETCH_INSTRUCCION:
+                        manejar_fetch_cpu(cliente);
+                        break;
+                    case READ_MEMORIA:
+                        manejar_read_memoria(cliente);
+                        break;
+                    case WRITE_MEMORIA:
+                        manejar_write_memoria(cliente);
+                        break;
+                    default:
+                        log_warning(logger_memoria, "Petición desconocida de CPU: %d", peticion);
+                        break;
+                }
+            }
         default:
-            log_warning(logger_memoria, "No se pudo identificar al cliente; op_code: %d", cliente_id); //AVISA Q FUCNIONA MAL
+            log_debug(logger_memoria,"CLIENTE DESCONOCIDO");
             break;
-    }
+}
     close(cliente);
     return NULL;
+}
+void manejar_fetch_cpu(int socket_cpu){
+    //paquete con el PC y el PID
+    t_paquete* paquete = recibir_paquete(socket_cpu);
+    int pc = deserializar_pc(paquete);    // ya está en utils
+    int pid = deserializar_pid(paquete);  // ya está en utils
+
+    t_instruccion* instruccion = obtener_instruccion(pid, pc);
+    if (!instruccion) {
+        log_error(logger_memoria, "Instrucción no encontrada para PID %d - PC %d", pid, pc);
+        return;
+    }
+
+    char* codigo_str = instruccion_a_string(instruccion->codigo); //hace q en vex de q diga instruccion 6 a q diga instruccion READ, ponele
+    log_info(logger_memoria, "## PID: <%d> - Obtener instrucción: <%d> - Instrucción: <%s>", pid, pc, codigo_str); //log oblig
+    free(codigo_str);
+
+
+    t_buffer* buffer = crear_buffer_instruccion(instruccion);
+    crear_paquete(ENVIO_INSTRUCCION, buffer, socket_cpu);
+
+    // sumo a la metrica de instrucciones solicitadas
+    listado_metricas.instrucciones_solicitadas++;
+}
+void manejar_read_memoria(int socket_cpu) {
+    t_paquete* paquete = recibir_paquete(socket_cpu);
+
+    int pid = deserializar_pid(paquete);
+    int direccion_fisica = deserializar_entero_desde_stream(paquete);
+    int tamanio = deserializar_entero_desde_stream(paquete);
+
+    void* buffer = malloc(tamanio);
+    leer_espacio_usuario(buffer, direccion_fisica, tamanio);  // ya lo tenés
+
+    log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio); //log oblig
+
+    send(socket_cpu, buffer, tamanio, 0);
+    free(buffer);
+}
+void manejar_write_memoria(int socket_cpu) {
+    t_paquete* paquete = recibir_paquete(socket_cpu);
+
+    int pid = deserializar_pid(paquete);
+    int direccion_fisica = deserializar_entero_desde_stream(paquete); // función auxiliar
+    int tamanio = deserializar_entero_desde_stream(paquete);
+
+    void* valor = malloc(tamanio);
+    memcpy(valor, paquete->buffer->stream + paquete->buffer->offset, tamanio);
+    escribir_espacio_usuario(direccion_fisica, valor, tamanio);
+
+    log_info(logger_memoria, "## PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio); //log oblig
+
+    free(valor);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
 }
 
 op_code verificar_si_hay_espacio(int tamanio){

@@ -1,23 +1,17 @@
-#ifndef INSTRUCCIONES
-#define INSTRUCCIONES
+#ifndef INSTRUCCIONES_MEMORIA_H
+#define INSTRUCCIONES_MEMORIA_H
 
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <utils/utils.h>
 #include <servidor_memoria.h>
 #include <variables_globales_memoria.h>
+#include <utils/utils.h>
 
 
 //Variables y Structs Globales
-
-typedef struct t_instruccion {
-    op_code codigo;
-    char** parametros;
-    int cantidad_parametros;
-} t_instruccion;
 
 typedef struct {
     int pid;
