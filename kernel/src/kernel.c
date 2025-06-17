@@ -12,31 +12,11 @@ int main(int argc, char* argv[]){
    
    //PRUEBA PARA PLANIFICADOR DE CORTO PLAZO SJF SIN/CON DESALOJO
 
-   struct pcb *pruebita1 = malloc(sizeof(struct pcb));
-   pruebita1->pid = 2;
-   pruebita1->proxima_estimacion = 100000000000;
-   pruebita1->duracion_ultima_rafaga = temporal_create();
-   struct pcb *pruebita2 = malloc(sizeof(struct pcb));
-   pruebita2->proxima_estimacion = 50000000000;
-   pruebita2->pid = 3;
-   pruebita2->duracion_ultima_rafaga = temporal_create();
-   list_add(colaEstados[EXEC],pruebita1);
-   list_add(colaEstados[EXEC],pruebita2);
+ 
    //atender_kernel_io();
    //atender_kernel_dispatch();
   
-   struct instancia_de_cpu *cpu_1 = malloc(sizeof(struct instancia_de_cpu));
-   struct instancia_de_cpu *cpu_2 = malloc(sizeof(struct instancia_de_cpu));
-   cpu_1->id_cpu = 1;
-   cpu_1->puede_usarse = false;
-   cpu_1->proceso_ejecutando = pruebita1;
-   cpu_2->id_cpu = 2;
-   cpu_2->puede_usarse = false;
-   cpu_2->proceso_ejecutando = pruebita2;
-   list_add(cpus_conectadas,cpu_1);
-   sem_post(&CPUS_LIBRES);
-   list_add(cpus_conectadas,cpu_2);
-   sem_post(&CPUS_LIBRES);
+ 
    //crear_proceso(3,"f4");
    crear_proceso(2,"f1");
    //atender_kernel_io();

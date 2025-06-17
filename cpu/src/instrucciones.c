@@ -18,13 +18,13 @@ int pc;
 
 void* ejecutar_instrucciones(void* arg){
     //int cpu_id = *(int *)arg;
-    t_instruccion instru;
+    instru instru;
     char *instruccionEntera;
     obtenerDelKernelPcPid(&pid, &pc);
     instruccionEntera = fetch(pc,pid);
     instru = decode(instruccionEntera);
     execute(instru);
-    check_interrupt();
+    check_interrupt(); //ponerlo en hilo.
     return NULL;
 }
 
@@ -48,15 +48,15 @@ char* fetch(int pid,int pc){
     send(fd_conexion_dispatch_memoria,&pc,sizeof(int),0);
     send(fd_conexion_dispatch_memoria,&pid,sizeof(int),0);
     //Ver con Sofi Mandar PID y CPU
-    recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(t_instruccion),0);
+    recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(instru),0);
     return instruccion_recibida;
 }
 
 //Fase Decode (Interpretar proxima ejecucion a ejecutar)(Segunda Fase del Ciclo de Instruccion)
 
-t_instruccion decode(char* instruccion_recibida){
+instru decode(char* instruccion_recibida){ 
     //Decodifico las instrucciones
-    t_instruccion instruccion;
+    instru instruccion;
     obtenerInsPartes = string_split(instruccion_recibida, " "); //te recibe el string tal como es si no lo encuentra
     instruccion.opcode = obtenerInsPartes[0];
     instruccion.param1 = obtenerInsPartes[1];
@@ -70,7 +70,7 @@ t_instruccion decode(char* instruccion_recibida){
 
 //Fase Execute (Ejecutar la instruccion)(Tercera Fase del Ciclo de Instruccion).
 
-void execute(t_instruccion instruccion){
+void execute(instru instruccion){
     char *nombre_instruccion = instruccion.opcode;
     char *param1Char = instruccion.param1;
     int param1 = atoi(param1Char);
@@ -135,9 +135,10 @@ void instruccion_goto(int parametro){
 
 //Ejecucion Syscalls
 
-void mandar_syscall(t_instruccion instruccion){
+void mandar_syscall(instru instruccion){
     //Hay que serializar
-    send(fd_conexion_kernel_dispatch, &instruccion, sizeof(t_instruccion),0);
+    
+    send(fd_conexion_kernel_dispatch, &instruccion, sizeof(instru),0);
 }
 
 //Chequear Interrupcion
@@ -146,11 +147,12 @@ void check_interrupt(void){
     int pid_interrupcion=0;
     recv(fd_conexion_kernel_interrupt, &pid_interrupcion,sizeof(int),0);
     log_info(cpu_logger," ## Llega interrupción al puerto Interrupt <%d>", pid_interrupcion);
-    if(pid_interrupcion != 0){ //recibio una instruccion
+    if(pid_interrupcion != 0){ //recibio una interrupcion
         //Hay que Serializar 
         send(fd_conexion_kernel_interrupt, &pid, sizeof(int),0);
         send(fd_conexion_kernel_interrupt, &pc, sizeof(int),0);
         log_info(cpu_logger, "SI hay interrupcion");
+        //tendria que mandarle a kernel una syscall que se llame desalojo aceptado.
     }
     else{
         log_info(cpu_logger, "NO hay interrupcion");

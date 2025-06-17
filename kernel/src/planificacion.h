@@ -48,7 +48,7 @@ void esperar_enter_por_pantalla();
 void actualizar_proximo_a_consultar();
 void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
 void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
-
+void liberar_proceso(struct pcb *aux);
 
 //CAMBIO Y TRANSICION DE ESTADOS
 struct pcb *obtener_copia_primer_proceso_de(Estado estado);
@@ -70,7 +70,6 @@ struct instancia_de_cpu *obtener_cpu(int posicion);
 //LISTA
 int buscar_en_lista(t_list *lista,int pid);
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *));
-
 
 //SJF CON DESALOJO Y SIN DESALOJO
 void frenar_y_restar_cronometros(t_list *lista);

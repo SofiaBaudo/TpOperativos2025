@@ -15,7 +15,7 @@ sem_t CANTIDAD_DE_PROCESOS_EN_NEW;
 sem_t CANTIDAD_DE_PROCESOS_EN_READY;
 sem_t INGRESO_DEL_PRIMERO_READY;
 sem_t CPUS_LIBRES;
-sem_t INICIAR;
+sem_t REPLANIFICAR;
 
 //INICIALIZACION DE SEMAFOROS
 
@@ -35,6 +35,6 @@ void inicializar_sincronizacion() {
     sem_init(&CANTIDAD_DE_PROCESOS_EN_READY,0,0);
     sem_init(&INGRESO_DEL_PRIMERO_READY,0,1);
     sem_init(&CPUS_LIBRES,0,0);
-    sem_init(&INICIAR,0,0);
+    sem_init(&REPLANIFICAR,0,0);
 }
 

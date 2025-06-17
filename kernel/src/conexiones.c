@@ -122,15 +122,13 @@ void atender_kernel_io(){
            log_error(kernel_logger, "Error al aceptar un cliente");
            continue;
         }
-      
         int *puntero_al_io= malloc(sizeof(*puntero_al_io));
         //*puntero_al_io = cliente_io;
         memcpy(puntero_al_io, &cliente_io, sizeof(int));
         pthread_t hilo_kernel_io;
         pthread_create(&hilo_kernel_io,NULL,manejar_kernel_io,(void*)puntero_al_io); //Creamos el hilo
         pthread_detach(hilo_kernel_io);//El hilo se desacopla del hilo principal.
-      
-   }
+    }
    }
 
 void* manejar_kernel_io(void *socket_io){
@@ -179,7 +177,6 @@ void* manejar_kernel_io(void *socket_io){
 void *io(void *instancia_de_io) { //el aux
     struct instancia_de_io *io_aux = instancia_de_io;
     while (true){
-
         sem_wait(&io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
         //struct pcb *proceso = obtener_primero(io_aux->procesos_esperando); //y sacarlo
         //t_buffer *buffer = crear_buffer_para_ejecucion_de_io(proceso->pid,proceso->proxima_rafaga_io);
@@ -187,6 +184,7 @@ void *io(void *instancia_de_io) { //el aux
         int respuesta = recibir_entero(cliente_io);
         switch(respuesta){
             case 41: //Corresponde al enum de fin de IO
+                //calcular_proxima_estimacion(proceso);
                 //transicionar_a_ready(proceso,BLOCKED);
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando
@@ -195,8 +193,7 @@ void *io(void *instancia_de_io) { //el aux
                 if(io_aux->cantInstancias == 0){
                     //recorrer la lista de bloqueados por esta IO y finalizarlos
                 }
-                break;
-                
+                break;  
         }
     }
 }

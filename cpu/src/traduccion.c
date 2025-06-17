@@ -64,6 +64,7 @@ int buscarTlb(int numPag, int pid){
     return -1;
 }
 void agregarEntradaATLB(int numPag, int numMarco, int pid){
+    /*
     NodoEntradasTLB *nodoexistente = dondeEstaenTLB(numPag,pid);
     if(nodoexistente != NULL){
         nodoexistente->info.numMarco = numMarco;
@@ -71,7 +72,8 @@ void agregarEntradaATLB(int numPag, int numMarco, int pid){
         actualizarContadores(numPag,pid);
         return;
     }
-    else{
+    */
+    
     if(strcmp(REEMPLAZO_TLB, "FIFO") == 0){
         implementarAlgoritmoFIFO(numPag, numMarco, pid);
     }
@@ -79,17 +81,19 @@ void agregarEntradaATLB(int numPag, int numMarco, int pid){
         implementarAlgoritmoLRU(numPag, numMarco, pid);
         modificarReferencia(numPag,pid);
     }
-    }
+    
 }
-
 void implementarAlgoritmoFIFO(int numPag, int numMarco, int pid){
     NodoEntradasTLB *punteroPos = buscarPunteroFIFO(pid);
     if (punteroPos == NULL){
-        return; //por las dudas para que no tire segmentation fault.
-    }
+        return; 
+    }    
     punteroPos->info.numPag = numPag;
     punteroPos->info.numMarco = numMarco;
-    punteroPos = punteroPos->sgte; //hacemos que avance para la proxima que le agregues una 
+    punteroPos->info.apareceEnTLB = true;
+    punteroPos->info.tiempoSinReferencia = 0;
+
+    actualizarPunteroPos(pid);
 }
 
 void implementarAlgoritmoLRU(int numPag, int numMarco, int pid){

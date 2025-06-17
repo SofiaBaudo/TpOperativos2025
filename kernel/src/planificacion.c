@@ -12,7 +12,6 @@ int estimacion_de_prueba = 50;
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
     struct pcb* pcb = malloc(sizeof(struct pcb));
     pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo);
-    //pcb -> estado = NEW; // seguramente no sirva mucho
     transicionar_a_new(pcb); //aca esta lo de ultimo proceso en entrar
     log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
     log_debug(kernel_debug_log,"Su proxima estimacion es: %f",pcb->proxima_estimacion);
@@ -112,8 +111,8 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
 void *planificador_corto_plazo_sjf_con_desalojo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-        sem_wait(&CPUS_LIBRES); // A CHEQUEAR EN EL SOPORTE 
-        sem_wait(&INICIAR);
+        sem_wait(&CPUS_LIBRES); 
+        sem_wait(&REPLANIFICAR);
         usleep(200000);
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas);
@@ -131,6 +130,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
                 proceso = sacar_primero_de_la_lista(READY);
                 cambiarEstado(proceso,READY,EXEC);
                 desalojar_el_mas_grande(proceso);
+                //solicitar desalojo a cpu
                 //struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
                 //poner_a_ejecutar(proceso,cpu_aux);
                 //poner ultima_cpu->proceso_ejecutando = aux;
@@ -338,7 +338,7 @@ void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial){
     //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
         //cambiarEstado(pcb,estadoInicial,READY);
     //}else{
-        sem_post(&INICIAR);
+        sem_post(&REPLANIFICAR);
         cambiarEstadoOrdenado(pcb,estadoInicial,READY,menor_por_estimacion);
      //}
     pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
@@ -406,6 +406,7 @@ float calcular_proxima_estimacion(struct pcb *proceso){
     long ultima_rafaga = temporal_gettime(proceso->duracion_ultima_rafaga);
     float alfa = (float)atof(ALFA);
     prox_estimacion = alfa * ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
+    proceso->ultima_estimacion = prox_estimacion;
     //capaz agregar que proceso->ultima_estimacion sea esta
     return prox_estimacion;
 }
@@ -426,7 +427,6 @@ bool menor_por_tamanio(void* a, void* b) {
     return p1->tamanio < p2->tamanio;
 }
 
-
 //MANEJO DE SYSCALLS
 
 void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado){
@@ -446,22 +446,30 @@ int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta)
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(DUMP_MEMORY,buffer,socket);
     sacar_de_cola_de_estado(aux,EXEC);
-    liberar_cpu(cpu_en_la_que_ejecuta);
+    temporal_stop(aux->duracion_ultima_rafaga);
     cambiarEstado(aux,EXEC,BLOCKED);
-    //liberar cpu aca
+    liberar_cpu(cpu_en_la_que_ejecuta);
     int respuesta = recibir_entero(socket);
     return respuesta;
 }
 
-
 void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
-    //t_temporal *cronometro = temporal_create();
+    aux->duracion_ultima_rafaga = temporal_create();
     bool bloqueante = false;
     while(!bloqueante){
         mandar_paquete_a_cpu(aux);
         t_paquete *paquete = recibir_paquete(cliente_dispatch); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
+        //deserializar el pc
+        //actualizarlo
         op_code syscall = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         switch(syscall){
+            /*case Desalojo Aceptado
+            avisar a CPU que interrumpa, enviando un numero distinto de 0
+            recibir respuesta
+            liberar cpu (devuelta conexion)
+            transiciono a ready
+            bloqueante = true;
+            */
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo(paquete);
                 int tamanio = deserializar_tamanio (paquete);
@@ -478,6 +486,7 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
             case DUMP_MEMORY:
                 int respuesta = manejar_dump(aux,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
+                    calcular_proxima_estimacion(aux);
                     transicionar_a_ready(aux,BLOCKED);
                 }
                 else{
@@ -493,7 +502,9 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
                 if(posicionIO == -1){ //quiere decir que no hay ninguna syscall con ese nombre
                     finalizar_proceso(aux,EXEC);
                     liberar_cpu(cpu_en_la_que_ejecuta);
-                }else{
+                }
+                else{
+                    temporal_stop(aux->duracion_ultima_rafaga);
                     sacar_de_cola_de_estado(aux,EXEC);
                     cambiarEstado(aux,EXEC,BLOCKED);
                     liberar_cpu(cpu_en_la_que_ejecuta);
@@ -506,7 +517,7 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
                 bloqueante = true;
                 break;
             default:
-            log_debug(kernel_debug_log,"SYSCALL DESCONOCIDA");
+                log_debug(kernel_debug_log,"SYSCALL DESCONOCIDA");
                 break;
         }
     }
@@ -516,19 +527,30 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
     cpu->puede_usarse = true;
     cpu->proceso_ejecutando = NULL;
     sem_post(&CPUS_LIBRES);
+    if(strcmp(ALGORITMO_INGRESO_A_READY,"SJF_CON_DESALOJO")==0){
+        sem_post(&REPLANIFICAR);
+    }
 }
 
 void finalizar_proceso(struct pcb *aux, Estado estadoInicial){
     sacar_de_cola_de_estado(aux,estadoInicial);
     cambiarEstado(aux,estadoInicial,EXIT_ESTADO);
-    int socket = iniciar_conexion_kernel_memoria();
+    int socket = iniciar_conexion_kernel_memoria();-
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(EXIT,buffer,socket);
-    free(aux); //free de todos los punteros, lo demas se va con el free (aux)
+    cerrar_conexion(socket);
+    sacar_de_cola_de_estado(aux,EXIT_ESTADO);    
+    liberar_proceso(aux); //free de todos los punteros, lo demas se va con el free (aux)
     // semaforo que llame al planificador de mediano plazo.
     sem_post(&INTENTAR_INICIAR); //SOLO SI SUSP_READY ESTA VACIA !!
     //int confirmacion = recibir_entero(socket);
     //return confirmacion;
+}
+
+void liberar_proceso(struct pcb *aux){
+    temporal_destroy(aux->duracion_ultima_rafaga);
+    free(aux->ruta_del_archivo_de_pseudocodigo);
+    free(aux);
 }
 
 //para el de mediano plazo hay que buscarle la vuelta para no quemar la cpu con un gettime todo el tiempo

@@ -61,6 +61,6 @@ extern sem_t CANTIDAD_DE_PROCESOS_EN_READY;
 extern sem_t INTENTAR_INICIAR;
 extern sem_t INGRESO_DEL_PRIMERO_READY;
 extern sem_t CPUS_LIBRES;
-extern sem_t INICIAR;
+extern sem_t REPLANIFICAR;
 
 
