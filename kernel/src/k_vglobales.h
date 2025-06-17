@@ -58,11 +58,11 @@ extern pthread_mutex_t mx_usar_recurso[2];
 //extern sem_t INGRESO_DEL_PRIMERO;
 extern sem_t CANTIDAD_DE_PROCESOS_EN_NEW;
 extern sem_t CANTIDAD_DE_PROCESOS_EN_READY;
+extern sem_t CANTIDAD_DE_PROCESOS_EN_BLOCKED;
 extern sem_t INTENTAR_INICIAR;
 extern sem_t INGRESO_DEL_PRIMERO_READY;
 extern sem_t CPUS_LIBRES;
 extern sem_t REPLANIFICAR;
-
 //DECLARACIONES
 
 void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);

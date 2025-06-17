@@ -132,12 +132,16 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
                 //struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
                 //poner_a_ejecutar(proceso,cpu_aux);
                 //poner ultima_cpu->proceso_ejecutando = aux;
-                //reanudar cronometros de todos menos la ultima posicion
+                pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+                reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)-1);
+                pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
             }
             else{
             log_debug(kernel_debug_log,"No se desaloja");
+            pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+            reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas));
+            pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
             sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
-            //reanudar_cronometro();
             }
         }
         sem_post(&CPUS_LIBRES); // es para que no se bloquee, pero hay que preguntar en el soporte si las cpus se conectan primero
@@ -146,9 +150,23 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
 
 /*
 PLANIFICADOR DE MEDIANO PLAZO
-    
+    semaforo que espere a que llegue un proceso a SUSP_BLOCKED
+    iniciar cronometro
+    el proceso sigue bloqueado?
+    Si{
+        cambiar estado a suspendido blocked
+        informar a memoria que debe ser movido a swap
+        actualizar procesos de suspendido ready
+        actualizar procesos de new
+    }
 
 */
+
+//FUNCION PARA BLOQUEADOS{
+//USLEEP
+//BUSCO EL PROCESO EN LA LISTA DE BLOQUEADOS
+//SI ESTÁ, LO MUEVO A SUSP_BLOCKED Y HAGO UN SEM_POST PARA QUE SE ENTERE EL PLANI DE MEDIANO PLAZO 
+//}
 
 //FUNCIONES AUXILIARES PARA EL SJF CON DESALOJO
 
@@ -189,6 +207,16 @@ bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b){
     struct instancia_de_cpu* i1 = (struct instancia_de_cpu*) a;
     struct instancia_de_cpu* i2 = (struct instancia_de_cpu*) b;
     return i1->proceso_ejecutando->proxima_estimacion < i2->proceso_ejecutando->proxima_estimacion;
+}
+
+void reanudar_cronometros(t_list *lista,int iterarciones){
+    t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
+    int cantIteraciones = 0;
+    while (list_iterator_has_next(aux) && cantIteraciones < iterarciones) { //es true mientras haya un siguiente al cual avanzar.
+        struct instancia_de_cpu *cpu_aux = list_iterator_next(aux);
+        temporal_resume(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
+        cantIteraciones++;
+    }
 }
 
 //FUNCIONES AUXILIARES
@@ -449,6 +477,8 @@ void mandar_paquete_a_cpu(struct pcb *proceso){
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
     temporal_stop(aux->duracion_ultima_rafaga);
     cambiarEstado(aux,EXEC,BLOCKED);
+    sem_post(&CANTIDAD_DE_PROCESOS_EN_BLOCKED);
+    aux->tiempo_bloqueado = temporal_create();
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(DUMP_MEMORY,buffer,socket);
@@ -512,6 +542,8 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
                     temporal_stop(aux->duracion_ultima_rafaga);
                     sacar_de_cola_de_estado(aux,EXEC);
                     cambiarEstado(aux,EXEC,BLOCKED);
+                    sem_post(&CANTIDAD_DE_PROCESOS_EN_BLOCKED);
+                    aux->tiempo_bloqueado = temporal_create();
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,posicionIO);
@@ -560,3 +592,6 @@ void liberar_proceso(struct pcb *aux){
 
 //para el de mediano plazo hay que buscarle la vuelta para no quemar la cpu con un gettime todo el tiempo
 //buscar en el foro
+
+//IDEA: FUNCION QUE HAGA UN USLEEP DEL TIEMPO DE SUSPENSION Y PASADO ESE TIEMPO VERIFIQUE SI EL PROCESO 
+// QUE CREÓ EL HILO SIGUE O NO EN ESTADO BLOCKED

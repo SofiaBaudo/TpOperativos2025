@@ -26,6 +26,7 @@ struct pcb{
   float proxima_estimacion; //deberia ser float
   float ultima_estimacion; //deberia ser float
   t_temporal *duracion_ultima_rafaga; //capaz deberia ser un long por el tema del gettime
+  t_temporal *tiempo_bloqueado;
   //despues terminar lo de las metricas de estado y la otra metrica
   //Estado estado;
   int tamanio;
@@ -73,6 +74,7 @@ void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *));
 
 //SJF CON DESALOJO Y SIN DESALOJO
 void frenar_y_restar_cronometros(t_list *lista);
+void reanudar_cronometros(t_list *lista,int iterarciones);
 //float calcular_proxima_estimacion(struct pcb *proceso);
 bool menor_por_estimacion(void* a, void* b);
 bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b);
