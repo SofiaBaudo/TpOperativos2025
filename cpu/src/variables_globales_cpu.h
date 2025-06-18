@@ -70,8 +70,7 @@ extern char* instruccion_recibida;
 extern char** obtenerInsPartes; 
 extern char* parametros;
 extern char* nombre_instruccion;
-extern int pid;
-extern int pc;
+
 
 typedef struct {
     char* opcode; //codigo de instruccion

@@ -74,7 +74,8 @@ typedef enum op_code
 	FETCH_INSTRUCCION,
 	READ_MEMORIA,
 	WRITE_MEMORIA,
-	ENVIO_INSTRUCCION
+	ENVIO_INSTRUCCION,
+	ENVIO_PID_DIRFIS_DAT
 }op_code;
 typedef struct
 {
@@ -167,5 +168,6 @@ t_buffer * crear_buffer_para_ejecucion_de_io(int pid, int milisegundos);
 t_buffer* crear_buffer_instruccion(t_instruccion* instr);
 char* instruccion_a_string(op_code codigo);
 int deserializar_entero_desde_stream(t_paquete* paquete);
+t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char *datos);
 
 #endif

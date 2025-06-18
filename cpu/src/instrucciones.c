@@ -23,13 +23,12 @@ void* ejecutar_instrucciones(void* arg){
     obtenerDelKernelPcPid(&pid, &pc);
     instruccionEntera = fetch(pc,pid);
     instru = decode(instruccionEntera);
-    execute(instru);
+    execute(instru, pid);
     check_interrupt(); //ponerlo en hilo.
     return NULL;
 }
 
 void obtenerDelKernelPcPid(int *pid, int *pc){
-    //Serializar
     t_paquete *paquete = recibir_paquete(fd_conexion_kernel_dispatch);
     *pid = deserializar_pid(paquete); 
     *pc = deserializar_pc(paquete);
@@ -41,36 +40,27 @@ void obtenerDelKernelPcPid(int *pid, int *pc){
 //Fase fetch (Buscar proxima instruccion a realizar)(Primer Fase del Ciclo de Instruccion).
 
 char* fetch(int pid,int pc){
-    //Mando confirmacion de cpu a memoria, espero la instruccion a realizar de memoria.
-    //LOG OBLIGATORIO
     log_info(cpu_logger,"## PID: <PID> - FETCH - Program Counter: <%d>", pc);
-    //send(fd_conexion_dispatch_memoria,&id,sizeof(int),0);
-    send(fd_conexion_dispatch_memoria,&pc,sizeof(int),0);
-    send(fd_conexion_dispatch_memoria,&pid,sizeof(int),0);
-    //Ver con Sofi Mandar PID y CPU
+    t_buffer *buffer = crear_buffer_cpu(pc, pid);
+    crear_paquete(ENVIO_PID_Y_PC, buffer, fd_conexion_dispatch_memoria);
     recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(instru),0);
     return instruccion_recibida;
 }
 
 //Fase Decode (Interpretar proxima ejecucion a ejecutar)(Segunda Fase del Ciclo de Instruccion)
 
-instru decode(char* instruccion_recibida){ 
-    //Decodifico las instrucciones
+instru decode(char* instruccion_recibida){
     instru instruccion;
     obtenerInsPartes = string_split(instruccion_recibida, " "); //te recibe el string tal como es si no lo encuentra
     instruccion.opcode = obtenerInsPartes[0];
     instruccion.param1 = obtenerInsPartes[1];
     instruccion.param2 = obtenerInsPartes[2];
-    if(strcmp(instruccion.opcode, "WRITE") == 0 || strcmp(instruccion.opcode, "READ") == 0){ //hacer un if en vez array 
-    //Llamar a la MMMU para que lo traduzca.TB TENES QUE MANDAR EL PID
-    //hardcodeemos un valor ahora para la prueba, porque se hace en el prox checkpoint
-    } 
     return instruccion;  
 } 
 
 //Fase Execute (Ejecutar la instruccion)(Tercera Fase del Ciclo de Instruccion).
 
-void execute(instru instruccion){
+void execute(instru instruccion, int pid){
     char *nombre_instruccion = instruccion.opcode;
     char *param1Char = instruccion.param1;
     int param1 = atoi(param1Char);
@@ -80,11 +70,11 @@ void execute(instru instruccion){
         pc++;
     }
     if(strcmp(nombre_instruccion, "WRITE") == 0){
-        instruccion_write(param1, param2);
+        instruccion_write(param1, param2, pid);
         pc++;
     }
     if(strcmp(nombre_instruccion, "READ") == 0){
-        instruccion_read(param1, param2);
+        instruccion_read(param1, param2, pid);
         pc++;
     } 
     if(strcmp(nombre_instruccion, "GOTO") == 0){   
@@ -95,12 +85,10 @@ void execute(instru instruccion){
         pc++;
     }
     else{
-        //ERROR
         log_error(cpu_logger, "Error en la Sintaxis o en el ingreso de la Instruccion");
     }
 }
 
-//MMU la cantidad de niveles es variable
 
 //Ejecucion Noop.
 
@@ -110,20 +98,23 @@ void instruccion_noop(void){
 
 //Ejecucion Write.
 
-void instruccion_write(int direccion, char* param2){
+void instruccion_write(int direccion, char* param2, int pid){
+    int direccionFisica = traduccion(direccion, pid);
+    t_buffer *buffer = crear_buffer_pid_dirFis_datos(pid, direccion,param2);
+    crear_paquete(ENVIO_PID_DIRFIS_DAT, buffer, fd_conexion_dispatch_memoria);
     log_info(cpu_logger,"## PID: %d - Ejecutando: <WRITE>",pid);
-    log_info(cpu_logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%d> - Valor: <%s>",pid,direccion, param2);
+    log_info(cpu_logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%d> - Valor: <%s>",pid,direccionFisica, param2);
 }
 
 //Ejecucion Read.
 
-void instruccion_read(int direccion, char* param2){
+void instruccion_read(int direccion, char* param2, int pid){
+    int direccionFisica = traduccion(direccion, pid);
+    t_buffer *buffer = crear_buffer_pid_dirFis_datos(pid, direccion,param2);
+    crear_paquete(ENVIO_PID_DIRFIS_DAT, buffer, fd_conexion_dispatch_memoria);
     log_info(cpu_logger,"## PID: %d - Ejecutando: <READ>",pid);
     log_info(cpu_logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%d> - Valor: <%s>",pid,direccion,param2);
 }
-
-//Ejecucion Go to.
-//Hay un loop infinito con los go to
 
 void instruccion_goto(int parametro){
    //Accedo a Memoria y Kernel para actualizar el PC
@@ -148,9 +139,9 @@ void check_interrupt(void){
     recv(fd_conexion_kernel_interrupt, &pid_interrupcion,sizeof(int),0);
     log_info(cpu_logger," ## Llega interrupción al puerto Interrupt <%d>", pid_interrupcion);
     if(pid_interrupcion != 0){ //recibio una interrupcion
-        //Hay que Serializar 
-        send(fd_conexion_kernel_interrupt, &pid, sizeof(int),0);
-        send(fd_conexion_kernel_interrupt, &pc, sizeof(int),0);
+        //Hay que Serializar
+        t_buffer *buffer = crear_buffer_cpu(pc, pid);
+        crear_paquete(ENVIO_PID_Y_PC,buffer, fd_conexion_kernel_dispatch); 
         log_info(cpu_logger, "SI hay interrupcion");
         //tendria que mandarle a kernel una syscall que se llame desalojo aceptado.
     }

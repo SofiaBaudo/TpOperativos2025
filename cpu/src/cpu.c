@@ -8,6 +8,9 @@ int main(int argc, char* argv[]){
     
     inicializar_CPU(id);
     log_info(cpu_logger,"inicializacion exitosa"); 
-    
+
+    while(1){
+        ejecutar_instrucciones(NULL);
+    }
     return 0;
 }

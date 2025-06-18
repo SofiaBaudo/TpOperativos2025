@@ -46,9 +46,6 @@ void* iniciar_conexion_kernel_interrupt(void *arg){
     return NULL;
 }
 
-//Iniciar conexion Memoria
-//deserializar tamPag, entradasTabla,cantNiveles
-
 void* iniciar_conexion_memoria_dispatch(void* arg){
     free(arg);
     fd_conexion_dispatch_memoria = crear_conexion(IP_MEMORIA, PUERTO_MEMORIA);
@@ -71,10 +68,6 @@ void* iniciar_conexion_memoria_dispatch(void* arg){
     }
     return NULL;
 }
-//Inicializar las CPUs pedidas por el Config
-
-// me parece que primero tendria que hacer el handshake y despues inicializar memoria. Y lo mismo con kernel. 
-
 void* inicializar_memoria(void* arg){
     int id = *(int *)arg;
   
