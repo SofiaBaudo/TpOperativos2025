@@ -25,7 +25,7 @@ void inicializar_logs(){
 }
 
 void inicializar_configs(){
-    config_kernel = crear_config("/home/utnso/Desktop/tp-2025-1c-Sinergia-SO-13/kernel/kernel.config");
+    config_kernel = crear_config("/home/utnso/tp-2025-1c-Sinergia-SO-13/kernel/kernel.config");
     IP_MEMORIA = config_get_string_value(config_kernel, "IP_MEMORIA");
     PUERTO_MEMORIA = config_get_string_value(config_kernel, "PUERTO_MEMORIA");
     PUERTO_ESCUCHA_DISPATCH = config_get_string_value(config_kernel, "PUERTO_ESCUCHA_DISPATCH");

@@ -34,7 +34,7 @@ void crear_proceso(int tamanio, char *ruta_archivo);
 struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo);
 void incrementar_var_global_id_proceso();
 void esperar_enter_por_pantalla();
-void actualizar_proximo_a_consultar();
+void actualizar_proximo_a_consultar(Estado estadoInicial);
 void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
 //void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
 void liberar_proceso(struct pcb *aux);
@@ -52,6 +52,7 @@ float calcular_proxima_estimacion(struct pcb *proceso);
 void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *));
 //void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 //void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
+void intentar_iniciar();
 
 //CPU
 int buscar_cpu_libre(t_list *lista);
@@ -76,5 +77,6 @@ int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta)
 void liberar_cpu(struct instancia_de_cpu *cpu);
 
 //PlANI MEDIANO PLAZO
-
 void *funcion_para_bloqueados(struct pcb *proceso);
+
+

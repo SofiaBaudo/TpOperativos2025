@@ -24,20 +24,19 @@ void *planificador_largo_plazo_fifo(){
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // si no hay nada espera a que llegue un proceso
-        sem_wait(&INTENTAR_INICIAR); //que los demas esperen a que uno entre
+        sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
         sem_wait(&UNO_A_LA_VEZ);
         //verificar_cola_de_suspendido_ready
         if(!list_is_empty(colaEstados[SUSP_READY])){
             sem_wait(&SUSP_READY_SIN_PROCESOS);
         }
-    
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); //no lo sacamos de la lista todavia pero obtenemos una referencia
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
             primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
             transicionar_a_ready(primer_proceso,NEW);
-            sem_post(&INTENTAR_INICIAR);
+            sem_post(&INTENTAR_INICIAR_NEW);
         }   
         else{
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
@@ -54,13 +53,11 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);// si no hay nada espera a que llegue un proceso
-        sem_wait(&INTENTAR_INICIAR);
+        sem_wait(&INTENTAR_INICIAR_NEW);
         sem_wait(&UNO_A_LA_VEZ);
-
         if(!list_is_empty(colaEstados[SUSP_READY])){
             sem_wait(&SUSP_READY_SIN_PROCESOS);
         }
-        
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW);
         if(primer_proceso->pid == proximo_a_consultar->pid){
             bool respuesta = consultar_si_puede_entrar(primer_proceso);
@@ -68,8 +65,8 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
             if(respuesta == true){
                 primer_proceso = sacar_primero_de_la_lista(NEW);
                 transicionar_a_ready(primer_proceso,NEW);
-                actualizar_proximo_a_consultar();
-                sem_post(&INTENTAR_INICIAR);
+                actualizar_proximo_a_consultar(NEW);
+                sem_post(&INTENTAR_INICIAR_NEW);
             }
             else{
                 sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
@@ -173,33 +170,38 @@ void *planificador_mediano_plazo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
         //avisar a memoria que lo pase a swap
-        sem_post(&INTENTAR_INICIAR);
+        intentar_iniciar();
     }
 }
 
-/*
-PLANIFICADOR DE MEDIANO PLAZO
-    semaforo que espere a que llegue un proceso a SUSP_BLOCKED
-    iniciar cronometro
-    el proceso sigue bloqueado?
-    Si{
-        cambiar estado a suspendido blocked
-        informar a memoria que debe ser movido a swap
-        actualizar procesos de suspendido ready
-        actualizar procesos de new
-    }
-    
-        --Si el plani de largo plazo maneja la cola de suspendido ready
-        Verificacion de que no haya procesos en suspendido ready
-        si hay: 
-        while(){
-           pasarlos a ready 
+void *planificador_mediano_plazo_fifo(){
+    while(1){
+    sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+    sem_wait(&INTENTAR_INICIAR_SUSP_READY);
+    struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
+        bool respuesta = consultar_si_puede_entrar(primer_proceso);
+        log_debug(kernel_debug_log,"Conexion con memoria cerrada");
+        if (respuesta == true){
+            primer_proceso = sacar_primero_de_la_lista(SUSP_READY); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
+            transicionar_a_ready(primer_proceso,SUSP_READY);
+            sem_post(&INTENTAR_INICIAR_SUSP_READY);
+            if(list_is_empty(colaEstados[SUSP_READY])){
+                sem_post(&SUSP_READY_SIN_PROCESOS);
+            }
+        }   
+        else{
+            log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
+            sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
         }
-        sem_post(&SUSP_READY_SIN_PROCESOS);
-        si no hay:
-        manejar cola de new
-        
-*/
+        sem_post(&UNO_A_LA_VEZ_SUSP_READY);
+    }
+}
+
+
+
+
+
+
 
 //FUNCIONES PLANI MEDIANO PLAZO
 
@@ -229,9 +231,7 @@ void *funcion_para_bloqueados(struct pcb *proceso){
 
 bool ver_si_hay_que_desalojar(struct pcb *proceso){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
-    log_debug(kernel_debug_log,"Antes de frenar y restar");
     frenar_y_restar_cronometros(cpus_conectadas);
-    log_debug(kernel_debug_log,"Ya frene y reste");
     ordenar_lista_segun(cpus_conectadas,menor_por_estimacion_de_los_que_ya_estan_ejecutando);
     bool desalojo = recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(cpus_conectadas,proceso);
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
@@ -414,13 +414,14 @@ struct pcb *sacar_primero_de_la_lista(Estado estado){
 void transicionar_a_new(struct pcb *pcb){
  pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
     //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
-        //list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
+        list_add(colaEstados[NEW],pcb); // es una variable global asi que habria que poner un mutex
     //}else{
-        insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
+        /*insertar_ordenado_segun(colaEstados[NEW],pcb,menor_por_tamanio);
         pthread_mutex_lock(&mx_proximo_a_consultar);
         proximo_a_consultar = pcb;
         pthread_mutex_unlock(&mx_proximo_a_consultar);
-        sem_post(&INTENTAR_INICIAR);
+        sem_post(&INTENTAR_INICIAR_NEW);
+        */
     //}
     pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
     sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
@@ -485,8 +486,8 @@ bool consultar_si_puede_entrar(struct pcb *proceso){
     return respuesta;
 }
 
-void actualizar_proximo_a_consultar(){
-    struct pcb *primer_proceso_actualizado = obtener_copia_primer_proceso_de(NEW);
+void actualizar_proximo_a_consultar(Estado estadoInicial){
+    struct pcb *primer_proceso_actualizado = obtener_copia_primer_proceso_de(estadoInicial);
     if(primer_proceso_actualizado!=NULL){
         pthread_mutex_lock(&mx_proximo_a_consultar);
         proximo_a_consultar = primer_proceso_actualizado;
@@ -567,6 +568,8 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
             liberar cpu (devuelta conexion)
             transiciono a ready
             bloqueante = true;
+            case DESALOJO_ACEPTADO:
+                enviar_entero(cliente_dispatch,1);
             */
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo(paquete);
@@ -642,8 +645,8 @@ void finalizar_proceso(struct pcb *aux, Estado estadoInicial){
     cerrar_conexion(socket);
     sacar_de_cola_de_estado(aux,EXIT_ESTADO);    
     liberar_proceso(aux); //free de todos los punteros, lo demas se va con el free (aux)
-    // semaforo que llame al planificador de mediano plazo.
-    sem_post(&INTENTAR_INICIAR); //SOLO SI SUSP_READY ESTA VACIA !!
+    intentar_iniciar();
+
     //int confirmacion = recibir_entero(socket);
     //return confirmacion;
 }
@@ -654,9 +657,11 @@ void liberar_proceso(struct pcb *aux){
     free(aux);
 }
 
-
-//para el de mediano plazo hay que buscarle la vuelta para no quemar la cpu con un gettime todo el tiempo
-//buscar en el foro
-
-//IDEA: FUNCION QUE HAGA UN USLEEP DEL TIEMPO DE SUSPENSION Y PASADO ESE TIEMPO VERIFIQUE SI EL PROCESO 
-// QUE CREÓ EL HILO SIGUE O NO EN ESTADO BLOCKED
+void intentar_iniciar(){
+    if(!list_is_empty(colaEstados[SUSP_READY])){
+        sem_post(&INTENTAR_INICIAR_SUSP_READY);
+    }
+    else{
+        sem_post(&INTENTAR_INICIAR_NEW);
+    }
+}
