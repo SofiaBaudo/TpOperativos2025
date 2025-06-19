@@ -8,7 +8,6 @@ int identificador_del_proceso = 0;
 struct pcb *proximo_a_consultar;
 int estimacion_de_prueba = 50;
 
-
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
     struct pcb* pcb = malloc(sizeof(struct pcb));
     pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo);
@@ -123,7 +122,6 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
 void *planificador_corto_plazo_sjf_con_desalojo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]);
-        //sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
         sem_wait(&CPUS_LIBRES); 
         sem_wait(&REPLANIFICAR);
         usleep(200000);
@@ -578,7 +576,7 @@ void mandar_paquete_a_cpu(struct pcb *proceso){
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
     temporal_stop(aux->duracion_ultima_rafaga);
     cambiarEstado(aux,EXEC,BLOCKED);
-    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
+    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux); preguntar en el soporte
     sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
     aux->tiempo_bloqueado = temporal_create();
     int socket = iniciar_conexion_kernel_memoria();

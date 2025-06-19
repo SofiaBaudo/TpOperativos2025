@@ -12,7 +12,7 @@
 #include <string.h>
 #include <servidor_memoria.h>
 
-//Declaracion Pagina de Swap
+//Declaracion Pagina de SWAP
 
 typedef struct {
     int pid;                  // Identificador del proceso dueño de la página

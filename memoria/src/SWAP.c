@@ -5,6 +5,8 @@
 
 #include <SWAP.h>
 
+//Define Localizacion PATH_SWAPFILE
+
 #define PATH_SWAPFILE "/home/utnso/tp-2025-1c-Sinergia-SO-13/memoria/swapfile.bin"
 
 static FILE* swapfile = NULL;

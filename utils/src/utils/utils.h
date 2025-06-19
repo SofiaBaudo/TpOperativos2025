@@ -122,6 +122,7 @@ struct pcb{
   char *ruta_del_archivo_de_pseudocodigo; // a chequear
   int proxima_rafaga_io;
   pthread_t hilo_al_bloquearse;
+  //Metricas de estado es un vector de enteros 
 };
 
 struct instancia_de_io{
