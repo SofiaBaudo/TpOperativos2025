@@ -1,18 +1,25 @@
-//Un espacio contiguo de memoria (representado por un void*). Este representará el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
+//Incluir las librerias
 
 #include <espacio_de_usuario.h>
 
+//Un espacio contiguo de memoria (representado por un void*). Este representará el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
+
+//Declaracion de Variables Globales
+
 void* espacio_usuario_memoria = NULL;  // Memoria física simulada
+
+//Funcion para Inicializar Espacio de Usuario
 
 void inicializar_espacio_usuario() {
     espacio_usuario_memoria = malloc(memoria_config.TAM_MEMORIA);
+    //Es toda completa o hay que restar la que usamos en la paginacion? CONSULTA
     if (!espacio_usuario_memoria) {
         printf("Error al reservar memoria de usuario\n");
         exit(EXIT_FAILURE);
     }
 }
 
-//Retorna toda una página (según TAM_PAGINA) a partir de una dirección física.
+//Funcion que Retorna toda una página (según TAM_PAGINA) a partir de una dirección física.
 
 char* leer_pagina_completa(unsigned int direccion_fisica) {
     if (direccion_fisica + memoria_config.TAM_PAGINA > memoria_config.TAM_MEMORIA)
@@ -23,7 +30,7 @@ char* leer_pagina_completa(unsigned int direccion_fisica) {
     return buffer;
 }
 
-//Copia los datos completos (una página) desde contenido al espacio de usuario.
+//Funcion que Copia los datos completos (una página) desde contenido al espacio de usuario.
 
 char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido){
     if (direccion_fisica + memoria_config.TAM_PAGINA > memoria_config.TAM_MEMORIA)
@@ -33,6 +40,8 @@ char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido)
     return "OK";
 }
 
+//Funcion que Lee el Espacio de usuario segun su tamanio
+
 void leer_espacio_usuario(void* destino, int direccion_fisica, int tamanio){
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
         log_error(logger_memoria, "Lectura fuera de los límites de memoria");
@@ -41,6 +50,8 @@ void leer_espacio_usuario(void* destino, int direccion_fisica, int tamanio){
     memcpy(destino, espacio_usuario_memoria + direccion_fisica, tamanio);
     listado_metricas.cant_lecturas_memoria++;
 }
+
+//Funcion que Escribe el Espacio de usuario segun su tamanio
 
 void escribir_espacio_usuario(int direccion_fisica, void* origen, int tamanio){
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {

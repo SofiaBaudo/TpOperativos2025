@@ -1,5 +1,9 @@
+//Define de Paginacion
+
 #ifndef PAGINACION_H
 #define PAGINACION_H
+
+//Incluir las librerias
 
 #include <stdbool.h>
 #include <variables_globales_memoria.h>
@@ -10,23 +14,30 @@
 #include <servidor_memoria.h>
 #include <math.h>
 
+//Declaracion Struct Entrada a Pagina
 typedef struct {
     int nro_entrada;             
     int nro_marco;               
     void* siguiente_nivel;       
 } entrada_tabla_pagina;
 
+//Declaracion Struct Nivel de Pagina
 typedef struct {
     int nivel;
     entrada_tabla_pagina* entradas;
 } tabla_pagina_nivel;
 
+//Declaracion Struct Tabla Proceso
 typedef struct {
     int pid;
     tabla_pagina_nivel* tabla_raiz;
 } t_tabla_proceso;
 
+//Declaracion de los Logs
+
 extern t_log* logger;
+
+//Declaracion los Prototipos de Funciones
 
 tabla_pagina_nivel* crear_tabla_nivel(int nivel_actual);
 tabla_pagina_nivel* crear_tablas_proceso();

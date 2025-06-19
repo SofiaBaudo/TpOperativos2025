@@ -1,5 +1,9 @@
+//Define de Instrucciones Memoria
+
 #ifndef INSTRUCCIONES_MEMORIA_H
 #define INSTRUCCIONES_MEMORIA_H
+
+//Incluir las librerias
 
 #include <commons/log.h>
 #include <commons/collections/list.h>
@@ -10,15 +14,17 @@
 #include <variables_globales_memoria.h>
 #include <utils/utils.h>
 
-
-//Variables y Structs Globales
-
+//Declaracion Struct Instrucciones Por Proceso
 typedef struct {
     int pid;
     t_list* instrucciones;
 } t_proceso_instrucciones; //tipo de dato
 
+//Declaracion da la Lista de Procesos
+
 extern t_list* lista_procesos_instrucciones; //lista global
+
+//Declaracion los Prototipos de Funciones
 
 void iniciar_lista_procesos_instrucciones();
 t_instruccion* analizar_linea(char* linea);

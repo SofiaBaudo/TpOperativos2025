@@ -1,8 +1,14 @@
+//Incluir las librerias
+
 #include <servidor_memoria.h>
+
+//Declaracion de Variables Globales
 
 int tamanio_disponible_en_memoria = 30;
 t_memoria_config memoria_config;
 t_log* logger_memoria;
+
+//Funcion para Leer Configuraciones
 
 void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header)
     t_config* config = config_create("memoria.config");
@@ -21,6 +27,9 @@ void leer_config(){ // Lee la config y guarda todos los values de las key (struc
     memoria_config.DUMP_PATH = strdup(config_get_string_value(config, "DUMP_PATH"));
     config_destroy(config); //destruye luego de guardarse los values
 }
+
+//Funcion para Inicializar Loggers de Memoria
+
 void iniciar_logger_memoria(){
     logger_memoria = log_create("memoria.log", "[Memoria]", true, LOG_LEVEL_TRACE);
     if (logger_memoria == NULL) {
@@ -29,6 +38,9 @@ void iniciar_logger_memoria(){
     }
     //despues ver de cambiar el tipo 
 }
+
+//Funcion para Inicializar Servidor de Memoria
+
 void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender peticiones
     char puerto[6]; // Buffer para almacenar el puerto como cadena (máximo 5 dígitos + '\0')
     sprintf(puerto, "%d", memoria_config.PUERTO_ESCUCHA); // Convierte el puerto a cadena.  A puerto le asigna el valor de memoria_config.puerto_escucha
@@ -54,6 +66,8 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     }
     close(servidor_memoria);
 }
+
+//Funcion para Manejar Cliente de Memoria(Depende del Modulo)
 
 void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión con el cliente dependiendo de que modulo venga
 {   /*
@@ -112,6 +126,9 @@ void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión 
     close(cliente);
     return NULL;
 }
+
+//Funcion para Manejar la Instruccion de CPU (PC y el PID)
+
 void manejar_fetch_cpu(int socket_cpu){
     //paquete con el PC y el PID
     t_paquete* paquete = recibir_paquete(socket_cpu);
@@ -132,9 +149,12 @@ void manejar_fetch_cpu(int socket_cpu){
     t_buffer* buffer = crear_buffer_instruccion(instruccion);
     crear_paquete(ENVIO_INSTRUCCION, buffer, socket_cpu);
 
-    // sumo a la metrica de instrucciones solicitadas
+    //Sumo a la metrica de instrucciones solicitadas
     listado_metricas.instrucciones_solicitadas++;
 }
+
+//Funcion para Manejar la Instruccion de Read de CPU
+
 void manejar_read_memoria(int socket_cpu) {
     t_paquete* paquete = recibir_paquete(socket_cpu);
 
@@ -150,6 +170,9 @@ void manejar_read_memoria(int socket_cpu) {
     send(socket_cpu, buffer, tamanio, 0);
     free(buffer);
 }
+
+//Funcion para Manejar la Instruccion de Write de CPU
+
 void manejar_write_memoria(int socket_cpu) {
     t_paquete* paquete = recibir_paquete(socket_cpu);
 
@@ -168,6 +191,9 @@ void manejar_write_memoria(int socket_cpu) {
     free(paquete->buffer);
     free(paquete);
 }
+
+//Funcion de Verificar Espacio
+//VER DONDE VA O SI DEBEMOS SACARLA(SI RESPONDEMOS EN OTRA PARTE)
 
 op_code verificar_si_hay_espacio(int tamanio){
     if(tamanio>tamanio_disponible_en_memoria){

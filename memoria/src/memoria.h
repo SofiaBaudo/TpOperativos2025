@@ -1,5 +1,9 @@
+//Define de Memoria
+
 #ifndef MEMORIA_H
 #define MEMORIA_H
+
+//Incluir las librerias
 
 #include <stdlib.h>
 #include <stdio.h>

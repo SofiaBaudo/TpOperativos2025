@@ -1,8 +1,14 @@
+//Incluir las librerias
+
 //Listado de métricas por proceso
 
 #include <metricas.h>
 
+//Declaracion de Variables Globales
+
 t_metricas listado_metricas;           // Estructura para acumular estadísticas por proceso
+
+//Funcion para Sumar a cada Metrica del Proceso
 
 void* metricas_proceso(int pid, tipo_metrica metrica){
     switch(metrica) {
