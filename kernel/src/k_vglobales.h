@@ -64,9 +64,13 @@ extern sem_t INGRESO_DEL_PRIMERO_READY;
 extern sem_t CPUS_LIBRES;
 extern sem_t REPLANIFICAR;
 extern sem_t CANTIDAD_DE_PROCESOS_EN[7];
+extern sem_t UNO_A_LA_VEZ;
+extern sem_t SUSP_READY_SIN_PROCESOS;
 
 //DECLARACIONES
 
+int buscar_en_lista(t_list *lista,int pid);
 void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
+void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
+void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
 float calcular_proxima_estimacion(struct pcb *proceso);
-void finalizar_proceso(struct pcb*aux, Estado estadoInicial);

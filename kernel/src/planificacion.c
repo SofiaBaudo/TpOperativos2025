@@ -23,9 +23,14 @@ void *planificador_largo_plazo_fifo(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     while(1){
-        sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);
-        //sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR); //que los demas esperen a que uno entre
+        sem_wait(&UNO_A_LA_VEZ);
+        //verificar_cola_de_suspendido_ready
+        if(!list_is_empty(colaEstados[SUSP_READY])){
+            sem_wait(&SUSP_READY_SIN_PROCESOS);
+        }
+    
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); //no lo sacamos de la lista todavia pero obtenemos una referencia
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
@@ -39,6 +44,7 @@ void *planificador_largo_plazo_fifo(){
             //sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW); 
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
         }
+        sem_post(&UNO_A_LA_VEZ);
     } 
     return NULL;
 }
@@ -47,9 +53,14 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
     while(1){
-        sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);
-        //sem_wait(&CANTIDAD_DE_PROCESOS_EN_NEW); // si no hay nada espera a que llegue un proceso
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);// si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR);
+        sem_wait(&UNO_A_LA_VEZ);
+
+        if(!list_is_empty(colaEstados[SUSP_READY])){
+            sem_wait(&SUSP_READY_SIN_PROCESOS);
+        }
+        
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW);
         if(primer_proceso->pid == proximo_a_consultar->pid){
             bool respuesta = consultar_si_puede_entrar(primer_proceso);
@@ -61,14 +72,13 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
                 sem_post(&INTENTAR_INICIAR);
             }
             else{
-                sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
-                //sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
+                sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
             }
         }
         else{
-            //sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW);
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
         }
+        sem_post(&UNO_A_LA_VEZ);
     }
 }
 
@@ -159,6 +169,14 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
     }
 }
 
+void *planificador_mediano_plazo(){
+    while(1){
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
+        //avisar a memoria que lo pase a swap
+        sem_post(&INTENTAR_INICIAR);
+    }
+}
+
 /*
 PLANIFICADOR DE MEDIANO PLAZO
     semaforo que espere a que llegue un proceso a SUSP_BLOCKED
@@ -170,8 +188,36 @@ PLANIFICADOR DE MEDIANO PLAZO
         actualizar procesos de suspendido ready
         actualizar procesos de new
     }
-
+    
+        --Si el plani de largo plazo maneja la cola de suspendido ready
+        Verificacion de que no haya procesos en suspendido ready
+        si hay: 
+        while(){
+           pasarlos a ready 
+        }
+        sem_post(&SUSP_READY_SIN_PROCESOS);
+        si no hay:
+        manejar cola de new
+        
 */
+
+//FUNCIONES PLANI MEDIANO PLAZO
+
+void *funcion_para_bloqueados(struct pcb *proceso){
+
+    usleep(atoi(TIEMPO_SUSPENSION)); //preguntar 
+    pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
+    int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
+    pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
+    if(pos!=-1){
+        sacar_de_cola_de_estado(proceso,BLOCKED);
+        cambiarEstado(proceso,BLOCKED,SUSP_BLOCKED); //A chequear
+        sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
+    }
+    pthread_detach(proceso->hilo_al_bloquearse);//El hilo se desacopla del hilo principal.
+    return NULL;
+  
+}
 
 //FUNCION PARA BLOQUEADOS{
 //USLEEP
@@ -425,7 +471,7 @@ void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoN
         "BLOCKED_SUSPEND"
     };
 
-    if (estado < 0 || estado > BLOCKED_SUSPEND) {
+    if (estado < 0 || estado > SUSP_BLOCKED) {
         return "ESTADO_DESCONOCIDO";
     }
 
@@ -494,7 +540,8 @@ void mandar_paquete_a_cpu(struct pcb *proceso){
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
     temporal_stop(aux->duracion_ultima_rafaga);
     cambiarEstado(aux,EXEC,BLOCKED);
-    sem_post(&CANTIDAD_DE_PROCESOS_EN_BLOCKED);
+    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
+    sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
     aux->tiempo_bloqueado = temporal_create();
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
@@ -559,7 +606,8 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
                     temporal_stop(aux->duracion_ultima_rafaga);
                     sacar_de_cola_de_estado(aux,EXEC);
                     cambiarEstado(aux,EXEC,BLOCKED);
-                    sem_post(&CANTIDAD_DE_PROCESOS_EN_BLOCKED);
+                    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
+                    sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
                     aux->tiempo_bloqueado = temporal_create();
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
@@ -606,6 +654,7 @@ void liberar_proceso(struct pcb *aux){
     free(aux->ruta_del_archivo_de_pseudocodigo);
     free(aux);
 }
+
 
 //para el de mediano plazo hay que buscarle la vuelta para no quemar la cpu con un gettime todo el tiempo
 //buscar en el foro

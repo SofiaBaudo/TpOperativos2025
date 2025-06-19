@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <semaforos.h> // para poder hacer el sem_post en cpu
 
+
 //ATENCION DE CLIENTES
 void *atender_kernel_dispatch();
 void atender_kernel_io();
@@ -20,3 +21,4 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 //CONEXION CON CLIENTES
 int iniciar_conexion_kernel_memoria();
 void cerrar_conexion(int socket);
+struct pcb* obtener_primero(t_list *lista);

@@ -1,6 +1,12 @@
 #include <kernel.h>
 #include <conexiones.h>
 
+void *funcion_que_duerme(){
+   usleep(5000000);
+   log_debug(kernel_debug_log,"Ya dormi");
+   return NULL;
+   }
+
 int main(int argc, char* argv[]){
 
  //argc es la cantidad de argumentos y argv que contiene cada argumento
@@ -23,16 +29,19 @@ int main(int argc, char* argv[]){
    crear_proceso(2,"f3");
    crear_proceso(1,"f4");
 
-   pthread_t hilo_dispatch;
+   //pthread_t hilo_dispatch;
+   //pthread_t hilo_funcion_que_duerme;
    pthread_t hilo_plani_largo_plazo;
-   pthread_create(&hilo_dispatch,NULL,atender_kernel_dispatch,NULL); //Creamos el hilo
+   //pthread_create(&hilo_dispatch,NULL,atender_kernel_dispatch,NULL); //Creamos el hilo
+   //pthread_create(&hilo_funcion_que_duerme,NULL,funcion_que_duerme,NULL);
    pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
    //hilos para cpus e ios. Ios se pueden agregar durante la ejecucion y las cpus son fijas
    pthread_t hilo_plani_corto_plazo;
-   //pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL); //Creamos el hilo
-   pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_con_desalojo,NULL); //Creamos el hilo
-   pthread_join(hilo_dispatch,NULL);
+   pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL); //Creamos el hilo
+   //pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_con_desalojo,NULL); //Creamos el hilo
+   //pthread_join(hilo_dispatch,NULL);
    pthread_join(hilo_plani_largo_plazo,NULL);
+   //pthread_join(hilo_funcion_que_duerme,NULL);
    pthread_join(hilo_plani_corto_plazo,NULL);
    
 /*

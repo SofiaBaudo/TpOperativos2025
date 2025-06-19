@@ -2,9 +2,10 @@
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <conexiones.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <commons/temporal.h>
+
 
 //ESTADOS DEL PROCESO
 /*typedef enum{
@@ -19,20 +20,7 @@
 */
 
 
-//ESTRUCTURA DEL PROCESO
-struct pcb{
-  int pid;
-  int pc;
-  float proxima_estimacion; //deberia ser float
-  float ultima_estimacion; //deberia ser float
-  t_temporal *duracion_ultima_rafaga; //capaz deberia ser un long por el tema del gettime
-  t_temporal *tiempo_bloqueado;
-  //despues terminar lo de las metricas de estado y la otra metrica
-  //Estado estado;
-  int tamanio;
-  char *ruta_del_archivo_de_pseudocodigo; // a chequear
-  int proxima_rafaga_io;
-};
+
 
 //PLANIFICADORES
 void *planificador_largo_plazo_fifo();
@@ -48,7 +36,7 @@ void incrementar_var_global_id_proceso();
 void esperar_enter_por_pantalla();
 void actualizar_proximo_a_consultar();
 void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
-//void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
+void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
 void liberar_proceso(struct pcb *aux);
 
 //CAMBIO Y TRANSICION DE ESTADOS
@@ -60,18 +48,18 @@ bool menor_por_tamanio(void* a, void* b);
 char *cambiar_a_string(Estado estado);
 void transicionar_a_new(struct pcb *proceso);
 //void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
-void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
+float calcular_proxima_estimacion(struct pcb *proceso);
 void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *));
-void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
+//void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
+//void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
 
 //CPU
 int buscar_cpu_libre(t_list *lista);
 struct instancia_de_cpu *obtener_cpu(int posicion);
 
 //LISTA
-int buscar_en_lista(t_list *lista,int pid);
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *));
-
+//int buscar_en_lista(t_list *lista,int pid);
 //SJF CON DESALOJO Y SIN DESALOJO
 void frenar_y_restar_cronometros(t_list *lista);
 void reanudar_cronometros(t_list *lista,int iterarciones);
@@ -86,3 +74,7 @@ bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct 
 void mandar_paquete_a_cpu(struct pcb *proceso);
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta);
 void liberar_cpu(struct instancia_de_cpu *cpu);
+
+//PlANI MEDIANO PLAZO
+
+void *funcion_para_bloqueados(struct pcb *proceso);

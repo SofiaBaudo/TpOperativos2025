@@ -178,14 +178,24 @@ void *io(void *instancia_de_io) { //el aux
     struct instancia_de_io *io_aux = instancia_de_io;
     while (true){
         sem_wait(&io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
-        //struct pcb *proceso = obtener_primero(io_aux->procesos_esperando); //y sacarlo
+        struct pcb *proceso = malloc(sizeof(struct pcb));
+        proceso = obtener_primero(io_aux->procesos_esperando); //y sacarlo
         //t_buffer *buffer = crear_buffer_para_ejecucion_de_io(proceso->pid,proceso->proxima_rafaga_io);
         //crear_paquete(RAFAGA_DE_IO,buffer,cliente_io);
         int respuesta = recibir_entero(cliente_io);
         switch(respuesta){
             case 41: //Corresponde al enum de fin de IO
-                //proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
-                //transicionar_a_ready(proceso,BLOCKED);
+                int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
+                if(pos!=-1){
+                    sacar_de_cola_de_estado(proceso,BLOCKED);
+                    proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
+                    transicionar_a_ready(proceso,BLOCKED);
+                }
+                else{
+                    sacar_de_cola_de_estado(proceso,SUSP_BLOCKED);
+                    cambiarEstado(proceso,SUSP_BLOCKED,SUSP_READY);
+                    sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+                }
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando
                 //finalizar_proceso(proceso,BLOCKED);
@@ -196,7 +206,7 @@ void *io(void *instancia_de_io) { //el aux
                 break;  
         }
     }
-}
+ }
 
 int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
@@ -225,8 +235,7 @@ void solicitar_rafaga_de_io(int duracion){
     }
     else{
         // hay que ver esto
-    
-} // esta funcion capaz estaria mejor que solo devuelva la respuesta pero para ir probandola la dejamos en void
+    } // esta funcion capaz estaria mejor que solo devuelva la respuesta pero para ir probandola la dejamos en void
 }
 
 bool solicitar_permiso_a_memoria(int socket,int tamanio){
@@ -268,4 +277,14 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
     list_iterator_destroy(iterador);
     log_debug(kernel_debug_log, "La instancia de IO con nombre %s no se encuentra en la lista\n", nombre_io);
     return -1;
+}
+
+struct pcb* obtener_primero(t_list *lista){
+    if(!lista){
+        return NULL;
+    }
+    pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
+    struct pcb* aux = list_remove(lista,0);
+    pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
+    return aux;
 }

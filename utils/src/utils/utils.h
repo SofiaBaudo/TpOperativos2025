@@ -13,7 +13,7 @@
 #include <string.h> // para usar, por ejemplo, la funcion memset en iniciar conexion
 #include <unistd.h> // para funciones como por ejemplo close(linea 105 utils.c)
 #include <semaphore.h>
-
+#include <commons/temporal.h>
 typedef enum op_code
 {
 	// Handshakes
@@ -104,10 +104,25 @@ typedef enum{
   BLOCKED,//2
   EXEC,//3
   EXIT_ESTADO,//4
-  READY_SUSPEND,//5
-  BLOCKED_SUSPEND//6
+  SUSP_READY,//5
+  SUSP_BLOCKED//6
 } Estado;
 
+//ESTRUCTURA DEL PROCESO
+struct pcb{
+  int pid;
+  int pc;
+  float proxima_estimacion; //deberia ser float
+  float ultima_estimacion; //deberia ser float
+  t_temporal *duracion_ultima_rafaga; //capaz deberia ser un long por el tema del gettime
+  t_temporal *tiempo_bloqueado;
+  //despues terminar lo de las metricas de estado y la otra metrica
+  //Estado estado;
+  int tamanio;
+  char *ruta_del_archivo_de_pseudocodigo; // a chequear
+  int proxima_rafaga_io;
+  pthread_t hilo_al_bloquearse;
+};
 
 struct instancia_de_io{
     char* nombre;
