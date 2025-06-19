@@ -22,3 +22,7 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 int iniciar_conexion_kernel_memoria();
 void cerrar_conexion(int socket);
 struct pcb* obtener_primero(t_list *lista);
+
+//MANEJO DE IOS
+void sacar_primero_de_la_lista_de_bloqueados(t_list *lista);
+void recorrer_lista_y_finalizar_procesos(t_list * lista);

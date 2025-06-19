@@ -74,3 +74,4 @@ void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
 void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
 float calcular_proxima_estimacion(struct pcb *proceso);
+void finalizar_proceso(struct pcb*aux, Estado estadoInicial);

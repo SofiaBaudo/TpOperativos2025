@@ -149,22 +149,27 @@ void* manejar_kernel_io(void *socket_io){
             char *nombre = deserializar_nombre_io(paquete);
             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
             //Capaz estaria bueno agregar un mutex porque la lista de ios es una variable global
-            int pos = buscar_IO_solicitada(ios_conectados,nombre);
             pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
+            int pos = buscar_IO_solicitada(ios_conectados,nombre);
+            pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
             if(pos == -1){
                 aux->nombre = nombre;
                 aux->cantInstancias = 1;
                 sem_init(&aux->hay_procesos_esperando,0,0);
                 log_debug(kernel_debug_log,"Inicialice el semaforo");
+                pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                 list_add(ios_conectados,aux);
+                pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 log_debug(kernel_debug_log,"Se conecto la primera instancia de la IO: %s",nombre);
             }
             else{
+                pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                 aux = list_get(ios_conectados,pos);
+                pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 aux->cantInstancias++;
                 log_debug(kernel_debug_log,"Se conecto una nueva instancia de la IO %s y ahora hay %i instancias",nombre,aux->cantInstancias);
             }
-            pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
+           
             //create hilo io
         break;
         default:
@@ -198,15 +203,18 @@ void *io(void *instancia_de_io) { //el aux
                 }
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando
-                //finalizar_proceso(proceso,BLOCKED);
+                finalizar_proceso(proceso,BLOCKED);
+                sacar_primero_de_la_lista_de_bloqueados(io_aux->procesos_esperando);
                 io_aux->cantInstancias--;
                 if(io_aux->cantInstancias == 0){
-                    //recorrer la lista de bloqueados por esta IO y finalizarlos
+                    recorrer_lista_y_finalizar_procesos(io_aux->procesos_esperando);
                 }
                 break;  
         }
     }
  }
+
+
 
 int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
@@ -287,4 +295,22 @@ struct pcb* obtener_primero(t_list *lista){
     struct pcb* aux = list_remove(lista,0);
     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
     return aux;
+}
+
+void sacar_primero_de_la_lista_de_bloqueados(t_list *lista){
+    list_remove(lista,0);
+}
+
+void recorrer_lista_y_finalizar_procesos(t_list * lista){
+    if (lista == NULL) { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
+        printf("Lista nula\n");
+    return;
+    }
+    t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
+    while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
+        list_iterator_next(aux);
+        sacar_primero_de_la_lista_de_bloqueados(lista);
+    }
+    list_iterator_destroy(aux);
+    return;
 }

@@ -381,7 +381,6 @@ bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct 
             list_iterator_destroy(aux); //delete del iterador.
             return true;
         }
-        
     }
     return false;
 }
