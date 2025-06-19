@@ -10,7 +10,6 @@
 #include <servidor_memoria.h>
 #include <math.h>
 
-
 void inicializar_espacio_usuario();
 char* leer_pagina_completa(unsigned int direccion_fisica);
 char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido);

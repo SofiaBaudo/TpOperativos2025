@@ -1,8 +1,10 @@
 //Listado de métricas por proceso
+
 #include <metricas.h>
+
 t_metricas listado_metricas;           // Estructura para acumular estadísticas por proceso
 
-void* metricas_proceso(int pid, tipo_metrica metrica) {
+void* metricas_proceso(int pid, tipo_metrica metrica){
     switch(metrica) {
         case ACCESO_TABLA:
             listado_metricas.cant_acceso_tabla_pagina++;

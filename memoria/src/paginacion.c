@@ -23,15 +23,18 @@ tabla_pagina_nivel* crear_tabla_nivel(int nivel_actual){
     }
     return tabla;
 }
+
 tabla_pagina_nivel* crear_tablas_proceso() {
     return crear_tabla_nivel(0); // empieza desde el nivel 0
 }
+
 void agregar_tablas_proceso(int pid){ // agregar un proceso nuevo
     t_tabla_proceso* nuevo = malloc(sizeof(t_tabla_proceso));
     nuevo->pid = pid;
     nuevo->tabla_raiz = crear_tablas_proceso();
     list_add(lista_tablas_por_proceso, nuevo);
 }
+
 tabla_pagina_nivel* buscar_tabla_por_pid(int pid){ //buscar la tabla raíz por PID
     for (int i = 0; i < list_size(lista_tablas_por_proceso); i++) {
         t_tabla_proceso* p = list_get(lista_tablas_por_proceso, i);
@@ -39,6 +42,7 @@ tabla_pagina_nivel* buscar_tabla_por_pid(int pid){ //buscar la tabla raíz por P
     }
     return NULL;
 }
+
 void liberar_tablas(tabla_pagina_nivel* tabla){
     if (tabla == NULL) return;
     for (int i = 0; i < memoria_config.ENTRADAS_POR_TABLA; i++) {
@@ -53,6 +57,7 @@ void liberar_tablas(tabla_pagina_nivel* tabla){
     free(tabla->entradas);
     free(tabla);
 }
+
 void eliminar_tabla_proceso(int pid){
     for (int i = 0; i < list_size(lista_tablas_por_proceso); i++) {
         t_tabla_proceso* p = list_get(lista_tablas_por_proceso, i);
@@ -64,6 +69,7 @@ void eliminar_tabla_proceso(int pid){
         }
     }
 }
+
 int obtener_marco_final(tabla_pagina_nivel* tabla_raiz, int* indices_niveles) {
     tabla_pagina_nivel* actual = tabla_raiz;
     for (int i = 0; i < memoria_config.CANTIDAD_NIVELES - 1; i++) {

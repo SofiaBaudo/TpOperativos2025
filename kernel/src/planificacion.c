@@ -178,6 +178,7 @@ void *planificador_mediano_plazo_fifo(){
     while(1){
     sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
     sem_wait(&INTENTAR_INICIAR_SUSP_READY);
+    sem_wait(&UNO_A_LA_VEZ_SUSP_READY);
     struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
@@ -197,11 +198,38 @@ void *planificador_mediano_plazo_fifo(){
     }
 }
 
-
-
-
-
-
+void *planificador_mediano_plazo_proceso_mas_chico_primero(){
+    while(1){
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);// si no hay nada espera a que llegue un proceso
+        sem_wait(&INTENTAR_INICIAR_SUSP_READY);
+        sem_wait(&UNO_A_LA_VEZ_SUSP_READY);
+        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY);
+        if(primer_proceso->pid == proximo_a_consultar->pid){
+            bool respuesta = consultar_si_puede_entrar(primer_proceso);
+            log_debug(kernel_debug_log,"Conexion con memoria cerrada");
+            if(respuesta == true){
+                primer_proceso = sacar_primero_de_la_lista(SUSP_READY);
+                transicionar_a_ready(primer_proceso,SUSP_READY);
+                sem_post(&INTENTAR_INICIAR_SUSP_READY);
+                if(list_is_empty(colaEstados[SUSP_READY])){ //SI LA LISTA ESTA VACIA LE AVISAMOS AL PLANIFICADOR DE LARGO PLAZO 
+                    actualizar_proximo_a_consultar(NEW); 
+                    sem_post(&SUSP_READY_SIN_PROCESOS);     //QUE PUEDE INTENTAR INICIAR ALGUNO DE LOS QUE ESTAN ESPERANDO EN NEW
+                }
+                else{
+                    actualizar_proximo_a_consultar(SUSP_READY);
+                }
+                sem_post(&INTENTAR_INICIAR_SUSP_READY);
+            }
+            else{
+                sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+            }
+        }
+        else{
+            sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+        }
+        sem_post(&UNO_A_LA_VEZ_SUSP_READY);
+    }
+}
 
 //FUNCIONES PLANI MEDIANO PLAZO
 
@@ -221,12 +249,6 @@ void *funcion_para_bloqueados(struct pcb *proceso){
   
 }
 
-//FUNCION PARA BLOQUEADOS{
-//USLEEP
-//BUSCO EL PROCESO EN LA LISTA DE BLOQUEADOS
-//SI ESTÁ, LO MUEVO A SUSP_BLOCKED Y HAGO UN SEM_POST PARA QUE SE ENTERE EL PLANI DE MEDIANO PLAZO 
-//}
-
 //FUNCIONES AUXILIARES PARA EL SJF CON DESALOJO
 
 bool ver_si_hay_que_desalojar(struct pcb *proceso){
@@ -237,7 +259,6 @@ bool ver_si_hay_que_desalojar(struct pcb *proceso){
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
     return desalojo;
 }
-
 
 void desalojar_el_mas_grande(struct pcb *proceso){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
@@ -385,11 +406,10 @@ bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct 
     return false;
 }
 
-
 //LISTAS DE ESTADOS
 
 struct pcb *obtener_copia_primer_proceso_de(Estado estado){
-   if(list_is_empty(colaEstados[estado])){
+    if(list_is_empty(colaEstados[estado])){
         return NULL;
     }
     else{
@@ -428,7 +448,6 @@ void transicionar_a_new(struct pcb *pcb){
     //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
 }
 
-
 void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial){
     pthread_mutex_lock(&mx_usar_cola_estado[READY]); 
     //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
@@ -441,6 +460,25 @@ void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial){
     sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]);
     //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
 }
+
+void transicionar_a_susp_ready(struct pcb *pcb){
+    pthread_mutex_lock(&mx_usar_cola_estado[SUSP_READY]); 
+    //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
+        //cambiarEstado(pcb,SUSP_BLOCKED,SUSP_READY);
+    //}
+    // else{
+        pthread_mutex_lock(&mx_proximo_a_consultar);
+        proximo_a_consultar = pcb;
+        pthread_mutex_unlock(&mx_proximo_a_consultar);
+        cambiarEstadoOrdenado(pcb,SUSP_BLOCKED,SUSP_READY,menor_por_tamanio);
+        sem_post(&INTENTAR_INICIAR_SUSP_READY);
+     //}
+    pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_READY]);
+    sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+    //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
+}
+
+
 
 void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
@@ -662,6 +700,9 @@ void intentar_iniciar(){
         sem_post(&INTENTAR_INICIAR_SUSP_READY);
     }
     else{
+        if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
+            actualizar_proximo_a_consultar(NEW);
+        }
         sem_post(&INTENTAR_INICIAR_NEW);
     }
 }

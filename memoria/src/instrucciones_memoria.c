@@ -6,6 +6,7 @@ t_list* lista_procesos_instrucciones;
 void iniciar_lista_procesos_instrucciones(){
     lista_instrucciones = list_create();
 }
+
 //Convierte una línea completa del pseudocódigo, como "READ 10 20", en una estructura t_instruccion con: el enum correspondiente (por ejemplo: READ) una lista de los parámetros como strings (["10", "20"])la cantidad de parámetros (2)
 t_instruccion* analizar_linea(char* linea){
     t_instruccion* instr = malloc(sizeof(t_instruccion));
@@ -21,8 +22,10 @@ t_instruccion* analizar_linea(char* linea){
     free(linea_copia);
     return instr;
 }
+
 //Busca la instrucción número pc del proceso con pid.
 //Devuelve el puntero a la instrucción que necesita la CPU ejecutar.
+
 t_instruccion* obtener_instruccion(int pid, int pc){
     for (int i = 0; i < list_size(lista_procesos_instrucciones); i++) {
         t_proceso_instrucciones* p = list_get(lista_procesos_instrucciones, i);
@@ -32,8 +35,10 @@ t_instruccion* obtener_instruccion(int pid, int pc){
     }
     return NULL;
 }
+
 //Lee línea por línea un archivo de pseudocódigo (ej: "proceso1") y convierte cada línea en una t_instruccion, agregándolas a una lista.
 //Devuelve un t_list* con todas las instrucciones del proceso, ya parseadas.
+
 t_list* cargar_instrucciones_desde_archivo(char* PATH_INSTRUCCIONES){
     FILE* archivo = fopen(PATH_INSTRUCCIONES, "r");
     if (!archivo) {
@@ -54,17 +59,21 @@ t_list* cargar_instrucciones_desde_archivo(char* PATH_INSTRUCCIONES){
     fclose(archivo);
     return instrucciones;
 }
+
 //Guarda la lista de instrucciones de un proceso en una estructura junto con su PID, y lo agrega a una lista global (procesos_instrucciones).
 //se usa cuando la Memoria crea un nuevo proceso.
-//agrega el pid q necesitamos 
+//agrega el pid q necesitamos
+
 void registrar_instrucciones_proceso(int pid, char* PATH_INSTRUCCIONES){
     t_proceso_instrucciones* nuevo = malloc(sizeof(t_proceso_instrucciones));
     nuevo->pid = pid;
     nuevo->instrucciones = cargar_instrucciones_desde_archivo(PATH_INSTRUCCIONES);
     list_add(lista_procesos_instrucciones, nuevo);
 }
+
 //Libera toda la memoria usada por una sola t_instruccion
 //cuando se quiere limpiar memoria, cuando finaliza un proceso
+
 void destruir_instruccion(t_instruccion* instr){
     for (int i = 0; i < instr->cantidad_parametros; i++) {
         free(instr->parametros[i]);
@@ -72,8 +81,10 @@ void destruir_instruccion(t_instruccion* instr){
     free(instr->parametros);
     free(instr);
 }
+
 //Busca el proceso con ese pid en la lista global, libera cada instrucción de su lista, libera la estructura del proceso, lo saca de la lista global procesos_instrucciones
 //Se usa al destruir un proceso (cuando pasa a EXIT creo)
+
 void destruir_proceso_instrucciones(int pid){
     for (int i = 0; i < list_size(lista_procesos_instrucciones); i++) {
         t_proceso_instrucciones* p = list_get(lista_procesos_instrucciones, i);

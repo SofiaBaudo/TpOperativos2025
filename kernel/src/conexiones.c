@@ -200,8 +200,7 @@ void *io(void *instancia_de_io) { //el aux
                 }
                 else{
                     sacar_de_cola_de_estado(proceso,SUSP_BLOCKED);
-                    cambiarEstado(proceso,SUSP_BLOCKED,SUSP_READY);
-                    sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+                    transicionar_a_susp_ready(proceso);
                 }
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando

@@ -1,5 +1,9 @@
+//Define de Variables Globales
+
 #ifndef VARIABLES_GLOBALES_MEMORIA_H
 #define VARIABLES_GLOBALES_MEMORIA_H
+
+//Incluir las librerias
 
 #include <commons/log.h>
 #include <commons/collections/list.h>
@@ -7,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <utils/utils.h>
+
+//Declaracion Enum de Metricas para los Procesos
 
 typedef enum {
     ACCESO_TABLA,
@@ -16,6 +22,8 @@ typedef enum {
     LECTURAS_MEMORIA,
     ESCRITURAS_MEMORIA
 } tipo_metrica;
+
+//Declaracion Variables Globales(Extern para que no se incluyan multiples veces)
 
 extern t_log* logger;
 extern int PUERTO_ESCUCHA;
@@ -29,6 +37,7 @@ extern char* LOG_LEVEL;
 extern char* DUMP_PATH;
 extern char* PATH_INSTRUCCIONES;
 
+//Declaracion Struct Memoria Config
 typedef struct t_memoria_config {
     int PUERTO_ESCUCHA;
     int TAM_MEMORIA;
@@ -41,6 +50,8 @@ typedef struct t_memoria_config {
     char* DUMP_PATH;
 } t_memoria_config;
 
+
+//Declaracion Struct Metricas
 typedef struct t_metricas {
     int pid;
     int cant_acceso_tabla_pagina;
@@ -50,6 +61,8 @@ typedef struct t_metricas {
     int cant_lecturas_memoria;
     int cant_escrituras_memoria;
 } t_metricas;
+
+//Declaracion del Listado de Metricas
 
 extern t_metricas listado_metricas;
 

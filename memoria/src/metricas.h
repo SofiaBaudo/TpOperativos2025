@@ -10,6 +10,7 @@
 #include <math.h>
 
 // Métricas por proceso
+
 void* metricas_proceso(int pid, tipo_metrica metrica);
 
 #endif
