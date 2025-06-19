@@ -184,13 +184,15 @@ void *io(void *instancia_de_io) { //el aux
     while (true){
         sem_wait(&io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
         struct pcb *proceso = malloc(sizeof(struct pcb));
-        proceso = obtener_primero(io_aux->procesos_esperando); //y sacarlo
+        proceso = obtener_primero(io_aux->procesos_esperando); //esta funcion lo saca
         //t_buffer *buffer = crear_buffer_para_ejecucion_de_io(proceso->pid,proceso->proxima_rafaga_io);
         //crear_paquete(RAFAGA_DE_IO,buffer,cliente_io);
         int respuesta = recibir_entero(cliente_io);
         switch(respuesta){
             case 41: //Corresponde al enum de fin de IO
+                pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
                 int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
+                pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
                 if(pos!=-1){
                     sacar_de_cola_de_estado(proceso,BLOCKED);
                     proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
@@ -204,7 +206,6 @@ void *io(void *instancia_de_io) { //el aux
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando
                 finalizar_proceso(proceso,BLOCKED);
-                sacar_primero_de_la_lista_de_bloqueados(io_aux->procesos_esperando);
                 io_aux->cantInstancias--;
                 if(io_aux->cantInstancias == 0){
                     recorrer_lista_y_finalizar_procesos(io_aux->procesos_esperando);
@@ -297,10 +298,6 @@ struct pcb* obtener_primero(t_list *lista){
     return aux;
 }
 
-void sacar_primero_de_la_lista_de_bloqueados(t_list *lista){
-    list_remove(lista,0);
-}
-
 void recorrer_lista_y_finalizar_procesos(t_list * lista){
     if (lista == NULL) { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
         printf("Lista nula\n");
@@ -309,7 +306,16 @@ void recorrer_lista_y_finalizar_procesos(t_list * lista){
     t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
     while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
         list_iterator_next(aux);
-        sacar_primero_de_la_lista_de_bloqueados(lista);
+        struct pcb *proceso = obtener_primero(lista);
+        pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
+        int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
+        pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
+        if(pos!=-1){ //Sigue en BLOCKED
+            finalizar_proceso(proceso,BLOCKED);
+        }
+        else{ //Se suspendio
+            finalizar_proceso(proceso,SUSP_BLOCKED);
+        }
     }
     list_iterator_destroy(aux);
     return;
