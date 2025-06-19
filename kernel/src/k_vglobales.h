@@ -63,6 +63,8 @@ extern sem_t INTENTAR_INICIAR;
 extern sem_t INGRESO_DEL_PRIMERO_READY;
 extern sem_t CPUS_LIBRES;
 extern sem_t REPLANIFICAR;
+extern sem_t CANTIDAD_DE_PROCESOS_EN[7];
+
 //DECLARACIONES
 
 void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);

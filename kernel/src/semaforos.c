@@ -17,6 +17,7 @@ sem_t CANTIDAD_DE_PROCESOS_EN_BLOCKED;
 sem_t INGRESO_DEL_PRIMERO_READY;
 sem_t CPUS_LIBRES;
 sem_t REPLANIFICAR;
+sem_t CANTIDAD_DE_PROCESOS_EN[7];
 
 //INICIALIZACION DE SEMAFOROS
 
@@ -24,11 +25,12 @@ void inicializar_sincronizacion() {
     pthread_mutex_init(&mx_identificador_del_proceso, NULL);
     pthread_mutex_init(&mx_avisar_que_entro_el_primero,NULL);
     pthread_mutex_init(&mx_proximo_a_consultar,NULL);
-     for(int i=0; i<2; i++){
+    for(int i=0; i<2; i++){
         pthread_mutex_init(&mx_usar_recurso[i],NULL);
     }
     for(int i=0; i<7; i++){
         pthread_mutex_init(&mx_usar_cola_estado[i],NULL);
+        sem_init(&CANTIDAD_DE_PROCESOS_EN[i],0,0);
     }
     //sem_init(&INGRESO_DEL_PRIMERO, 0, 1); // El segundo parámetro es 0 para semáforo binario
     sem_init(&INTENTAR_INICIAR, 0, 0); 

@@ -184,7 +184,7 @@ void *io(void *instancia_de_io) { //el aux
         int respuesta = recibir_entero(cliente_io);
         switch(respuesta){
             case 41: //Corresponde al enum de fin de IO
-                //calcular_proxima_estimacion(proceso);
+                //proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
                 //transicionar_a_ready(proceso,BLOCKED);
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando

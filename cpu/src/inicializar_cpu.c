@@ -80,7 +80,7 @@ void inicializar_logs(){
 //Funcion de Inicializacion de Configs
 
 void inicializar_configs(){
-    cpu_config = crear_config("/home/utnso/tp-2025-1c-Sinergia-SO-13/cpu/cpu.config");
+    cpu_config = crear_config("/home/utnso/Desktop/tp-2025-1c-Sinergia-SO-13/cpu/cpu.config");
     if(cpu_config == NULL){
         perror("No se pudo crear la configuracion");
         exit(EXIT_FAILURE);

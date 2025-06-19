@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
    //crear_proceso(3,"f4");
    //crear_proceso(2,"f1");
    //atender_kernel_io();
-   //crear_proceso(2,"f3");
+   crear_proceso(2,"f3");
    crear_proceso(1,"f4");
 
    pthread_t hilo_dispatch;
