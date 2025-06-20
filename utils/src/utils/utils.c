@@ -316,6 +316,17 @@ t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char* datos){
 	buffer_aux->offset += sizeof(int);
 	return buffer_aux;
 }
+t_buffer *crear_buffer_pid_numPag(int pid, int nroPag){
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 2*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &nroPag, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	return buffer_aux;
+}
 
 void crear_paquete(op_code codigo, t_buffer *buffer, int socket){
 	
@@ -396,6 +407,16 @@ int deserializar_pid(t_paquete *paquete){
     free(paquete->buffer);
     free(paquete);
 	return pid;
+}
+
+int deserializar_nroPag(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int nroPag;
+    memcpy(&nroPag,stream,sizeof(int));
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return nroPag;
 }
 int deserializar_dirFis(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;

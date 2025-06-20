@@ -12,6 +12,8 @@ t_log *logger;
 
 EnlazadorTLBPID *listaPids = NULL;
 NodoEntradasTLB *listaTlb = NULL;
+NodosCache *cache = NULL;
+NodosPidCache *listaPidsCache = NULL;
 //Variables Globales CPU
 int tamPag;
 int cantNiveles;

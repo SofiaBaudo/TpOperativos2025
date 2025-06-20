@@ -36,6 +36,30 @@ typedef struct EnlazadorTLBPID{
 extern EnlazadorTLBPID *listaPids;
 extern NodoEntradasTLB *listaTlb; 
 
+typedef struct nodo_cache {
+    int numPag;
+    void* contenido;
+    int bitdeUso;
+    int bitModificado;
+} Cache;
+
+struct nodo_cache_lista;
+
+typedef struct {
+    int pid;
+    struct nodo_cache_lista* sublista;
+} Pidscache;
+
+typedef struct nodo_cache_lista {
+    Cache info;
+    struct nodo_cache_lista* sgte;
+} NodosCache;
+
+typedef struct nodo_pid_cache_lista {
+    Pidscache info;
+    struct nodo_pid_cache_lista* sgte;
+} NodosPidCache;
+
 // Inicialización Logs CPU
 
 extern t_log *cpu_logger;
@@ -71,6 +95,8 @@ extern char** obtenerInsPartes;
 extern char* parametros;
 extern char* nombre_instruccion;
 
+extern NodosCache *cache;
+extern NodosPidCache *listaPidsCache;
 
 typedef struct {
     char* opcode; //codigo de instruccion
