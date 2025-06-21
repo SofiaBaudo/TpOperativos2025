@@ -621,6 +621,7 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
+                sacar_de_cola_de_estado(colaEstados[EXEC],aux);
                 int respuesta = manejar_dump(aux,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
                     aux->proxima_estimacion = calcular_proxima_estimacion(aux);
@@ -696,6 +697,9 @@ void liberar_proceso(struct pcb *aux){
 void intentar_iniciar(){
     if(!list_is_empty(colaEstados[SUSP_READY])){
         sem_post(&INTENTAR_INICIAR_SUSP_READY);
+        if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
+            actualizar_proximo_a_consultar(SUSP_READY);
+        }
     }
     else{
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
