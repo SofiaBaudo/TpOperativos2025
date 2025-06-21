@@ -327,6 +327,25 @@ t_buffer *crear_buffer_pid_numPag(int pid, int nroPag){
 	buffer_aux->offset += sizeof(int);
 	return buffer_aux;
 }
+t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, char* contenido, int marco){
+	t_buffer *buffer_aux = crear_buffer();
+	int longitud = strlen(contenido);
+	buffer_aux->size = 3*sizeof(int) + longitud;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &nroPag, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); 
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, contenido,longitud);
+	buffer_aux->offset += sizeof(int);	
+	memcpy(buffer_aux->stream + buffer_aux->offset, &marco, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	return buffer_aux;
+	// el contendio tiene que entrar en tampag entonces podemos ponerlo como tampag para sacar el size?
+}
 
 void crear_paquete(op_code codigo, t_buffer *buffer, int socket){
 	
@@ -365,6 +384,20 @@ t_paquete* recibir_paquete(int socket){
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	recv(socket, paquete->buffer->stream, paquete->buffer->size, 0);
 	return paquete;
+}
+
+void *deserializar_contenido(t_paquete *paquete){
+void *stream = paquete->buffer->stream;
+    int data;
+	stream+=sizeof(int);
+    memcpy(&data,stream,sizeof(int));
+    stream+=sizeof(int);
+    char *contenido = malloc(data+1);
+    memcpy(contenido,stream,data);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return contenido;
 }
 
 char *deserializar_nombre_io(t_paquete *paquete){
@@ -418,6 +451,16 @@ int deserializar_nroPag(t_paquete *paquete){
     free(paquete);
 	return nroPag;
 }
+int deserializar_marco(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int marco;
+    memcpy(&marco,stream,sizeof(int));
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return marco;
+}
+
 int deserializar_dirFis(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int dirFis;

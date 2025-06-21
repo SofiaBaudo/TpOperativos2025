@@ -5,37 +5,43 @@
 #include <stdlib.h>
 #include <traduccion.h>
 
+NodosCache *punteroCache = NULL;
 void usarCache(int pid, int numPag, char *instruccion, char *contenido){
-    NodosCache *aux = buscarSublistaPidCache(pid); //buscas cual es la cache que queres
+   
+    NodosCache *aux = cache;
+    
     if(estaEnCache(numPag, pid)){
         for(int i = 0; i < ENTRADAS_CACHE; i++){
             if(aux->info.numPag == numPag){
                 aux->info.bitdeUso = 1;
                 aux->info.bitModificado = bitModificado(instruccion);
+                break;
             }
+            aux = aux->sgte;
         }
     }
     else{
         agregarPagCache(numPag, pid, instruccion);
-    }
-    
+    }    
 }
 
-void agregarPagCache(int nroPag, int pid, char* instruccion){
-    NodosCache *aux = buscarSublistaPidCache(pid);
-    char* contenido = obtenerContenido(nroPag, pid);
-    if(hayEspacioLibreCache(pid)){
-        aux = retornarEspacioLibreCache(pid);
-        aux->info.numPag = nroPag;
-        aux->info.contenido = contenido;
-        aux->info.bitdeUso = 1;
-        aux->info.bitModificado = bitModificado(instruccion);
+    void agregarPagCache(int nroPag, int pid, char* instruccion){
+        NodosCache *aux = cache;
+        
+        char* contenido = obtenerContenido(nroPag, pid);
+        
+        if(hayEspacioLibreCache()){
+            aux = retornarEspacioLibreCache();
+            aux->info.numPag = nroPag;
+            aux->info.contenido = contenido;
+            aux->info.bitdeUso = 1;
+            aux->info.bitModificado = bitModificado(instruccion);
+        }
+        else{
+            agregarConAlgoritmos(pid, instruccion, nroPag, contenido);
+            log_info(cpu_logger, "PID: <%d> - Cache Add - Pagina: <%d>", pid, nroPag);
+        }
     }
-    else{
-        agregarConAlgoritmos(pid, instruccion, nroPag, contenido);
-        log_info(cpu_logger, "PID: <%d> - Cache Add - Pagina: <%d>", pid, nroPag);
-    }
-}
 
 void agregarConAlgoritmos(int pid, char *instruccion, int nroPag, char* contenido){
 
@@ -55,8 +61,8 @@ char* obtenerContenido(int nroPag, int pid){
     return contenido;
 }
 
-bool estaHabilitada(int pid){
-    NodosCache *aux = buscarSublistaPidCache(pid);
+bool estaHabilitadaCache(){
+    NodosCache *aux = cache;
     if(ENTRADAS_CACHE == 0){
         return false;
     }
@@ -67,9 +73,13 @@ bool estaHabilitada(int pid){
 }
 
 bool estaEnCache(int numPag, int pid){
-    NodosCache *aux = buscarSublistaPidCache(pid);
+    NodosCache *aux = cache;
     int contador = 0; 
-    while(aux!= NULL && contador < ENTRADAS_CACHE){
+     if(cache == NULL){
+        log_error(cpu_logger, "cache vacia");
+        return false;
+    }
+    while(contador < ENTRADAS_CACHE){
         if(aux->info.numPag == numPag){
             log_info(cpu_logger, "PID: <%d> - Cache Hit - Pagina: <%d>", pid, numPag);
             return true;
@@ -81,22 +91,10 @@ bool estaEnCache(int numPag, int pid){
     return false;    
 }
 
-NodosCache *buscarSublistaPidCache(int pid){
-    NodosPidCache *aux = listaPidsCache;
-    while(aux != NULL){
-        if(aux->info.pid == pid){
-            return aux->info.sublista;
-        }
-        aux = aux->sgte;
-    }
-    return NULL;
-}
-
-NodosCache *inicializarCache(int pid){
-    NodosCache *aux = NULL; //porque lo estas inicializando => no esta en la lista de pids.
+void inicializarCache(){
     NodosCache *ultimoNodo = NULL;
     for(int i = 0; i < ENTRADAS_CACHE; i++){
-        NodosCache* nuevo = malloc(sizeof(NodoEntradasTLB));
+        NodosCache* nuevo = malloc(sizeof(NodosCache));
         nuevo->info.bitdeUso = -1;
         nuevo->info.bitModificado =-1;
         nuevo->info.contenido = NULL;
@@ -104,7 +102,7 @@ NodosCache *inicializarCache(int pid){
         nuevo->sgte = NULL;
 
         if(ultimoNodo == NULL){ //entonces la lista esta vacia
-            aux = nuevo; //apuntamos el primer nodo
+            cache = nuevo; //apuntamos el primer nodo
             ultimoNodo = nuevo;
         }
         else{
@@ -113,48 +111,43 @@ NodosCache *inicializarCache(int pid){
         ultimoNodo = nuevo;           
     }
     if(ultimoNodo != NULL){
-        ultimoNodo->sgte = aux;
+        ultimoNodo->sgte = cache;
     }
-    return aux;
+     punteroCache = cache;
 }
 
-bool hayEspacioLibreCache(int pid){
-    NodosCache *aux = buscarSublistaPidCache(pid);
-    while(aux != NULL){
+bool hayEspacioLibreCache(){
+    NodosCache *aux = cache;
+    if(cache == NULL){
+        return true;
+    }
+    int contador;
+    while(contador < ENTRADAS_CACHE){
         if(aux->info.numPag == -1){
             return true;
         }
         aux = aux->sgte;
+        contador++;
     }
     return false;
 }
 
-NodosCache *retornarEspacioLibreCache(int pid){
-    NodosCache *aux = buscarSublistaPidCache(pid);
-    while(aux != NULL){
+NodosCache *retornarEspacioLibreCache(){
+    NodosCache *aux = cache;
+    int contador = 0;
+    while(contador < ENTRADAS_CACHE){
         if(aux->info.numPag == -1){
             return aux;
         }
         aux = aux->sgte;
+        contador++;
     }
     return NULL;    
 }
-void inicializarPidCache(int pid){
-    NodosPidCache *nuevo = malloc(sizeof(EnlazadorTLBPID));
-    nuevo->info.pid = pid;
-    nuevo->info.sublista = inicializarCache(pid);
-    nuevo->sgte = NULL;
-    if (listaPidsCache == NULL) {
-        listaPidsCache = nuevo;
-    } else {
-        NodosPidCache *aux = listaPidsCache;
-        while (aux->sgte != NULL) {
-            aux = aux->sgte;
-        }
-        aux->sgte = nuevo;  
-    }
-}
 int bitModificado(char *instruccion){
+      if(instruccion == NULL){
+        return 0;
+    }
     if(strcmp(instruccion, "WRITE") == 0){
         return 1;
     }
@@ -163,60 +156,59 @@ int bitModificado(char *instruccion){
     }
 }
 void algoritmoClock(int pid, char *instruccion, int nroPag, char* contenido){
-    NodosCache *aux = buscarSublistaPidCache(pid);
     while(1){
-        if(aux->info.bitdeUso == 0){
-            if(aux->info.bitModificado == 1){
-            int marco = conseguirMarcoCache(pid, aux->info.numPag);
-            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, aux->info.numPag, aux->info.contenido, marco);
+        if(punteroCache->info.bitdeUso == 0){
+            if(punteroCache->info.bitModificado == 1){
+            int marco = conseguirMarcoCache(pid, punteroCache->info.numPag);
+            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco);
             crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
-            log_info(cpu_logger,"PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, aux->info.numPag, marco);
+            log_info(cpu_logger,"PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, punteroCache->info.numPag, marco);
             }
-            aux->info.bitdeUso = 1;
-            aux->info.bitModificado = bitModificado(instruccion);
-            aux->info.contenido = contenido;
-            aux->info.numPag = nroPag;
+            punteroCache->info.bitdeUso = 1;
+            punteroCache->info.bitModificado = bitModificado(instruccion);
+            punteroCache->info.contenido = contenido;
+            punteroCache->info.numPag = nroPag;
             break;
         }
         else{
-            aux->info.bitdeUso = 0;
+            punteroCache->info.bitdeUso = 0;
         }
-        aux = aux->sgte;
-    }   
+        punteroCache = punteroCache->sgte;
+    }  
+    punteroCache = punteroCache->sgte; 
 }
 void algoritmoClockM(int pid, char *instruccion, int nroPag, char*contenido){
-    NodosCache *aux = buscarSublistaPidCache(pid);
     while(1){
-        if(aux->info.bitdeUso == 0 && aux->info.bitModificado == 0){
-            aux->info.bitdeUso =1;
-            aux->info.bitModificado = bitModificado(instruccion);
-            aux->info.contenido = contenido;
-            aux->info.numPag = nroPag;
+        if(punteroCache->info.bitdeUso == 0 && punteroCache->info.bitModificado == 0){
+            punteroCache->info.bitdeUso =1;
+            punteroCache->info.bitModificado = bitModificado(instruccion);
+            punteroCache->info.contenido = contenido;
+            punteroCache->info.numPag = nroPag;
             break;
         }
-        else if(aux->info.bitdeUso == 0 && aux->info.bitModificado == 1){
-            int marco = conseguirMarcoCache(pid, aux->info.numPag);
-            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, aux->info.numPag, aux->info.contenido, marco);
+        else if(punteroCache->info.bitdeUso == 0 && punteroCache->info.bitModificado == 1){
+            int marco = conseguirMarcoCache(pid, punteroCache->info.numPag);
+            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco);
             crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
             //se debe escribir esto a la memoria porque esta modificado
             log_info(cpu_logger, "PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, nroPag, marco);
 
-            aux->info.bitdeUso = 1;
-            aux->info.bitModificado = bitModificado(instruccion);
-            aux->info.contenido = contenido;
-            aux->info.numPag = nroPag;
+            punteroCache->info.bitdeUso = 1;
+            punteroCache->info.bitModificado = bitModificado(instruccion);
+            punteroCache->info.contenido = contenido;
+            punteroCache->info.numPag = nroPag;
             break;
         }
         else{
-            if(aux->info.bitdeUso == 1){
-                aux->info.bitdeUso = 0;
+            if(punteroCache->info.bitdeUso == 1){
+                punteroCache->info.bitdeUso = 0;
             }
         }
-        aux = aux->sgte;
     }
+    punteroCache = punteroCache->sgte;
 }
 void desalojarProceso(int pid){
-    NodosCache *aux = buscarSublistaPidCache(pid);
+    NodosCache *aux = cache;
     for(int i = 0; i < ENTRADAS_CACHE; i++){
         if(aux->info.bitModificado == 1){
             int marco = conseguirMarcoCache(pid, aux->info.numPag);
@@ -235,10 +227,21 @@ int conseguirMarcoCache(int pid, int nroPag){
     int marco;
     if(tlbrespuesta == -1){
         marco = navegarNiveles(nroPag, pid);
-        agregarEntradaATLB(nroPag, marco, pid);
+        agregarEntradaATLB(nroPag, marco);
     }
     else{
         marco = tlbrespuesta;
     }
     return marco;
 }
+
+void imprimirCache() {
+    NodosCache *aux = cache;
+    log_info(cpu_logger, "Estado actual de la caché:");
+    for (int i = 0; i < ENTRADAS_CACHE; i++) {
+        log_info(cpu_logger, "Frame %d: Pag %d, Uso %d, Mod %d",
+                 i, aux->info.numPag, aux->info.bitdeUso, aux->info.bitModificado);
+        aux = aux->sgte;
+    }
+}
+

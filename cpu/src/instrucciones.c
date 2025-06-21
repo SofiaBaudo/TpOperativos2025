@@ -3,6 +3,7 @@
 
 #include <instrucciones.h>
 #include <cache.h>
+#include <traduccion.h>
 //Inicializacion de los Loggers
 
 

@@ -10,7 +10,7 @@ int traduccion(int direccion, int pid, char *instruccion, char *contenido){ //te
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int marco;
-    if(estaHabilitada(pid)){
+    if(estaHabilitadaCache()){
         usarCache(pid, numPag, instruccion,contenido);
         return -1; //no hace falta delvoler algo porque se hizo en cache
     }
@@ -20,7 +20,7 @@ int traduccion(int direccion, int pid, char *instruccion, char *contenido){ //te
     if(tlbrespuesta == -1){
         //osea que no se encontro
         marco = navegarNiveles(numPag, pid);
-        agregarEntradaATLB(numPag, marco, pid);
+        agregarEntradaATLB(numPag, marco);
     }
     else{
         marco = tlbrespuesta;
@@ -56,12 +56,12 @@ int conseguirMarco(int pid){
     return numMarco;
 }
 int buscarTlb(int numPag, int pid){
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+    NodoEntradasTLB *aux = listaTlb;
    for(int i = 0; i < ENTRADAS_TLB; i++){  
         if(aux->info.numPag == numPag ){
             log_info(cpu_logger, "PID: <%d> - TLB HIT - Pagina: <%d>", pid, aux->info.numPag);
             log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", pid, aux->info.numPag, aux->info.numMarco);
-            modificarReferencia(numPag,pid);
+            modificarReferencia(numPag);
             return aux->info.numMarco;
         }
         aux = aux->sgte;
@@ -69,64 +69,54 @@ int buscarTlb(int numPag, int pid){
     log_info(cpu_logger,"PID: <%d> - TLB MISS - Pagina: <%d>", pid, numPag);
     return -1;
 }
-void agregarEntradaATLB(int numPag, int numMarco, int pid){
-    /*
-    NodoEntradasTLB *nodoexistente = dondeEstaenTLB(numPag,pid);
-    if(nodoexistente != NULL){
-        nodoexistente->info.numMarco = numMarco;
-        modificarReferencia(numPag,pid);
-        actualizarContadores(numPag,pid);
-        return;
-    }
-    */
-    
+void agregarEntradaATLB(int numPag, int numMarco){
     if(strcmp(REEMPLAZO_TLB, "FIFO") == 0){
-        implementarAlgoritmoFIFO(numPag, numMarco, pid);
+        implementarAlgoritmoFIFO(numPag, numMarco);
     }
     else if(strcmp(REEMPLAZO_TLB, "LRU") == 0){
-        implementarAlgoritmoLRU(numPag, numMarco, pid);
-        modificarReferencia(numPag,pid);
+        implementarAlgoritmoLRU(numPag, numMarco);
+        modificarReferencia(numPag);
     }
     
 }
-void implementarAlgoritmoFIFO(int numPag, int numMarco, int pid){
-    NodoEntradasTLB *punteroPos = buscarPunteroFIFO(pid);
-    if (punteroPos == NULL){
+NodoEntradasTLB *punterosPos = NULL;
+void implementarAlgoritmoFIFO(int numPag, int numMarco){
+    if (punterosPos == NULL){
         return; 
     }    
-    punteroPos->info.numPag = numPag;
-    punteroPos->info.numMarco = numMarco;
-    punteroPos->info.apareceEnTLB = true;
-    punteroPos->info.tiempoSinReferencia = 0;
+    punterosPos->info.numPag = numPag;
+    punterosPos->info.numMarco = numMarco;
+    punterosPos->info.apareceEnTLB = true;
+    punterosPos->info.tiempoSinReferencia = 0;
 
-    actualizarPunteroPos(pid);
+    punterosPos = punterosPos->sgte;
 }
 
-void implementarAlgoritmoLRU(int numPag, int numMarco, int pid){
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+void implementarAlgoritmoLRU(int numPag, int numMarco){
+    NodoEntradasTLB *aux = listaTlb;
     NodoEntradasTLB *nodoAReemplazar = aux;
    // if(estaYaEnTlb(numPag)->info.apareceEnTLB){
     // estaYaEnTlb(numPag)->info.tiempoSinReferencia = 0;
-        if(hayEspacioLibre(pid)){
-            nodoAReemplazar = retornarEspacioLibre(pid);
+        if(hayEspacioLibre()){
+            nodoAReemplazar = retornarEspacioLibre();
             nodoAReemplazar->info.numPag = numPag;
             nodoAReemplazar->info.numMarco = numMarco;
             nodoAReemplazar->info.tiempoSinReferencia = 0;
             nodoAReemplazar->info.apareceEnTLB = true;
         }   
         else{
-        nodoAReemplazar = encontrarNodoConMenosReferencia(pid);
+        nodoAReemplazar = encontrarNodoConMenosReferencia();
         nodoAReemplazar->info.numMarco = numMarco;
         nodoAReemplazar->info.numPag = numPag;
         nodoAReemplazar->info.tiempoSinReferencia = 0;
          nodoAReemplazar->info.apareceEnTLB = true;
         }
-    actualizarContadores(numPag, pid);
+    actualizarContadores(numPag);
 }
 
 //si ya fue referenciado entonces hubiera sido un tlb hit ?? no entienod porque usarias el lru, tipo funciona exactamente igual
-void modificarReferencia(int numPag, int pid){
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+void modificarReferencia(int numPag){
+    NodoEntradasTLB *aux = listaTlb;
     for(int i = 0; i < ENTRADAS_TLB; i++){
         if(aux->info.numPag == numPag){
             aux->info.tiempoSinReferencia = 0;
@@ -161,16 +151,14 @@ void inicializarTLB(){
           
     }
     if(ultimoNodo != NULL){
-        ultimoNodo->sgte = aux;
+        ultimoNodo->sgte = listaTlb;
     }
-    NodoEntradasTLB* temp = aux;
-    for (int i = 0; i < ENTRADAS_TLB; i++) {
-    log_debug(cpu_log_debug, "Nodo %d: %p, sgte = %p", i, temp, temp->sgte);
-    temp = temp->sgte;
+    
+    punterosPos = listaTlb;
 }
-   return aux;
-}
-void imprimirTLB() {
+
+
+void imprimirTLB(){
     NodoEntradasTLB *aux = listaTlb;
     if (aux == NULL) {
         log_debug(cpu_log_debug, "TLB vacía.\n");
@@ -240,7 +228,7 @@ NodoEntradasTLB *dondeEstaenTLB(int numPag){
     }
     return NULL;
 }
-void actualizarContadores(int numPag) {
+void actualizarContadores(int numPag){
     NodoEntradasTLB *aux = listaTlb;
     for (int i = 0; i < ENTRADAS_TLB; i++) {
         if (aux->info.numPag != -1 && aux->info.numPag != numPag) {

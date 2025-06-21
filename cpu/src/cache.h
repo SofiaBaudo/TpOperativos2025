@@ -6,18 +6,17 @@
 void usarCache(int pid, int numPag, char *instruccion, char *contenido);
 void agregarPagCache(int nroPag, int pid, char* instruccion);
 char* obtenerContenido(int nroPag, int pid);
-bool estaHabilitada(int pid);
+bool estaHabilitadaCache();
 bool estaEnCache(int numPag, int pid);
-NodosCache *buscarSublistaPidCache(int pid);
-NodosCache *inicializarCache(int pid);
+void inicializarCache();
 void algoritmoClock(int pid, char *instruccion, int nroPag, char* contenido);
 int bitModificado(char *instruccion);
-void inicializarPidCache(int pid);
-NodosCache *retornarEspacioLibreCache(int pid);
-bool hayEspacioLibreCache(int pid);
+NodosCache *retornarEspacioLibreCache();
+bool hayEspacioLibreCache();
 void agregarConAlgoritmos(int pid, char *instruccion, int nroPag, char* contenido);
 int conseguirMarcoCache(int pid, int nroPag);
 void desalojarProceso(int pid);
+void imprimirCache();
 void algoritmoClockM(int pid, char *instruccion, int nroPag, char*contenido);
 
 #endif
