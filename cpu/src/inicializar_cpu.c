@@ -42,14 +42,19 @@ void inicializar_CPU(int id){
 
    
     usarCache(1, 1, "READ", contenido);
-    usarCache(1, 2, "READ", contenido);
-    usarCache(1, 3, "READ", contenido);
+    imprimirCache();
+    usarCache(1, 2, "WRITE", contenido);
+    imprimirCache();
+    usarCache(1, 3, "WRITE", contenido);
+    imprimirCache();
     usarCache(1, 4, "READ", contenido);
+    imprimirCache();
 
 // Accedés de nuevo a algunas
-    usarCache(1, 3, "READ", contenido);
+    usarCache(1, 3, "WRITE", contenido);
+    imprimirCache();
     usarCache(1, 4, "READ", contenido);
-
+    imprimirCache();
 // Forzás reemplazo (debería eliminar 1 o 2)
     usarCache(1, 5, "READ", contenido);
 

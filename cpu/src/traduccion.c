@@ -237,5 +237,16 @@ void actualizarContadores(int numPag){
         aux = aux->sgte;
     }
 }
+void desalojarProcesoTLB(int pid){
+    NodoEntradasTLB *aux = listaTlb;
+    int contador = 0;
+    while(contador < ENTRADAS_TLB){
+        aux->info.apareceEnTLB = false;
+        aux->info.numMarco = -1;
+        aux->info.numPag = -1;
+        aux->info.tiempoSinReferencia = -1;
+        aux = aux->sgte;
+    }
+}
 
 

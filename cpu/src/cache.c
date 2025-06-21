@@ -27,7 +27,6 @@ void usarCache(int pid, int numPag, char *instruccion, char *contenido){
 
     void agregarPagCache(int nroPag, int pid, char* instruccion){
         NodosCache *aux = cache;
-        
         char* contenido = obtenerContenido(nroPag, pid);
         
         if(hayEspacioLibreCache()){
@@ -39,8 +38,8 @@ void usarCache(int pid, int numPag, char *instruccion, char *contenido){
         }
         else{
             agregarConAlgoritmos(pid, instruccion, nroPag, contenido);
-            log_info(cpu_logger, "PID: <%d> - Cache Add - Pagina: <%d>", pid, nroPag);
         }
+    log_info(cpu_logger, "PID: <%d> - Cache Add - Pagina: <%d>", pid, nroPag);
     }
 
 void agregarConAlgoritmos(int pid, char *instruccion, int nroPag, char* contenido){
@@ -48,7 +47,7 @@ void agregarConAlgoritmos(int pid, char *instruccion, int nroPag, char* contenid
     if(strcmp(REEMPLAZO_CACHE, "CLOCK") == 0){
         algoritmoClock(pid, instruccion, nroPag, contenido);
     }
-    else if(strcmp(REEMPLAZO_CACHE, "CLOCK-M")== 0){   
+    else if(strcmp(REEMPLAZO_CACHE, "CLOCKM")== 0){   
         algoritmoClockM(pid, instruccion, nroPag, contenido);
     }
 }
@@ -121,7 +120,7 @@ bool hayEspacioLibreCache(){
     if(cache == NULL){
         return true;
     }
-    int contador;
+    int contador = 0;
     while(contador < ENTRADAS_CACHE){
         if(aux->info.numPag == -1){
             return true;
@@ -184,6 +183,7 @@ void algoritmoClockM(int pid, char *instruccion, int nroPag, char*contenido){
             punteroCache->info.bitModificado = bitModificado(instruccion);
             punteroCache->info.contenido = contenido;
             punteroCache->info.numPag = nroPag;
+            punteroCache = punteroCache->sgte;
             break;
         }
         else if(punteroCache->info.bitdeUso == 0 && punteroCache->info.bitModificado == 1){
@@ -197,6 +197,7 @@ void algoritmoClockM(int pid, char *instruccion, int nroPag, char*contenido){
             punteroCache->info.bitModificado = bitModificado(instruccion);
             punteroCache->info.contenido = contenido;
             punteroCache->info.numPag = nroPag;
+            punteroCache = punteroCache->sgte;
             break;
         }
         else{
@@ -204,8 +205,8 @@ void algoritmoClockM(int pid, char *instruccion, int nroPag, char*contenido){
                 punteroCache->info.bitdeUso = 0;
             }
         }
+        punteroCache = punteroCache->sgte;
     }
-    punteroCache = punteroCache->sgte;
 }
 void desalojarProceso(int pid){
     NodosCache *aux = cache;
@@ -219,6 +220,8 @@ void desalojarProceso(int pid){
         aux->info.bitModificado = -1;
         aux->info.numPag = -1;
         aux->info.contenido = NULL;
+
+        aux = aux->sgte;
     }
 }
 

@@ -22,4 +22,5 @@ void modificarReferencia(int numPag);
 bool estaYaEnTlb(int numPag);
 void actualizarContadores(int numPag);
 NodoEntradasTLB *dondeEstaenTLB(int numPag);
+void desalojarProcesoTLB(int pid);
 #endif
