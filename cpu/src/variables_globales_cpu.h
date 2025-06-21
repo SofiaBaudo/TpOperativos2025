@@ -23,17 +23,6 @@ typedef struct NodoEntradasTLB {
     struct NodoEntradasTLB *sgte;
 } NodoEntradasTLB;
 
-typedef struct {
-    int pid;
-    NodoEntradasTLB *sublista; //cada pid tiene su sublista que seria la TLB.
-    NodoEntradasTLB *punteroPos;
-}Enlazador;
-typedef struct EnlazadorTLBPID{
-    Enlazador info;
-    struct EnlazadorTLBPID *sgte;
-}EnlazadorTLBPID; 
-
-extern EnlazadorTLBPID *listaPids;
 extern NodoEntradasTLB *listaTlb; 
 
 typedef struct nodo_cache {
@@ -45,20 +34,10 @@ typedef struct nodo_cache {
 
 struct nodo_cache_lista;
 
-typedef struct {
-    int pid;
-    struct nodo_cache_lista* sublista;
-} Pidscache;
-
 typedef struct nodo_cache_lista {
     Cache info;
     struct nodo_cache_lista* sgte;
 } NodosCache;
-
-typedef struct nodo_pid_cache_lista {
-    Pidscache info;
-    struct nodo_pid_cache_lista* sgte;
-} NodosPidCache;
 
 // Inicialización Logs CPU
 
@@ -96,7 +75,7 @@ extern char* parametros;
 extern char* nombre_instruccion;
 
 extern NodosCache *cache;
-extern NodosPidCache *listaPidsCache;
+
 
 typedef struct {
     char* opcode; //codigo de instruccion

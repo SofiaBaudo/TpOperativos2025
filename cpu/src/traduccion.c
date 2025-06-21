@@ -139,8 +139,7 @@ void modificarReferencia(int numPag, int pid){
     }
 }
 
-NodoEntradasTLB *inicializarTLB(int pid){
-    NodoEntradasTLB *aux = NULL;
+void inicializarTLB(){
     NodoEntradasTLB *ultimoNodo = NULL;
     for(int i = 0; i < ENTRADAS_TLB; i++){
         NodoEntradasTLB* nuevo = malloc(sizeof(NodoEntradasTLB));
@@ -152,7 +151,7 @@ NodoEntradasTLB *inicializarTLB(int pid){
         //mediante esta forma vemos cuales son los que estan vacios y cuales no
     
         if(ultimoNodo == NULL){ //entonces la lista esta vacia
-            aux = nuevo; //apuntamos el primer nodo
+            listaTlb = nuevo; //apuntamos el primer nodo
             ultimoNodo = nuevo;
         }
         else{
@@ -171,8 +170,8 @@ NodoEntradasTLB *inicializarTLB(int pid){
 }
    return aux;
 }
-void imprimirTLB(int pid) {
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+void imprimirTLB() {
+    NodoEntradasTLB *aux = listaTlb;
     if (aux == NULL) {
         log_debug(cpu_log_debug, "TLB vacía.\n");
         return;
@@ -185,8 +184,8 @@ void imprimirTLB(int pid) {
     }
 }
 
-NodoEntradasTLB *encontrarNodoConMenosReferencia(int pid){
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+NodoEntradasTLB *encontrarNodoConMenosReferencia(){
+    NodoEntradasTLB *aux = listaTlb;
     NodoEntradasTLB *nodoAReemplazar = aux;
     int valorMaxSinRef = aux->info.tiempoSinReferencia;
     for(int i = 0; i < ENTRADAS_TLB; i++){
@@ -198,8 +197,8 @@ NodoEntradasTLB *encontrarNodoConMenosReferencia(int pid){
     }
     return nodoAReemplazar;
 }
-bool hayEspacioLibre(int pid){
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+bool hayEspacioLibre(){
+    NodoEntradasTLB *aux = listaTlb;
     for(int i = 0; i < ENTRADAS_TLB; i++){
         if(aux->info.numPag == -1){
             return true;
@@ -209,8 +208,8 @@ bool hayEspacioLibre(int pid){
     return false;
 }
 
-NodoEntradasTLB *retornarEspacioLibre(int pid){
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+NodoEntradasTLB *retornarEspacioLibre(){
+    NodoEntradasTLB *aux = listaTlb;
     for(int i = 0; i < ENTRADAS_TLB; i++){
         if(aux->info.numPag == -1){
             return aux;
@@ -219,8 +218,8 @@ NodoEntradasTLB *retornarEspacioLibre(int pid){
     }
     return NULL;
 }
-bool estaYaEnTlb(int numPag, int pid){
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+bool estaYaEnTlb(int numPag){
+    NodoEntradasTLB *aux = listaTlb;
     for(int i = 0; i < ENTRADAS_TLB; i++){
         if(aux->info.numPag == numPag){
             return true;
@@ -229,9 +228,9 @@ bool estaYaEnTlb(int numPag, int pid){
     }
     return false;
 }
-NodoEntradasTLB *dondeEstaenTLB(int numPag, int pid){
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
-    if(estaYaEnTlb(numPag, pid)){
+NodoEntradasTLB *dondeEstaenTLB(int numPag){
+    NodoEntradasTLB *aux = listaTlb;
+    if(estaYaEnTlb(numPag)){
     for(int i = 0; i < ENTRADAS_TLB; i++){
         if(aux->info.numPag == numPag){
             return aux;
@@ -241,8 +240,8 @@ NodoEntradasTLB *dondeEstaenTLB(int numPag, int pid){
     }
     return NULL;
 }
-void actualizarContadores(int numPag, int pid) {
-    NodoEntradasTLB *aux = buscarSublistaPid(pid);
+void actualizarContadores(int numPag) {
+    NodoEntradasTLB *aux = listaTlb;
     for (int i = 0; i < ENTRADAS_TLB; i++) {
         if (aux->info.numPag != -1 && aux->info.numPag != numPag) {
             aux->info.tiempoSinReferencia++;
@@ -250,49 +249,5 @@ void actualizarContadores(int numPag, int pid) {
         aux = aux->sgte;
     }
 }
-NodoEntradasTLB *buscarSublistaPid(int pid){
-    EnlazadorTLBPID *aux = listaPids;
-    while(aux!= NULL){
-        if(aux->info.pid == pid){
-            return aux->info.sublista;
-        }
-        aux= aux->sgte;
-    }
-    return NULL;
-}
-void agregarAEnlazador(int pid){
-    EnlazadorTLBPID *nuevo = malloc(sizeof(EnlazadorTLBPID));
-    nuevo->info.pid = pid;
-    nuevo->info.sublista = inicializarTLB(pid);
-    nuevo->info.punteroPos = nuevo->info.sublista;
-    nuevo->sgte = NULL;
-        if (listaPids == NULL) {
-        listaPids = nuevo;
-    } else {
-        EnlazadorTLBPID *aux = listaPids;
-        while (aux->sgte != NULL) {
-            aux = aux->sgte;
-        }
-        aux->sgte = nuevo;
-    }
-}
-NodoEntradasTLB *buscarPunteroFIFO(int pid){
-    EnlazadorTLBPID *aux = listaPids;
-    while(aux != NULL){
-        if(aux->info.pid == pid){
-            return aux->info.punteroPos;
-        }
-        aux = aux->sgte;
-    }
-    return NULL;
-}
-void actualizarPunteroPos(int pid){
-    EnlazadorTLBPID *aux = listaPids;
-    while(aux!= NULL){
-        if(aux->info.pid == pid){
-            aux->info.punteroPos = aux->info.punteroPos->sgte;
-            return;
-        }
-        aux= aux->sgte;
-    }
-}
+
+

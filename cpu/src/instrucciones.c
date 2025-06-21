@@ -139,12 +139,11 @@ void instruccion_goto(int parametro){
 
 void mandar_syscall(instru instruccion){
     //Hay que serializar
-    
+    //CAMBIAR --> hablar con jere y fede
     send(fd_conexion_kernel_dispatch, &instruccion, sizeof(instru),0);
 }
 
 //Chequear Interrupcion
-
 void check_interrupt(void){
     int pid_interrupcion=0;
     recv(fd_conexion_kernel_interrupt, &pid_interrupcion,sizeof(int),0);
