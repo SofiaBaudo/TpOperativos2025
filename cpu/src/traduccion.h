@@ -5,7 +5,7 @@
 
 
 
-int traduccion(int direccion, int pid);
+int traduccion(int direccion, int pid, char *instruccion, char *contenido);
 void enviarValoresMem(int entradaNivel, int pid);
 int navegarNiveles(int numPag, int pid);
 int conseguirMarco(int pid);

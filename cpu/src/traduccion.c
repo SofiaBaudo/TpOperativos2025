@@ -3,11 +3,17 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <cache.h>
 
-int traduccion(int direccion, int pid){ //te tendria que devolver la dir fisica
+
+int traduccion(int direccion, int pid, char *instruccion, char *contenido){ //te tendria que devolver la dir fisica
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int marco;
+    if(estaHabilitada(pid)){
+        usarCache(pid, numPag, instruccion,contenido);
+        return -1; //no hace falta delvoler algo porque se hizo en cache
+    }
     int tlbrespuesta;
     tlbrespuesta = buscarTlb(numPag, pid);
     //actualizarContadores(numPag);

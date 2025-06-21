@@ -38,7 +38,7 @@ extern NodoEntradasTLB *listaTlb;
 
 typedef struct nodo_cache {
     int numPag;
-    void* contenido;
+    char* contenido;
     int bitdeUso;
     int bitModificado;
 } Cache;

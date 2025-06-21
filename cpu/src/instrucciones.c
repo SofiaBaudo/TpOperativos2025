@@ -2,6 +2,7 @@
 //Incluimos las librerias.
 
 #include <instrucciones.h>
+#include <cache.h>
 //Inicializacion de los Loggers
 
 
@@ -99,9 +100,14 @@ void instruccion_noop(void){
 //Ejecucion Write.
 
 void instruccion_write(int direccion, char* param2, int pid){
-    int direccionFisica = traduccion(direccion, pid);
+    int direccionFisica =  traduccion(direccion,pid, "WRITE", param2);
+    if(direccionFisica == -1){
+        //entro por cache
+    }
+    else{
     t_buffer *buffer = crear_buffer_pid_dirFis_datos(pid, direccion,param2);
     crear_paquete(ENVIO_PID_DIRFIS_DAT, buffer, fd_conexion_dispatch_memoria);
+    }
     log_info(cpu_logger,"## PID: %d - Ejecutando: <WRITE>",pid);
     log_info(cpu_logger,"PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%d> - Valor: <%s>",pid,direccionFisica, param2);
 }
@@ -109,9 +115,14 @@ void instruccion_write(int direccion, char* param2, int pid){
 //Ejecucion Read.
 
 void instruccion_read(int direccion, char* param2, int pid){
-    int direccionFisica = traduccion(direccion, pid);
+    int direccionFisica = traduccion(direccion, pid, "READ", param2);
+    if(direccionFisica == -1){
+        //entro por cache
+    }
+    else{
     t_buffer *buffer = crear_buffer_pid_dirFis_datos(pid, direccion,param2);
     crear_paquete(ENVIO_PID_DIRFIS_DAT, buffer, fd_conexion_dispatch_memoria);
+    }
     log_info(cpu_logger,"## PID: %d - Ejecutando: <READ>",pid);
     log_info(cpu_logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%d> - Valor: <%s>",pid,direccion,param2);
 }
