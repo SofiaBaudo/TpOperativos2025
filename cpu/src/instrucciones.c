@@ -154,6 +154,7 @@ void check_interrupt(void){
         t_buffer *buffer = crear_buffer_cpu(pc, pid);
         crear_paquete(ENVIO_PID_Y_PC,buffer, fd_conexion_kernel_dispatch); 
         log_info(cpu_logger, "SI hay interrupcion");
+        //hay que desalojar el proceso => en el tlb y en cache. 
         //tendria que mandarle a kernel una syscall que se llame desalojo aceptado.
     }
     else{

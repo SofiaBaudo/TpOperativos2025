@@ -14,50 +14,14 @@ void inicializar_CPU(int id){
     *valor_id = id;
     int pid = 1; // ejemplo para ver si funciona FIFO
     log_debug(cpu_log_debug, "Valor de tamPag: %d", 4096);
-    agregarAEnlazador(1);
-
-    printf("Algoritmo de reemplazo TLB: %s\n", REEMPLAZO_TLB);
-
-    imprimirTLB(pid);
-
-    log_debug(cpu_log_debug, ".........................................................");
-
-    implementarAlgoritmoFIFO(1, 10,1);
-    imprimirTLB(pid);
-
-    log_debug(cpu_log_debug, ".........................................................");
-
-    implementarAlgoritmoFIFO(2, 20,1);
-    imprimirTLB(pid);
-
-    log_debug(cpu_log_debug, ".........................................................");
-
-    implementarAlgoritmoFIFO(3, 30,1);
-    imprimirTLB(pid);
-
-    log_debug(cpu_log_debug, ".........................................................");
-
-    implementarAlgoritmoFIFO(4, 40,1);
-    imprimirTLB(pid);
-    log_debug(cpu_log_debug, ".........................................................");
-
-    implementarAlgoritmoFIFO(5, 50,1);
-    imprimirTLB(pid);
-    log_debug(cpu_log_debug, ".........................................................");
-
-    
-    implementarAlgoritmoFIFO(6, 60,1);
-    imprimirTLB(pid);
-    log_debug(cpu_log_debug, ".........................................................");
-
-        
+            
     pthread_t hiloKernel;
-   // pthread_t hiloMemoria;
+    pthread_t hiloMemoria;
     pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
     pthread_join(hiloKernel,NULL);
-    //pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);
-    //pthread_detach(hiloKernel);
-    //pthread_join(hiloMemoria, NULL);
+    pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);
+    pthread_detach(hiloKernel);
+    pthread_join(hiloMemoria, NULL);
 }
 
 //Funcion de Inicializacion de Logs

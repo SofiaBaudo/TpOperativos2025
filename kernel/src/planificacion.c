@@ -142,8 +142,9 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             if(desalojo){
                 proceso = sacar_primero_de_la_lista(READY);
                 cambiarEstado(proceso,READY,EXEC);
-                desalojar_el_mas_grande(proceso);
-                //solicitar desalojo a cpu
+                //solicitar desalojo a cpu a través de un paquete con el pid 
+                //desalojar_el_mas_grande(proceso); esto va en la parte de poner a ejecutar
+                //Pongo el primero de ready a ejecutar(a chequear)
                 //struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
                 //poner_a_ejecutar(proceso,cpu_aux);
                 //poner ultima_cpu->proceso_ejecutando = aux;
@@ -621,7 +622,7 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
-                sacar_de_cola_de_estado(colaEstados[EXEC],aux);
+                sacar_de_cola_de_estado(aux,EXEC);
                 int respuesta = manejar_dump(aux,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
                     aux->proxima_estimacion = calcular_proxima_estimacion(aux);
