@@ -146,7 +146,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
                 reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)-1);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-                sem_post(CANTIDAD_DE_PROCESOS_EN[READY]); //Porque todavia no desalojamos nada, simplemente dimos el aviso
+                sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]); //Porque todavia no desalojamos nada, simplemente dimos el aviso
             }
             else{
             log_debug(kernel_debug_log,"No se desaloja");
@@ -630,7 +630,7 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
                 else{
                     temporal_stop(proceso->duracion_ultima_rafaga);
                     sacar_de_cola_de_estado(proceso,EXEC);
-                    cambiarEstado(aux,EXEC,BLOCKED);
+                    cambiarEstado(proceso,EXEC,BLOCKED);
                     //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
                     sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
                     proceso->tiempo_bloqueado = temporal_create();
@@ -662,7 +662,7 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
 void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
     sacar_de_cola_de_estado(proceso_desalojado,EXEC);
     liberar_cpu(cpu_en_la_que_ejecuta);
-    log_debug(kernel_debug_log,"Se desaloja de la cola EXECUTE al proceso con id: %i",proceso->pid);
+    log_debug(kernel_debug_log,"Se desaloja de la cola EXECUTE al proceso con id: %i",proceso_desalojado->pid);
     transicionar_a_ready(proceso_desalojado,EXEC);
 }
 
