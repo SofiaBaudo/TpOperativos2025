@@ -1,12 +1,9 @@
 #include <instrucciones_memoria.h>
 
-//Declaracion de Variables Globales
-
 t_list* lista_instrucciones;
 t_list* lista_procesos_instrucciones;
 
 //Funcion Inicializar Lista de Procesos con Instrucciones
-
 void iniciar_lista_procesos_instrucciones(){
     lista_instrucciones = list_create();
 }
@@ -110,4 +107,74 @@ void destruir_proceso_instrucciones(int pid){
             return;
         }
     }
+}
+void manejar_read_memoria(int socket_cpu) {
+    t_paquete* paquete = recibir_paquete(socket_cpu);
+
+    int pid = deserializar_pid(paquete);
+    int direccion_fisica = deserializar_entero_desde_stream(paquete);
+    int tamanio = deserializar_entero_desde_stream(paquete);
+
+    void* buffer = malloc(tamanio);
+    leer_espacio_usuario(buffer, direccion_fisica, tamanio);  // ya lo tenés
+
+    log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio); //log oblig
+
+    send(socket_cpu, buffer, tamanio, 0);
+    free(buffer);
+}
+void manejar_write_memoria(int socket_cpu) {
+    t_paquete* paquete = recibir_paquete(socket_cpu);
+
+    int pid = deserializar_pid(paquete);
+    int direccion_fisica = deserializar_entero_desde_stream(paquete); // función auxiliar
+    int tamanio = deserializar_entero_desde_stream(paquete);
+
+    void* valor = malloc(tamanio);
+    memcpy(valor, paquete->buffer->stream + paquete->buffer->offset, tamanio);
+    escribir_espacio_usuario(direccion_fisica, valor, tamanio);
+
+    log_info(logger_memoria, "## PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio); //log oblig
+
+    free(valor);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+void manejar_dump_memory(int socket_cpu, void* contenido){
+    t_paquete* paquete = recibir_paquete(socket_cpu);
+
+    int pid = deserializar_pid(paquete);
+    log_info(logger_memoria, "## PID: %d - Memory Dump solicitado", pid); //log oblig
+    int direccion_fisica = deserializar_entero_desde_stream(paquete); // función auxiliar
+    int tamanio = deserializar_entero_desde_stream(paquete);
+
+    void* valor = malloc(tamanio);
+    memcpy(valor, paquete->buffer->stream + paquete->buffer->offset, tamanio);
+
+    if (direccion_fisica < 0 || tamanio <= 0) {
+        log_error(logger_memoria, "Dump fallido: dirección o tamaño inválido");
+        return;
+    }
+    // Obtener timestamp con formato YYYYMMDDHHMMSS
+    char* timestamp = temporal_get_string_time("%Y%m%d%H%M%S");
+    // Crear nombre del archivo: <DUMP_PATH>/<PID>-<TIMESTAMP>.dmp
+    char* nombre_archivo = string_from_format("%s/%d-%s.dmp", memoria_config.DUMP_PATH, pid, timestamp);
+
+    // Crear y abrir archivo
+    FILE* archivo = fopen(nombre_archivo, "wb");
+    if (!archivo) {
+        log_error(logger_memoria, "No se pudo crear el archivo dump: %s", nombre_archivo);
+        free(timestamp);
+        free(nombre_archivo);
+        return;
+    }
+    // Escribir memoria del proceso en el archivo
+    //fwrite(contenido, 1, tamanio_marco, archivo);
+    fclose(archivo);
+
+    log_debug(logger_memoria, "Dump de memoria generado para PID %d en %s", pid, nombre_archivo);
+
+    free(timestamp);
+    free(nombre_archivo);
 }

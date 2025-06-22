@@ -1,8 +1,5 @@
+//hacemos las llamadas de las funciones principales de los Modulos
 #include <memoria.h>
-
-//Aca hacemos las llamadas de las funciones principales de los Modulos
-
-//Funcion Main(HILO 0)
 
 int main(int argc, char* argv[]){
     leer_config();

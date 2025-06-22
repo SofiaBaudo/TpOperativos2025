@@ -1,16 +1,13 @@
+//Un espacio contiguo de memoria (representado por un void*). Este representara el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
 #include <espacio_de_usuario.h>
 
-//Un espacio contiguo de memoria (representado por un void*). Este representara el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
-
-//Declaracion de Variables Globales
-
 void* espacio_usuario_memoria = NULL;  // Memoria fisica simulada
+int tamanio_disponible_en_memoria = 30;
 
-//Funcion para Inicializar Espacio de Usuario
+//Funcion para inicializar Espacio de Usuario
 
 void inicializar_espacio_usuario(){
     espacio_usuario_memoria = malloc(memoria_config.TAM_MEMORIA);
-    //Es toda completa o hay que restar la que usamos en la paginacion? CONSULTA
     if (!espacio_usuario_memoria) {
         printf("Error al reservar memoria de usuario\n");
         exit(EXIT_FAILURE);
@@ -58,4 +55,13 @@ void escribir_espacio_usuario(int direccion_fisica, void* origen, int tamanio){
     }
     memcpy(espacio_usuario_memoria + direccion_fisica, origen, tamanio);
     listado_metricas.cant_escrituras_memoria++;
+}
+op_code verificar_si_hay_espacio(int tamanio){
+    if(tamanio>tamanio_disponible_en_memoria){
+        return NO_HAY_ESPACIO_EN_MEMORIA;
+    }
+    else{
+        tamanio_disponible_en_memoria-=tamanio;
+        return HAY_ESPACIO_EN_MEMORIA;
+    }
 }

@@ -1,12 +1,9 @@
 #include <servidor_memoria.h>
 
-//Declaracion de Variables Globales
-
-int tamanio_disponible_en_memoria = 30;
 t_memoria_config memoria_config;
 t_log* logger_memoria;
+void* contenido;
 
-//Funcion para Leer Configuraciones
 
 void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header)
     t_config* config = config_create("memoria.config");
@@ -25,9 +22,6 @@ void leer_config(){ // Lee la config y guarda todos los values de las key (struc
     memoria_config.DUMP_PATH = strdup(config_get_string_value(config, "DUMP_PATH"));
     config_destroy(config); //destruye luego de guardarse los values
 }
-
-//Funcion para Inicializar Loggers de Memoria
-
 void iniciar_logger_memoria(){
     logger_memoria = log_create("memoria.log", "[Memoria]", true, LOG_LEVEL_TRACE);
     if (logger_memoria == NULL) {
@@ -36,9 +30,6 @@ void iniciar_logger_memoria(){
     }
     //despues ver de cambiar el tipo 
 }
-
-//Funcion para Inicializar Servidor de Memoria
-
 void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender peticiones
     char puerto[6]; // Buffer para almacenar el puerto como cadena (maximo 5 digitos + '\0')
     sprintf(puerto, "%d", memoria_config.PUERTO_ESCUCHA); // Convierte el puerto a cadena.  A puerto le asigna el valor de memoria_config.puerto_escucha
@@ -64,9 +55,6 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
     }
     close(servidor_memoria);
 }
-
-//Funcion para Manejar Cliente de Memoria(Depende del Modulo)
-
 void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion con el cliente dependiendo de que modulo venga
 {   /*
     int tamPag = memoria_config.TAM_PAGINA;
@@ -112,6 +100,9 @@ void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion co
                     case WRITE_MEMORIA:
                         manejar_write_memoria(cliente);
                         break;
+                    case DUMP_MEMORY:
+                        manejar_dump_memory(cliente, contenido);
+                        break;    
                     default:
                         log_warning(logger_memoria, "Petición desconocida de CPU: %d", peticion);
                         break;
@@ -124,9 +115,6 @@ void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion co
     close(cliente);
     return NULL;
 }
-
-//Funcion para Manejar la Instruccion de CPU (PC y el PID)
-
 void manejar_fetch_cpu(int socket_cpu){
     //paquete con el PC y el PID
     t_paquete* paquete = recibir_paquete(socket_cpu);
@@ -149,56 +137,4 @@ void manejar_fetch_cpu(int socket_cpu){
 
     //Sumo a la metrica de instrucciones solicitadas
     listado_metricas.instrucciones_solicitadas++;
-}
-
-//Funcion para Manejar la Instruccion de Read de CPU
-
-void manejar_read_memoria(int socket_cpu) {
-    t_paquete* paquete = recibir_paquete(socket_cpu);
-
-    int pid = deserializar_pid(paquete);
-    int direccion_fisica = deserializar_entero_desde_stream(paquete);
-    int tamanio = deserializar_entero_desde_stream(paquete);
-
-    void* buffer = malloc(tamanio);
-    leer_espacio_usuario(buffer, direccion_fisica, tamanio);  // ya lo tenés
-
-    log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio); //log oblig
-
-    send(socket_cpu, buffer, tamanio, 0);
-    free(buffer);
-}
-
-//Funcion para Manejar la Instruccion de Write de CPU
-
-void manejar_write_memoria(int socket_cpu) {
-    t_paquete* paquete = recibir_paquete(socket_cpu);
-
-    int pid = deserializar_pid(paquete);
-    int direccion_fisica = deserializar_entero_desde_stream(paquete); // función auxiliar
-    int tamanio = deserializar_entero_desde_stream(paquete);
-
-    void* valor = malloc(tamanio);
-    memcpy(valor, paquete->buffer->stream + paquete->buffer->offset, tamanio);
-    escribir_espacio_usuario(direccion_fisica, valor, tamanio);
-
-    log_info(logger_memoria, "## PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio); //log oblig
-
-    free(valor);
-    free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
-}
-
-//Funcion de Verificar Espacio
-//VER DONDE VA O SI DEBEMOS SACARLA(SI RESPONDEMOS EN OTRA PARTE)
-
-op_code verificar_si_hay_espacio(int tamanio){
-    if(tamanio>tamanio_disponible_en_memoria){
-        return NO_HAY_ESPACIO_EN_MEMORIA;
-    }
-    else{
-        tamanio_disponible_en_memoria-=tamanio;
-        return HAY_ESPACIO_EN_MEMORIA;
-    }
 }

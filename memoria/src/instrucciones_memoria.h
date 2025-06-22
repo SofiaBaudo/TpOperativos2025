@@ -3,6 +3,7 @@
 #define INSTRUCCIONES_MEMORIA_H
 
 #include <commons/log.h>
+#include <commons/string.h>
 #include <commons/collections/list.h>
 #include <stdio.h>
 #include <string.h>
@@ -30,5 +31,8 @@ t_list* cargar_instrucciones_desde_archivo(char* PATH_INSTRUCCIONES);
 void registrar_instrucciones_proceso(int pid, char* PATH_INSTRUCCIONES);
 void destruir_instruccion(t_instruccion* instr);
 void destruir_proceso_instrucciones(int pid);
+void manejar_read_memoria(int socket_cpu);
+void manejar_write_memoria(int socket_cpu);
+void manejar_dump_memory(int socket_cpu, void* contenido);
 
 #endif

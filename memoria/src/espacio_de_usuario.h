@@ -10,12 +10,14 @@
 #include <stdio.h>
 #include <servidor_memoria.h>
 #include <math.h>
-
+#include <commons/temporal.h>
 
 void inicializar_espacio_usuario();
 char* leer_pagina_completa(unsigned int direccion_fisica);
 char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido);
 void leer_espacio_usuario(void* destino, int direccion_fisica, int tamanio);
 void escribir_espacio_usuario(int direccion_fisica, void* origen, int tamanio);
+op_code verificar_si_hay_espacio(int tamanio);
+
 
 #endif

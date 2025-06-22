@@ -24,7 +24,7 @@ void *planificador_largo_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
-        sem_wait(&UNO_A_LA_VEZ);
+        sem_wait(&UNO_A_LA_VEZ); //este semaforo hace que el planificador maneje un proceso a la vez.
         //verificar_cola_de_suspendido_ready
         if(!list_is_empty(colaEstados[SUSP_READY])){
             sem_wait(&SUSP_READY_SIN_PROCESOS);
@@ -33,16 +33,16 @@ void *planificador_largo_plazo_fifo(){
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
-            primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
+            primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la cola de NEW
             transicionar_a_ready(primer_proceso,NEW);
-            sem_post(&INTENTAR_INICIAR_NEW);
+            sem_post(&INTENTAR_INICIAR_NEW); //incremento el semaforo para que pueda iniciar el planificador.
         }   
         else{
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
             //sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW); 
-            sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
+            sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //si no hay espacio en memoria, aviso que el proceso sigue estando en new.
         }
-        sem_post(&UNO_A_LA_VEZ);
+        sem_post(&UNO_A_LA_VEZ);// me aseguro que se siga tratando de a un proceso.
     } 
     return NULL;
 }
@@ -52,13 +52,14 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);// si no hay nada espera a que llegue un proceso
-        sem_wait(&INTENTAR_INICIAR_NEW);
-        sem_wait(&UNO_A_LA_VEZ);
+        sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
+        sem_wait(&UNO_A_LA_VEZ); //este semaforo hace que el planificador maneje un proceso a la vez.
+        //verifico que la cola de SUSP_READY este vacía.
         if(!list_is_empty(colaEstados[SUSP_READY])){
             sem_wait(&SUSP_READY_SIN_PROCESOS);
         }
-        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW);
-        if(primer_proceso->pid == proximo_a_consultar->pid){
+        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); 
+        if(primer_proceso->pid == proximo_a_consultar->pid){ 
             bool respuesta = consultar_si_puede_entrar(primer_proceso);
             log_debug(kernel_debug_log,"Conexion con memoria cerrada");
             if(respuesta == true){
