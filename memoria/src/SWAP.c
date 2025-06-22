@@ -1,8 +1,5 @@
 //SWAP = Manda un Proceso a Estado Suspendido
-//Guardas el contenido de las páginas de los procesos cuando son suspendidos (Estado SUSP.BLOCKED)
-
-//Incluir las librerias
-
+//Guardas el contenido de las paginas de los procesos cuando son suspendidos (Estado SUSP.BLOCKED)
 #include <SWAP.h>
 
 //Define Localizacion PATH_SWAPFILE
@@ -72,7 +69,7 @@ void eliminar_paginas_de_proceso(int pid) {
 
 //Funcion Cerrar SWAP
 
-void cerrar_swap() {
+void cerrar_swap(){
     if (swapfile != NULL) {
         fclose(swapfile);
         swapfile = NULL;

@@ -7,6 +7,7 @@
 t_list *ios_conectados = NULL; // variable global
 t_list *cpus_conectadas = NULL;
 int cliente_dispatch;
+int cliente_interrupt;
 void *atender_kernel_dispatch(){
    int servidor_kernel = iniciar_servidor(PUERTO_ESCUCHA_DISPATCH,kernel_logger,"El kernel se conecto y esta esperando al dispatch");
    if (servidor_kernel == -1) {
@@ -73,7 +74,7 @@ void atender_kernel_interrupt(){
    log_debug(kernel_logger, "Servidor de kernel para interrupt iniciado en el puerto %s", PUERTO_ESCUCHA_INTERRUPT);// Log de inicio del servidor
    while (1) { // sigue ciclando mientras no se desconecte el cliente
        // Aca esperan al cliente (CPU)
-       int cliente_interrupt = esperar_cliente(servidor_kernel_interrupt,kernel_logger,"CPU_INTERRUPT");
+       cliente_interrupt = esperar_cliente(servidor_kernel_interrupt,kernel_logger,"CPU_INTERRUPT");
        if (cliente_interrupt == -1) {
                log_error(kernel_logger, "Error al aceptar un cliente");
                continue;

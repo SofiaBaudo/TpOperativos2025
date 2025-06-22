@@ -133,24 +133,20 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
             proceso = sacar_primero_de_la_lista(READY);
             cambiarEstado(proceso,READY,EXEC);
-            proceso->duracion_ultima_rafaga = temporal_create();
-            cpu_aux->proceso_ejecutando = proceso;
+            proceso->duracion_ultima_rafaga = temporal_create(); //esto despues hay que sacarlo
+            cpu_aux->proceso_ejecutando = proceso; //esto tambien, va adentro de poner a ejecutar
             //poner_a_ejecutar(proceso,cpu_aux); //esta funcion tambien va a recibir la cpu
         }
         else{
             bool desalojo = ver_si_hay_que_desalojar(proceso);
             if(desalojo){
-                proceso = sacar_primero_de_la_lista(READY);
-                cambiarEstado(proceso,READY,EXEC);
-                //solicitar desalojo a cpu a través de un paquete con el pid 
-                //desalojar_el_mas_grande(proceso); esto va en la parte de poner a ejecutar
-                //Pongo el primero de ready a ejecutar(a chequear)
-                //struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
-                //poner_a_ejecutar(proceso,cpu_aux);
-                //poner ultima_cpu->proceso_ejecutando = aux;
+                struct pcb* proceso_a_desalojar = buscar_el_mas_grande(EXEC);
+                enviar_entero(cliente_interrupt,1); //Con esto aviso que quiero desalojar un proceso
+                enviar_entero(cliente_dispatch,proceso_a_desalojar->pid); //Con esto le indico a la cpu cual quiero desalojar
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
                 reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)-1);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+                sem_post(CANTIDAD_DE_PROCESOS_EN[READY]); //Porque todavia no desalojamos nada, simplemente dimos el aviso
             }
             else{
             log_debug(kernel_debug_log,"No se desaloja");
@@ -253,23 +249,17 @@ void *funcion_para_bloqueados(struct pcb *proceso){
 bool ver_si_hay_que_desalojar(struct pcb *proceso){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
     frenar_y_restar_cronometros(cpus_conectadas);
-    ordenar_lista_segun(cpus_conectadas,menor_por_estimacion_de_los_que_ya_estan_ejecutando);
     bool desalojo = recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(cpus_conectadas,proceso);
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
     return desalojo;
 }
 
-void desalojar_el_mas_grande(struct pcb *proceso){
+struct pcb *buscar_el_mas_grande(){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+    ordenar_lista_segun(cpus_conectadas,menor_por_estimacion_de_los_que_ya_estan_ejecutando);
     struct instancia_de_cpu *ultima_cpu = list_get(cpus_conectadas,list_size(cpus_conectadas)-1);
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-    struct pcb *aux = ultima_cpu->proceso_ejecutando;
-    ultima_cpu->proceso_ejecutando = proceso;
-    proceso->duracion_ultima_rafaga = temporal_create(); //esto despues hay que sacarlo pero es para probar
-    log_debug(kernel_debug_log,"Se desaloja al proceso con id: %i",aux->pid);
-    int pos = buscar_en_lista(colaEstados[EXEC],aux->pid);
-    list_remove(colaEstados[EXEC],pos);
-    transicionar_a_ready(aux,EXEC);
+    return ultima_cpu->proceso_ejecutando;
 }
 
 void frenar_y_restar_cronometros(t_list *lista){
@@ -477,8 +467,6 @@ void transicionar_a_susp_ready(struct pcb *pcb){
     //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
 }
 
-
-
 void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
     char *string_estado_anterior = cambiar_a_string(estadoAnterior);
@@ -589,25 +577,22 @@ int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta)
     return respuesta;
 }
 
-void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
-    aux->duracion_ultima_rafaga = temporal_create();
+void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
+    cpu_en_la_que_ejecuta->proceso_ejecutando = proceso;
+    proceso->duracion_ultima_rafaga = temporal_create();
     bool bloqueante = false;
     while(!bloqueante){
-        mandar_paquete_a_cpu(aux);
+        mandar_paquete_a_cpu(proceso);
         t_paquete *paquete = recibir_paquete(cliente_dispatch); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         //deserializar el pc
         //actualizarlo
-        op_code syscall = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
-        switch(syscall){
-            /*case Desalojo Aceptado
-            avisar a CPU que interrumpa, enviando un numero distinto de 0
-            recibir respuesta
-            liberar cpu (devuelta conexion)
-            transiciono a ready
-            bloqueante = true;
+        op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
+        switch(motivo_de_devolucion){
             case DESALOJO_ACEPTADO:
-                enviar_entero(cliente_dispatch,1);
-            */
+                temporal_stop(proceso->duracion_ultima_rafaga);
+                proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
+                desalojar_proceso_de_cpu(proceso,cpu_en_la_que_ejecuta);
+                bloqueante = true;
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo(paquete);
                 int tamanio = deserializar_tamanio (paquete);
@@ -616,44 +601,44 @@ void poner_a_ejecutar(struct pcb* aux, struct instancia_de_cpu *cpu_en_la_que_ej
                 break;
             case EXIT:
                 //Hay que sacarlo de la lista de exit
-                finalizar_proceso(aux,EXEC);
+                finalizar_proceso(proceso,EXEC);
                 liberar_cpu(cpu_en_la_que_ejecuta);
                 //tener en cuenta lo del mediano plazo
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
-                sacar_de_cola_de_estado(aux,EXEC);
-                int respuesta = manejar_dump(aux,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
+                sacar_de_cola_de_estado(proceso,EXEC);
+                int respuesta = manejar_dump(proceso,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
-                    aux->proxima_estimacion = calcular_proxima_estimacion(aux);
-                    transicionar_a_ready(aux,BLOCKED);
+                    proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
+                    transicionar_a_ready(proceso,BLOCKED);
                 }
                 else{
-                    finalizar_proceso(aux,BLOCKED);
+                    finalizar_proceso(proceso,BLOCKED);
                 }
                 bloqueante = true; 
                 break;   
             case IO:
                 int milisegundos = deserializar_cant_segundos(paquete);
-                aux->proxima_rafaga_io = milisegundos;
+                proceso->proxima_rafaga_io = milisegundos;
                 char *nombre_io_a_usar = deserializar_nombre_syscall_io(paquete);
                 int posicionIO = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
                 if(posicionIO == -1){ //quiere decir que no hay ninguna syscall con ese nombre
-                    finalizar_proceso(aux,EXEC);
+                    finalizar_proceso(proceso,EXEC);
                     liberar_cpu(cpu_en_la_que_ejecuta);
                 }
                 else{
-                    temporal_stop(aux->duracion_ultima_rafaga);
-                    sacar_de_cola_de_estado(aux,EXEC);
+                    temporal_stop(proceso->duracion_ultima_rafaga);
+                    sacar_de_cola_de_estado(proceso,EXEC);
                     cambiarEstado(aux,EXEC,BLOCKED);
                     //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
                     sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
-                    aux->tiempo_bloqueado = temporal_create();
+                    proceso->tiempo_bloqueado = temporal_create();
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,posicionIO);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                    list_add(io_aux->procesos_esperando,aux);
+                    list_add(io_aux->procesos_esperando,proceso);
                     sem_post(&io_aux->hay_procesos_esperando);
                 }
                 bloqueante = true;
@@ -672,6 +657,13 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
     if(strcmp(ALGORITMO_INGRESO_A_READY,"SJF_CON_DESALOJO")==0){
         sem_post(&REPLANIFICAR);
     }
+}
+
+void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
+    sacar_de_cola_de_estado(proceso_desalojado,EXEC);
+    liberar_cpu(cpu_en_la_que_ejecuta);
+    log_debug(kernel_debug_log,"Se desaloja de la cola EXECUTE al proceso con id: %i",proceso->pid);
+    transicionar_a_ready(proceso_desalojado,EXEC);
 }
 
 void finalizar_proceso(struct pcb *aux, Estado estadoInicial){

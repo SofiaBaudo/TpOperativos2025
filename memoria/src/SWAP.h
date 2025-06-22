@@ -1,9 +1,5 @@
-//Define de SWAP
-
 #ifndef SWAP_H
 #define SWAP_H
-
-//Incluir las librerias
 
 #include <stdio.h>
 #include <commons/collections/list.h>

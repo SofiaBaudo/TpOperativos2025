@@ -1,5 +1,3 @@
-//Incluir las librerias
-
 #include <instrucciones_memoria.h>
 
 //Declaracion de Variables Globales
@@ -14,7 +12,7 @@ void iniciar_lista_procesos_instrucciones(){
 }
 
 //Funcion que Convierte la linea de Codigo
-//Convierte una línea completa del pseudocódigo, como "READ 10 20", en una estructura t_instruccion con: el enum correspondiente (por ejemplo: READ) una lista de los parámetros como strings (["10", "20"])la cantidad de parámetros (2)
+//Convierte una linea completa del pseudocodigo, como "READ 10 20", en una estructura t_instruccion con: el enum correspondiente (por ejemplo: READ) una lista de los parámetros como strings (["10", "20"])la cantidad de parámetros (2)
 
 t_instruccion* analizar_linea(char* linea){
     t_instruccion* instr = malloc(sizeof(t_instruccion));
@@ -31,8 +29,8 @@ t_instruccion* analizar_linea(char* linea){
     return instr;
 }
 
-//Funcion que Busca la instrucción número pc del proceso con pid.
-//Devuelve el puntero a la instrucción que necesita la CPU ejecutar.
+//Funcion que Busca la instruccion numero pc del proceso con pid.
+//Devuelve el puntero a la instruccion que necesita la CPU ejecutar.
 
 t_instruccion* obtener_instruccion(int pid, int pc){
     for (int i = 0; i < list_size(lista_procesos_instrucciones); i++) {
@@ -44,13 +42,13 @@ t_instruccion* obtener_instruccion(int pid, int pc){
     return NULL;
 }
 
-//Funcion que Lee línea por línea un archivo de pseudocódigo (ej: "proceso1") y convierte cada línea en una t_instruccion, agregándolas a una lista.
+//Funcion que Lee linea por linea un archivo de pseudocodigo (ej: "proceso1") y convierte cada linea en una t_instruccion, agregandolas a una lista.
 //Devuelve un t_list* con todas las instrucciones del proceso, ya parseadas.
 
 t_list* cargar_instrucciones_desde_archivo(char* PATH_INSTRUCCIONES){
     FILE* archivo = fopen(PATH_INSTRUCCIONES, "r");
     if (!archivo) {
-        perror("No se pudo abrir el archivo de pseudocódigo");
+        perror("No se pudo abrir el archivo de pseudocodigo");
         return NULL;
     }
 
@@ -90,7 +88,7 @@ void destruir_instruccion(t_instruccion* instr){
     free(instr);
 }
 
-//Funciin que Busca el proceso con ese pid en la lista global, libera cada instrucción de su lista, libera la estructura del proceso, lo saca de la lista global procesos_instrucciones
+//Funciin que Busca el proceso con ese pid en la lista global, libera cada instruccion de su lista, libera la estructura del proceso, lo saca de la lista global procesos_instrucciones
 //Se usa al destruir un proceso (cuando pasa a EXIT creemos)
 
 void destruir_proceso_instrucciones(int pid){
@@ -99,7 +97,7 @@ void destruir_proceso_instrucciones(int pid){
         if (p->pid == pid) {
            // list_destroy_and_destroy_elements(p->instrucciones, (void*)destruir_instruccion);
             list_remove(lista_procesos_instrucciones, i);
-            log_info(logger_memoria, "## PID: <%d> - Proceso Destruido - Métricas - Acc.T.Pag: <%d>; Inst.Sol.: <%d>; SWAP: <%d>; Mem.Prin.: <%d>; Lec.Mem.: <%d>; Esc.Mem.: <%d>",
+            log_info(logger_memoria, "## PID: <%d> - Proceso Destruido - Metricas - Acc.T.Pag: <%d>; Inst.Sol.: <%d>; SWAP: <%d>; Mem.Prin.: <%d>; Lec.Mem.: <%d>; Esc.Mem.: <%d>",
             pid,
             listado_metricas.cant_acceso_tabla_pagina,
             listado_metricas.instrucciones_solicitadas,

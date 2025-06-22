@@ -58,6 +58,7 @@ typedef enum op_code
 	READ,
 	GOTO,
 	IO,
+	DESALOJO_ACEPTADO,
 	INIT_PROC,
 	DUMP_MEMORY,
 	EXIT,
@@ -114,14 +115,14 @@ typedef enum{
 struct pcb{
   int pid;
   int pc;
-  float proxima_estimacion; //deberia ser float
-  float ultima_estimacion; //deberia ser float
-  t_temporal *duracion_ultima_rafaga; //capaz deberia ser un long por el tema del gettime
+  float proxima_estimacion; 
+  float ultima_estimacion; 
+  t_temporal *duracion_ultima_rafaga; 
   t_temporal *tiempo_bloqueado;
   //despues terminar lo de las metricas de estado y la otra metrica
   //Estado estado;
   int tamanio;
-  char *ruta_del_archivo_de_pseudocodigo; // a chequear
+  char *ruta_del_archivo_de_pseudocodigo;
   int proxima_rafaga_io;
   pthread_t hilo_al_bloquearse;
   //Metricas de estado es un vector de enteros 

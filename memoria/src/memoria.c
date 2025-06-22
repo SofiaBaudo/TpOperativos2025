@@ -1,8 +1,4 @@
-//Incluir las librerias
-
 #include <memoria.h>
-
-//#include <inicializar_memoria.h>
 
 //Aca hacemos las llamadas de las funciones principales de los Modulos
 

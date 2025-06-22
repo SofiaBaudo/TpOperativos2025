@@ -1,16 +1,14 @@
-//Incluir las librerias
-
 #include <espacio_de_usuario.h>
 
-//Un espacio contiguo de memoria (representado por un void*). Este representará el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
+//Un espacio contiguo de memoria (representado por un void*). Este representara el espacio de usuario de la misma, donde los procesos podrán leer y/o escribir.
 
 //Declaracion de Variables Globales
 
-void* espacio_usuario_memoria = NULL;  // Memoria física simulada
+void* espacio_usuario_memoria = NULL;  // Memoria fisica simulada
 
 //Funcion para Inicializar Espacio de Usuario
 
-void inicializar_espacio_usuario() {
+void inicializar_espacio_usuario(){
     espacio_usuario_memoria = malloc(memoria_config.TAM_MEMORIA);
     //Es toda completa o hay que restar la que usamos en la paginacion? CONSULTA
     if (!espacio_usuario_memoria) {
@@ -19,7 +17,7 @@ void inicializar_espacio_usuario() {
     }
 }
 
-//Funcion que Retorna toda una página (según TAM_PAGINA) a partir de una dirección física.
+//Funcion que Retorna toda una pagina (segun TAM_PAGINA) a partir de una direccion fisica.
 
 char* leer_pagina_completa(unsigned int direccion_fisica) {
     if (direccion_fisica + memoria_config.TAM_PAGINA > memoria_config.TAM_MEMORIA)
@@ -30,7 +28,7 @@ char* leer_pagina_completa(unsigned int direccion_fisica) {
     return buffer;
 }
 
-//Funcion que Copia los datos completos (una página) desde contenido al espacio de usuario.
+//Funcion que Copia los datos completos (una pagina) desde contenido al espacio de usuario.
 
 char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido){
     if (direccion_fisica + memoria_config.TAM_PAGINA > memoria_config.TAM_MEMORIA)
@@ -44,7 +42,7 @@ char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido)
 
 void leer_espacio_usuario(void* destino, int direccion_fisica, int tamanio){
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
-        log_error(logger_memoria, "Lectura fuera de los límites de memoria");
+        log_error(logger_memoria, "Lectura fuera de los limites de memoria");
         return;
     }
     memcpy(destino, espacio_usuario_memoria + direccion_fisica, tamanio);

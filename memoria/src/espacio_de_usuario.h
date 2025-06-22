@@ -1,9 +1,6 @@
 //Define de Espacio de Usuario
-
 #ifndef ESPACIO_DE_USUARIO_H
 #define ESPACIO_DE_USUARIO_H
-
-//Incluir las librerias
 
 #include <stdbool.h>
 #include <variables_globales_memoria.h>
@@ -14,7 +11,6 @@
 #include <servidor_memoria.h>
 #include <math.h>
 
-//Declaracion los Prototipos de Funciones
 
 void inicializar_espacio_usuario();
 char* leer_pagina_completa(unsigned int direccion_fisica);

@@ -1,5 +1,3 @@
-//Define de Variables Globales
-
 #ifndef VARIABLES_GLOBALES_MEMORIA_H
 #define VARIABLES_GLOBALES_MEMORIA_H
 

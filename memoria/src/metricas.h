@@ -1,9 +1,6 @@
 //Define de Metricas
-
 #ifndef METRICAS_H
 #define METRICAS_H
-
-//Incluir las librerias
 
 #include <commons/collections/list.h>
 #include <string.h>
@@ -13,8 +10,6 @@
 #include <servidor_memoria.h>
 #include <math.h>
 
-//Declaracion los Prototipos de Funciones
-//Metricas por Proceso
 
 void* metricas_proceso(int pid, tipo_metrica metrica);
 

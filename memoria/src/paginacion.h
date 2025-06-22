@@ -1,9 +1,5 @@
-//Define de Paginacion
-
 #ifndef PAGINACION_H
 #define PAGINACION_H
-
-//Incluir las librerias
 
 #include <stdbool.h>
 #include <variables_globales_memoria.h>

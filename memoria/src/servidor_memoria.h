@@ -1,9 +1,5 @@
-//Define de Servidor Memoria
-
 #ifndef SERVIDOR_MEMORIA
 #define SERVIDOR_MEMORIA
-
-//Incluir las librerias
 
 #include <instrucciones_memoria.h>
 #include <variables_globales_memoria.h>

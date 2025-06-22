@@ -1,5 +1,3 @@
-//Incluir las librerias
-
 #include <servidor_memoria.h>
 
 //Declaracion de Variables Globales
@@ -42,7 +40,7 @@ void iniciar_logger_memoria(){
 //Funcion para Inicializar Servidor de Memoria
 
 void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender peticiones
-    char puerto[6]; // Buffer para almacenar el puerto como cadena (máximo 5 dígitos + '\0')
+    char puerto[6]; // Buffer para almacenar el puerto como cadena (maximo 5 digitos + '\0')
     sprintf(puerto, "%d", memoria_config.PUERTO_ESCUCHA); // Convierte el puerto a cadena.  A puerto le asigna el valor de memoria_config.puerto_escucha
 
     int servidor_memoria = iniciar_servidor(puerto, logger_memoria, "Se ha iniciado el servidor de Memoria");
@@ -62,14 +60,14 @@ void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender 
         *cliente_ptr = cliente;
         pthread_t hilo_cliente; // Crea un hilo para atender a varios clientes al mismo tiempo
         pthread_create(&hilo_cliente, NULL, manejar_cliente, (void*) cliente_ptr);
-        pthread_detach(hilo_cliente); // Desvincula el hilo para que se libere automáticamente
+        pthread_detach(hilo_cliente); // Desvincula el hilo para que se libere automaticamente
     }
     close(servidor_memoria);
 }
 
 //Funcion para Manejar Cliente de Memoria(Depende del Modulo)
 
-void *manejar_cliente(void *socketCliente) // Esta función maneja la conexión con el cliente dependiendo de que modulo venga
+void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion con el cliente dependiendo de que modulo venga
 {   /*
     int tamPag = memoria_config.TAM_PAGINA;
     int entradasTabla = memoria_config.ENTRADAS_POR_TABLA;

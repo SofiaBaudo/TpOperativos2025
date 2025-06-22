@@ -1,5 +1,3 @@
-//Incluir las librerias
-
 #include <paginacion.h>
 
 //Declaracion de Variables Globales

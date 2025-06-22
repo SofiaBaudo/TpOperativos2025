@@ -1,9 +1,6 @@
 //Define de Instrucciones Memoria
-
 #ifndef INSTRUCCIONES_MEMORIA_H
 #define INSTRUCCIONES_MEMORIA_H
-
-//Incluir las librerias
 
 #include <commons/log.h>
 #include <commons/collections/list.h>

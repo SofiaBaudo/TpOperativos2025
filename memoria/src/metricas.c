@@ -1,12 +1,9 @@
-//Incluir las librerias
-
-//Listado de métricas por proceso
-
+//Listado de metricas por proceso
 #include <metricas.h>
 
 //Declaracion de Variables Globales
 
-t_metricas listado_metricas;           // Estructura para acumular estadísticas por proceso
+t_metricas listado_metricas;           // Estructura para acumular estadisticas por proceso
 
 //Funcion para Sumar a cada Metrica del Proceso
 
