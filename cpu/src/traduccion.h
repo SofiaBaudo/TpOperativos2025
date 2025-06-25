@@ -3,9 +3,7 @@
 
 #include <variables_globales_cpu.h>
 
-
-
-int traduccion(int direccion, int pid, char *instruccion, char *contenido);
+int traduccion(int direccion, int pid, char* instruccion, void *contenido);
 void enviarValoresMem(int entradaNivel, int pid);
 int navegarNiveles(int numPag, int pid);
 int conseguirMarco(int pid);

@@ -38,6 +38,7 @@ void* ejecutar_instrucciones(void* arg){
     check_interrupt(); //ponerlo en hilo.
     return NULL;
     */
+    return NULL;
 }
 
 void obtenerDelKernelPcPid(){

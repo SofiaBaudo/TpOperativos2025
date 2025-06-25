@@ -159,7 +159,7 @@ void algoritmoClock(int pid, char *instruccion, int nroPag, void* contenido){
         if(punteroCache->info.bitdeUso == 0){
             if(punteroCache->info.bitModificado == 1){
             int marco = conseguirMarcoCache(pid, punteroCache->info.numPag);
-            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco);
+            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco, tamPag);
             crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
             log_info(cpu_logger,"PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, punteroCache->info.numPag, marco);
             }
@@ -188,7 +188,7 @@ void algoritmoClockM(int pid, char *instruccion, int nroPag, void*contenido){
         }
         else if(punteroCache->info.bitdeUso == 0 && punteroCache->info.bitModificado == 1){
             int marco = conseguirMarcoCache(pid, punteroCache->info.numPag);
-            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco);
+            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco, tamPag);
             crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
             //se debe escribir esto a la memoria porque esta modificado
             log_info(cpu_logger, "PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, nroPag, marco);
@@ -213,7 +213,7 @@ void desalojarProceso(int pid){
     for(int i = 0; i < ENTRADAS_CACHE; i++){
         if(aux->info.bitModificado == 1){
             int marco = conseguirMarcoCache(pid, aux->info.numPag);
-            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, aux->info.numPag, aux->info.contenido, marco);
+            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, aux->info.numPag, aux->info.contenido, marco, tamPag);
             crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
         }
         aux->info.bitdeUso =-1;
