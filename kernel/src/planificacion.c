@@ -581,9 +581,7 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
     proceso->duracion_ultima_rafaga = temporal_create();
     bool bloqueante = false;
     while(!bloqueante){
-        log_debug(kernel_debug_log,"Entre al while");
         mandar_paquete_a_cpu(proceso);
-        log_debug(kernel_debug_log,"Paquete mandado a cpu");
         t_paquete *paquete = recibir_paquete(cliente_dispatch); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         //deserializar el pc
         //actualizarlo

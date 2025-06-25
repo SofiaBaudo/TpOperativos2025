@@ -60,13 +60,12 @@ void inicializar_CPU(int id){
 
     imprimirCache();
     */
-    inicializar_kernel(valor_id);
-    //pthread_t hiloKernel;
-    //pthread_t hiloMemoria;
-    //pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
-    //pthread_detach(hiloKernel);
-    //pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
-    //pthread_join(hiloMemoria, NULL);
+    //inicializar_kernel(valor_id);
+    pthread_t hiloKernel;
+    pthread_t hiloMemoria;
+    pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
+    pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
+    pthread_join(hiloKernel, NULL);
     
 }
 
