@@ -135,18 +135,6 @@ t_buffer *crear_buffer(){
 	return buffer_aux;
 }
 
-t_buffer * crear_buffer_cpu(int pc, int pid){ //esto se lo manda kernel a cpu
-	t_buffer *buffer_aux = crear_buffer();
-	buffer_aux->size = 2*sizeof(int);
-	buffer_aux->offset = 0;
-	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pc, sizeof(int)); //como un fwrite.
-	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
-	return buffer_aux;
-}
 
 t_buffer * crear_buffer_para_ejecucion_de_io(int pid, int milisegundos){ //esto se lo manda kernel a cpu
 	t_buffer *buffer_aux = crear_buffer();
@@ -222,21 +210,6 @@ t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel){
 	return buffer_aux;
 }
 
-void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasTabla, int* cantNiveles) {
-	void* stream = paquete->buffer->stream;
-
-	memcpy(tamPag, stream, sizeof(int));
-	stream += sizeof(int);
-
-	memcpy(entradasTabla, stream, sizeof(int));
-	stream += sizeof(int);
-
-	memcpy(cantNiveles, stream, sizeof(int));
-
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
-	free(paquete);
-}
 
 
 t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria){
@@ -245,16 +218,16 @@ t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamani
 	buffer_aux->size = sizeof(int) + longitud;
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
-
+	
 	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &tamanio_en_memoria, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-
+	
 	buffer_aux -> stream = buffer_aux-> stream;
-
+	
 	return buffer_aux;
 }
 
@@ -264,7 +237,7 @@ t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos){
 	buffer_aux->size = sizeof(int) + longitud;
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
-
+	
 	memcpy(buffer_aux->stream + buffer_aux->offset, &milisegundos, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
@@ -274,7 +247,7 @@ t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos){
 	
 
 	buffer_aux -> stream = buffer_aux-> stream;
-
+	
 	return buffer_aux;
 }
 
@@ -291,7 +264,7 @@ t_buffer *crear_buffer_io_nombre(char *nombre){
 	buffer_aux->size = sizeof(int) + longitud;
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
-
+	
 	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
@@ -375,10 +348,10 @@ void crear_paquete(op_code codigo, t_buffer *buffer, int socket){
 t_paquete* recibir_paquete(int socket){
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->buffer = malloc(sizeof(t_buffer));
-
+	
 	// Primero recibimos el codigo de operacion
 	recv(socket, &paquete->codigo_operacion, sizeof(paquete->codigo_operacion), 0);
-
+	
 	// Después ya podemos recibir el buffer. Primero su tamaño seguido del contenido
 	recv(socket, &(paquete->buffer->size), sizeof(int), 0);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
@@ -387,7 +360,7 @@ t_paquete* recibir_paquete(int socket){
 }
 
 void *deserializar_contenido(t_paquete *paquete){
-void *stream = paquete->buffer->stream;
+	void *stream = paquete->buffer->stream;
     int data;
 	stream+=sizeof(int);
     memcpy(&data,stream,sizeof(int));
@@ -432,15 +405,99 @@ op_code obtener_codigo_de_operacion (t_paquete * paquete){
 	return codigo;
 }
 
+void deserializar_pid_y_pc(t_paquete *paquete, int *pid, int *pc){
+	void *stream = paquete->buffer->stream;
+    memcpy(pid,stream,sizeof(int));
+	stream+=sizeof(int);
+	memcpy(pc,stream,sizeof(int));
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
 int deserializar_pid(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
-    int pid;
+	int pid;
     memcpy(&pid,stream,sizeof(int));
 	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
 	return pid;
 }
+
+void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasTabla, int* cantNiveles) {
+	void* stream = paquete->buffer->stream;
+
+	memcpy(tamPag, stream, sizeof(int));
+	stream += sizeof(int);
+
+	memcpy(entradasTabla, stream, sizeof(int));
+	stream += sizeof(int);
+
+	memcpy(cantNiveles, stream, sizeof(int));
+
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+}
+
+t_buffer * crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 2*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pc, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
+}
+
+
+int deserializar_pc(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+	stream+=sizeof(int);
+	int pc;
+	fprintf(stderr, "Puntero nulo en deserializar_pc\n");
+	memcpy(&pc,stream,sizeof(int));
+	fprintf(stderr, "Ya pase el memcpy");
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+	return pc;
+}
+
+int deserializar_entradaNivel(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+	stream+=sizeof(int);
+	int entradaNivel;
+	memcpy(&entradaNivel, stream, sizeof(int));
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+	return entradaNivel;
+}
+
+/*
+int deserializar_pc(t_paquete *paquete) {
+    if (!paquete || !paquete->buffer || !paquete->buffer->stream) {
+        fprintf(stderr, "Puntero nulo en deserializar_pc\n");
+        return -1;
+    }
+
+    int *stream = (int *)paquete->buffer->stream;
+
+    int pc = stream[1];  // asumimos que el primer int es otra cosa, el segundo es el pc
+
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+
+    return pc;
+}
+	*/
+
 
 int deserializar_nroPag(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
@@ -451,6 +508,7 @@ int deserializar_nroPag(t_paquete *paquete){
     free(paquete);
 	return nroPag;
 }
+
 int deserializar_marco(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int marco;
@@ -484,26 +542,7 @@ char *deserializar_dataIns(t_paquete *paquete){
 	return nombre;
 }
 
-int deserializar_pc(t_paquete *paquete){
-	void *stream = paquete->buffer->stream;
-	stream+=sizeof(int);
-    int pc;
-    memcpy(&pc,stream,sizeof(int));
-	free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
-	return pc;
-}
-int deserializar_entradaNivel(t_paquete *paquete){
-	void *stream = paquete->buffer->stream;
-	stream+=sizeof(int);
-	int entradaNivel;
-	memcpy(&entradaNivel, stream, sizeof(int));
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
-	free(paquete);
-	return entradaNivel;
-}
+
 int deserializar_tamanio(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int tamanio;

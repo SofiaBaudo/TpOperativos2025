@@ -42,7 +42,7 @@ void *planificador_largo_plazo_fifo(){
             //sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW); 
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //si no hay espacio en memoria, aviso que el proceso sigue estando en new.
         }
-        sem_post(&UNO_A_LA_VEZ);// me aseguro que se siga tratando de a un proceso.
+        sem_post(&UNO_A_LA_VEZ);//me aseguro que se siga tratando de a un proceso.
     } 
     return NULL;
 }
@@ -56,39 +56,38 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
         sem_wait(&UNO_A_LA_VEZ); //este semaforo hace que el planificador maneje un proceso a la vez.
         //verifico que la cola de SUSP_READY este vacía.
         if(!list_is_empty(colaEstados[SUSP_READY])){
-            sem_wait(&SUSP_READY_SIN_PROCESOS);
+            sem_wait(&SUSP_READY_SIN_PROCESOS); //espero a que se vacíe la lista de susp ready.
         }
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); 
         if(primer_proceso->pid == proximo_a_consultar->pid){ 
             bool respuesta = consultar_si_puede_entrar(primer_proceso);
             log_debug(kernel_debug_log,"Conexion con memoria cerrada");
             if(respuesta == true){
-                primer_proceso = sacar_primero_de_la_lista(NEW);
-                transicionar_a_ready(primer_proceso,NEW);
-                actualizar_proximo_a_consultar(NEW);
-                sem_post(&INTENTAR_INICIAR_NEW);
+                primer_proceso = sacar_primero_de_la_lista(NEW); //saco el primer proceso de la lista de NEW
+                transicionar_a_ready(primer_proceso,NEW); // lo transiciono a READY
+                actualizar_proximo_a_consultar(NEW); //actualizo la lista de NEW
+                sem_post(&INTENTAR_INICIAR_NEW); //intento iniciar nuevamente la lista de NEW
             }
             else{
-                sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
+                sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //aviso que el proceso sigue en new
             }
         }
         else{
-            sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);
+            sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);  //aviso que el proceso sigue en new
         }
-        sem_post(&UNO_A_LA_VEZ);
+        sem_post(&UNO_A_LA_VEZ); //me aseguro que se siga tratando de a un proceso a la vez.
     }
 }
 
 void *planificador_corto_plazo_fifo(){
     while(1){
-        sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]);
-        //sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
-        sem_wait(&CPUS_LIBRES);
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]); //espero a que llegue un proceso a ready.
+        sem_wait(&CPUS_LIBRES); //espero a que haya cpus libres.
         //sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
         usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
-        int pos_cpu = buscar_cpu_libre(cpus_conectadas);
+        int pos_cpu = buscar_cpu_libre(cpus_conectadas); 
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
@@ -114,7 +113,6 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         cambiarEstado(proceso,READY,EXEC);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
-        
         //poner_a_ejecutar(proceso,cpu_aux);
         //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
@@ -125,7 +123,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]);
         sem_wait(&CPUS_LIBRES); 
         sem_wait(&REPLANIFICAR);
-        usleep(200000);
+        //usleep(200000);
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
@@ -134,9 +132,8 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
             proceso = sacar_primero_de_la_lista(READY);
             cambiarEstado(proceso,READY,EXEC);
-            proceso->duracion_ultima_rafaga = temporal_create(); //esto despues hay que sacarlo
-            cpu_aux->proceso_ejecutando = proceso; //esto tambien, va adentro de poner a ejecutar
-            //poner_a_ejecutar(proceso,cpu_aux); //esta funcion tambien va a recibir la cpu
+            //asignarle un hilo al proceso
+            poner_a_ejecutar(proceso,cpu_aux); //esta funcion tambien va a recibir la cpu.
         }
         else{
             bool desalojo = ver_si_hay_que_desalojar(proceso);
@@ -559,7 +556,8 @@ void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado){
 }
 
 void mandar_paquete_a_cpu(struct pcb *proceso){
-        t_buffer *buffer = crear_buffer_cpu(proceso->pc,proceso->pid);
+        t_buffer *buffer = crear_buffer_cpu(proceso->pid,proceso->pc);
+        log_debug(kernel_debug_log,"Se creo el buffer con el pid %i y el pc %i", proceso->pid, proceso->pc);
         crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
 }
 
@@ -583,7 +581,9 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
     proceso->duracion_ultima_rafaga = temporal_create();
     bool bloqueante = false;
     while(!bloqueante){
+        log_debug(kernel_debug_log,"Entre al while");
         mandar_paquete_a_cpu(proceso);
+        log_debug(kernel_debug_log,"Paquete mandado a cpu");
         t_paquete *paquete = recibir_paquete(cliente_dispatch); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         //deserializar el pc
         //actualizarlo
@@ -649,6 +649,7 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
                 break;
         }
     }
+    
 }
 
 void liberar_cpu(struct instancia_de_cpu *cpu){

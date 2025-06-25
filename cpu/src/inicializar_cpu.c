@@ -17,10 +17,10 @@ void inicializar_CPU(int id){
 
 
     // Paso 1: Inicializar TLB vacía (todas las entradas con numPag = -1)
-    inicializarTLB();
+    //inicializarTLB();
 
 // Paso 2: Agregar entradas hasta llenar la TLB
-    agregarEntradaATLB(1, 101); // entra al índice 0
+    /*agregarEntradaATLB(1, 101); // entra al índice 0
     agregarEntradaATLB(2, 102); // entra al índice 1
     agregarEntradaATLB(3, 103); // entra al índice 2
 
@@ -59,14 +59,15 @@ void inicializar_CPU(int id){
     usarCache(1, 5, "READ", contenido);
 
     imprimirCache();
-    /*   
-    pthread_t hiloKernel;
-    pthread_t hiloMemoria;
-    pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
-    pthread_detach(hiloKernel);
-    pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
-    pthread_join(hiloMemoria, NULL);
     */
+    inicializar_kernel(valor_id);
+    //pthread_t hiloKernel;
+    //pthread_t hiloMemoria;
+    //pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
+    //pthread_detach(hiloKernel);
+    //pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
+    //pthread_join(hiloMemoria, NULL);
+    
 }
 
 //Funcion de Inicializacion de Logs

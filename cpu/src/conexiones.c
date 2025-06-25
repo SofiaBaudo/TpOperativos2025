@@ -2,7 +2,7 @@
 #include <stdlib.h>       // Para malloc, free, exit
 #include <string.h>       // (opcional, si usás funciones de string)
 #include <conexiones.h>
-
+#include <instrucciones.h>
 // Funcion Iniciar Conexion Kernel
 
 void* iniciar_conexion_kernel_dispatch(void *arg){
@@ -118,13 +118,15 @@ void* inicializar_kernel(void* arg){
     *valor_id = id;
     pthread_create(&hilo_cliente_kernel, NULL, iniciar_conexion_kernel_dispatch, valor_id);
     pthread_join(hilo_cliente_kernel, NULL);
-    log_debug(cpu_log_debug,"Por entrar al while");
+    log_debug(cpu_log_debug,"Despues de crear el hilo");
     while(1){
-        op_code terminar = recibir_op_code(fd_conexion_kernel_dispatch);
-        if(terminar == -1){
+        //op_code terminar = recibir_op_code(fd_conexion_kernel_dispatch);
+        ejecutar_instrucciones(NULL);
+       /* if(terminar == -1){
             log_info(logger, "se cerro la conexion con kernel");
             break;
         }
+        */
     }
     log_info(logger, "Finalizando hilo de Kernel");
     log_destroy(logger);

@@ -66,6 +66,8 @@ extern int RETARDO_CACHE;
 extern int tamPag;
 extern int cantNiveles;
 extern int entradasTabla;
+extern int pid;
+extern int pc;
 
 //Declaracion Variables Globales
 

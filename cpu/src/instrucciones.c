@@ -20,9 +20,12 @@ int pc;
 
 void* ejecutar_instrucciones(void* arg){
     //int cpu_id = *(int *)arg;
+    log_debug(cpu_log_debug,"Esperando para ejecutar");
     instru instru;
     char *instruccionEntera;
-    obtenerDelKernelPcPid(&pid, &pc);
+    obtenerDelKernelPcPid();
+    log_debug(cpu_log_debug,"el pid es %i", pid);
+    log_debug(cpu_log_debug, "el pc es %i", pc);
     instruccionEntera = fetch(pc,pid);
     instru = decode(instruccionEntera);
     execute(instru, pid);
@@ -30,12 +33,16 @@ void* ejecutar_instrucciones(void* arg){
     return NULL;
 }
 
-void obtenerDelKernelPcPid(int *pid, int *pc){
-    t_paquete *paquete = recibir_paquete(fd_conexion_kernel_dispatch);
-    *pid = deserializar_pid(paquete); 
-    *pc = deserializar_pc(paquete);
+void obtenerDelKernelPcPid(){
+    t_paquete *paquete = malloc(sizeof(t_paquete)); 
+    paquete = recibir_paquete(fd_conexion_kernel_dispatch);
+    if(paquete == NULL){
+        log_debug(cpu_log_debug,"Me rompi antes de deserializar el paquete.");
+    }
+    deserializar_pid_y_pc(paquete,&pid,&pc);
+    log_debug(cpu_log_debug, "consegui pid: %d y pc: %d", pid, pc);
     if(pc < 0){
-    log_error(cpu_logger, "El program Counter no puede ser negativo");
+    log_error(cpu_logger, "El PC no puede ser negativo");
     }
 }
 
@@ -139,6 +146,7 @@ void instruccion_goto(int parametro){
 //Ejecucion Syscalls
 
 void mandar_syscall(instru instruccion){
+    log_debug(cpu_log_debug,"Estoy por mandar syscall");
     //Hay que serializar
     //CAMBIAR --> hablar con jere y fede
     send(fd_conexion_kernel_dispatch, &instruccion, sizeof(instru),0);

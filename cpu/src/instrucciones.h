@@ -9,7 +9,7 @@
 void* ejecutar_instrucciones(void* arg);
 char* fetch(int pc,int pid);
 instru decode(char* instruccion_recibida);
-void obtenerDelKernelPcPid(int *pid, int *pc);
+void obtenerDelKernelPcPid();
 void execute(instru instruccion_recibida, int pid);
 void instruccion_noop(void);
 void instruccion_write(int direccion, char* param2, int pid);

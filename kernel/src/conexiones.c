@@ -50,10 +50,10 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
            list_add(cpus_conectadas,aux);
            pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-           sem_post(&CPUS_LIBRES);
            log_debug(kernel_debug_log,"Se agrego a la lista la cpu con id: %i ", aux->id_cpu); //%i espera un entero
            int tamanio_lista = list_size(cpus_conectadas);
            log_debug(kernel_debug_log,"La lista tiene %i cpus",tamanio_lista);
+           sem_post(&CPUS_LIBRES);
            //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
            break;
            //case HANDSHAKE_CPU_INTERRUPT:
