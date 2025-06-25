@@ -402,7 +402,7 @@ t_buffer * crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
 */
 //DESERIALIZACIONES
 
-/*void *deserializar_contenido(t_paquete *paquete){
+void *deserializar_contenido(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	int longitud;
 	int offset = 0;
@@ -419,7 +419,7 @@ t_buffer * crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
     free(paquete->buffer);
     free(paquete);
 	return NULL;
-}*/
+}
 
 char *deserializar_nombre_io(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
