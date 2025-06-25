@@ -20,7 +20,7 @@ int pc;
 
 void* ejecutar_instrucciones(void* arg){
     //int cpu_id = *(int *)arg;
-    instru instru;
+    t_instruccion instru;
     char *instruccionEntera;
     obtenerDelKernelPcPid();
     log_debug(cpu_log_debug,"el pid es %i", pid);
@@ -47,14 +47,14 @@ char* fetch(int pid,int pc){
     log_info(cpu_logger,"## PID: <PID> - FETCH - Program Counter: <%d>", pc);
     t_buffer *buffer = crear_buffer_cpu(pc, pid);
     crear_paquete(ENVIO_PID_Y_PC, buffer, fd_conexion_dispatch_memoria);
-    recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(instru),0);
+    recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(t_instruccion),0);
     return instruccion_recibida;
 }
 
 //Fase Decode (Interpretar proxima ejecucion a ejecutar)(Segunda Fase del Ciclo de Instruccion)
 
-instru decode(char* instruccion_recibida){
-    instru instruccion;
+t_instruccion decode(char* instruccion_recibida){  
+    t_instruccion instruccion;
     obtenerInsPartes = string_split(instruccion_recibida, " "); //te recibe el string tal como es si no lo encuentra
     instruccion.opcode = obtenerInsPartes[0];
     instruccion.param1 = obtenerInsPartes[1];
@@ -64,7 +64,7 @@ instru decode(char* instruccion_recibida){
 
 //Fase Execute (Ejecutar la instruccion)(Tercera Fase del Ciclo de Instruccion).
 
-void execute(instru instruccion, int pid){
+void execute(t_instruccion instruccion, int pid){
     char *nombre_instruccion = instruccion.opcode;
     char *param1Char = instruccion.param1;
     int param1 = atoi(param1Char);
@@ -138,13 +138,30 @@ void instruccion_goto(int parametro){
     send(fd_conexion_kernel_dispatch, &pc,sizeof(int),0);
 }
 
-//Ejecucion Syscalls
-
-void mandar_syscall(instru instruccion){
+void mandar_syscall(t_instruccion instruccion){
     log_debug(cpu_log_debug,"Estoy por mandar syscall");
-    //Hay que serializar
-    //CAMBIAR --> hablar con jere y fede
-    send(fd_conexion_kernel_dispatch, &instruccion, sizeof(instru),0);
+    if(strcmp(instruccion.opcode, "INIC_PROC") == 0){
+        int tamanio = atoi(instruccion.param2);
+        t_buffer *buffer = crear_buffer_instruccion_init_proc(instruccion.param1, tamanio, &pid, &pc);
+        crear_paquete(INIT_PROC,buffer,fd_conexion_kernel_dispatch);
+        return;
+    }
+    else if(strcmp(instruccion.opcode, "EXIT") == 0){
+    t_buffer *buffer = crear_buffer_vacio();
+    crear_paquete(EXIT, buffer, fd_conexion_kernel_dispatch);
+    return;
+    }
+    else if(strcmp(instruccion.opcode, "IO") == 0){
+        int milisegundos = atoi(instruccion.param2);
+        t_buffer *buffer = crear_buffer_instruccion_io(instruccion.param1,milisegundos,&pid,&pc);
+        crear_paquete(IO, buffer, fd_conexion_kernel_dispatch);
+        return;
+    }
+    else if(strcmp(instruccion.opcode, "DUMP_MEMORY") == 0){
+        t_buffer *buffer = crear_buffer_vacio();
+        crear_paquete(DUMP_MEMORY, buffer, fd_conexion_kernel_dispatch);
+        return;
+    }
 }
 
 //Chequear Interrupcion

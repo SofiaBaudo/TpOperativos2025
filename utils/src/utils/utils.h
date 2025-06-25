@@ -14,9 +14,11 @@
 #include <unistd.h> // para funciones como por ejemplo close(linea 105 utils.c)
 #include <semaphore.h>
 #include <commons/temporal.h>
+
+//OP_CODE DEL PROYECTO
 typedef enum op_code
 {
-	// Handshakes
+	// HANDSHAKE
 	HANDSHAKE_KERNEL,
 	HANDSHAKE_CPU,
 	HANDSHAKE_MEMORIA,
@@ -47,7 +49,7 @@ typedef enum op_code
 	NO_HAY_ESPACIO_EN_MEMORIA,
 
 	//enums memoria con cpu
-	SOLCITAR_INSTRUCCION,
+	SOLICITAR_INSTRUCCION,
 	RESPUESTA_INSTRUCCION,
 	ENVIO_PID_Y_PC,
 	ENVIO_PID_Y_ENTRADANIVEL,
@@ -80,6 +82,8 @@ typedef enum op_code
 	ENVIO_PID_NROPAG,
 	ENVIO_PID_NROPAG_CONTENIDO_MARCO
 }op_code;
+
+//ESTRUCTURA DEL BUFFER
 typedef struct
 {
 	int size;
@@ -87,92 +91,125 @@ typedef struct
 	void* stream;
 } t_buffer;
 
+//ESTRUCTURA DEL PAQUETE
 typedef struct
 {
 	op_code codigo_operacion;
 	t_buffer* buffer;
 } t_paquete;
 
-struct instancia_de_cpu{
-    int id_cpu;
-    bool puede_usarse;
-    struct pcb *proceso_ejecutando;
-    t_list *procesos_esperando;
-	int cantInstancias;
-};
-
+//ESTADOS
 typedef enum{
-  NEW, //0
-  READY,//1
-  BLOCKED,//2
-  EXEC,//3
-  EXIT_ESTADO,//4
-  SUSP_READY,//5
-  SUSP_BLOCKED//6
+	NEW, //0
+	READY,//1
+	BLOCKED,//2
+	EXEC,//3
+	EXIT_ESTADO,//4
+	SUSP_READY,//5
+	SUSP_BLOCKED//6
 } Estado;
 
-//ESTRUCTURA DEL PROCESO
+//ESTRUCTURA DE UN PROCESO
 struct pcb{
-  int pid;
-  int pc;
-  float proxima_estimacion; 
-  float ultima_estimacion; 
-  t_temporal *duracion_ultima_rafaga; 
-  t_temporal *tiempo_bloqueado;
-  //despues terminar lo de las metricas de estado y la otra metrica
-  //Estado estado;
-  int tamanio;
-  char *ruta_del_archivo_de_pseudocodigo;
-  int proxima_rafaga_io;
-  pthread_t hilo_al_bloquearse;
-  //Metricas de estado es un vector de enteros 
+	int pid;
+	int pc;
+	float proxima_estimacion; 
+	float ultima_estimacion; 
+	t_temporal *duracion_ultima_rafaga; 
+	t_temporal *tiempo_bloqueado;
+	//despues terminar lo de las metricas de estado y la otra metrica
+	//Estado estado;
+	int tamanio;
+	char *ruta_del_archivo_de_pseudocodigo;
+	int proxima_rafaga_io;
+	pthread_t hilo_al_bloquearse;
+	//Metricas de estado es un vector de enteros 
 };
 
+//ESTRUCTURA DE UNA IO
 struct instancia_de_io{
-    char* nombre;
+	char* nombre;
     bool puede_usarse;
     struct pcb *proceso_ejecutando;
     t_list *procesos_esperando;
 	int cantInstancias;
 	sem_t hay_procesos_esperando;
 };
+
+//ESTRUCTURA DE UNA CPU
+struct instancia_de_cpu{
+	int id_cpu;
+	bool puede_usarse;
+	struct pcb *proceso_ejecutando;
+	t_list *procesos_esperando;
+	int cantInstancias;
+};
+//RECURSOS
 typedef enum{
   REC_CPU,
   REC_IO
 }Recurso;
-typedef struct t_instruccion {
+
+//INSTRUCCION
+
+/*
+typedef struct t_instruccion{
     op_code codigo;
     char** parametros;
     int cantidad_parametros;
 } t_instruccion;
+ */
 
+typedef struct {
+    char* opcode; //codigo de instruccion
+    char* param1; 
+    char* param2; 
+} t_instruccion;
+
+//CONFIG
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);
+
+//LOGS
 t_log *iniciar_logger(char* archivoLog, char* nombreLog);
 void destruir_logger(t_log *logger);
+
+//CONEXIONES
 int crear_conexion(char *ip, char* puerto);
 int iniciar_servidor(char *puerto, t_log *un_log, char *mensaje);
 int esperar_cliente(int socket_servidor, t_log *un_log, char *mensaje);
-int recibir_operacion(int socket_cliente);
 
+//ENVIO DE DATOS
 void enviar_entero(int socket_cliente, int numero);
-int recibir_entero(int fd_conexion);
-
-void enviar_op_code(int socket_cliente, op_code codigo_operacion);
-op_code recibir_op_code (int socket);
-int deserializar_cant_segundos(t_paquete *paquete);
 void enviar_mensaje(int socket, char* mensaje);
-
-t_buffer *crear_buffer();
-t_buffer * crear_buffer_cpu(int pid, int pc);
-t_buffer * crear_buffer_MarcoMem(int pid, int entradaNivel);
-t_buffer *mandar_pid_a_memoria(int pid);
-t_buffer * devolver_pid_a_kernel(int pid);
-t_buffer *crear_buffer_vacio();
-op_code obtener_codigo_de_operacion (t_paquete * paquete);
-t_buffer *crear_buffer_io_nombre(char *nombre);
+void enviar_op_code(int socket_cliente, op_code codigo_operacion);
 void crear_paquete(op_code codigo, t_buffer *buffer, int socket);
+
+//RECIBIR DATOS
+int recibir_operacion(int socket_cliente);
+int recibir_entero(int fd_conexion);
+op_code recibir_op_code (int socket);
 t_paquete* recibir_paquete(int socket);
+
+//CREACION DE BUFFERS
+t_buffer *crear_buffer();
+t_buffer *crear_buffer_vacio();
+t_buffer *crear_buffer_cpu(int pid, int pc);
+//t_buffer* crear_buffer_instruccion(t_instruccion* instr);
+t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos, int *pid, int *pc);
+t_buffer *crear_buffer_MarcoMem(int pid, int entradaNivel);
+t_buffer *mandar_pid_a_memoria(int pid);
+t_buffer *devolver_pid_a_kernel(int pid);
+t_buffer *crear_buffer_pid_numPag(int pid, int nroPag);
+t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, char* contenido, int marco);
+t_buffer *crear_buffer_io_nombre(char *nombre);
+t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradasTabla, int cantNiveles);
+t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
+t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria, int *pid, int *pc);
+t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char *datos);
+t_buffer *crear_buffer_para_ejecucion_de_io(int pid, int milisegundos);
+
+//DESERIALIZACIONES
 char *deserializar_nombre_syscall_io(t_paquete *paquete);
 char *deserializar_nombre_io(t_paquete *paquete);
 void deserializar_pid_y_pc(t_paquete *paquete, int *pid, int *pc);
@@ -180,17 +217,14 @@ int deserializar_pc(t_paquete *paquete);
 int deserializar_pid(t_paquete *paquete);
 int deserializar_tamanio(t_paquete *paquete);
 char *deserializar_nombre_archivo(t_paquete *paquete);
-t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradasTabla, int cantNiveles);
+int deserializar_cant_segundos(t_paquete *paquete);
 void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasTabla, int* cantNiveles);
-t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
 int deserializar_entradaNivel(t_paquete *paquete);
-t_buffer * crear_buffer_para_ejecucion_de_io(int pid, int milisegundos);
-t_buffer* crear_buffer_instruccion(t_instruccion* instr);
-char* instruccion_a_string(op_code codigo);
 int deserializar_entero_desde_stream(t_paquete* paquete);
-t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char *datos);
 int deserializar_nroPag(t_paquete *paquete);
-t_buffer *crear_buffer_pid_numPag(int pid, int nroPag);
-t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, char* contenido, int marco);
 void *deserializar_contenido(t_paquete *paquete);
+
+//SIN CLASIFICACION
+char* instruccion_a_string(op_code codigo);
+op_code obtener_codigo_de_operacion (t_paquete * paquete);
 #endif
