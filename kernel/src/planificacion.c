@@ -15,7 +15,7 @@ void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibi
     log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
     log_debug(kernel_debug_log,"Su proxima estimacion es: %f",pcb->proxima_estimacion);
     incrementar_var_global_id_proceso();
-  return; 
+    return; 
 }
 
 void *planificador_largo_plazo_fifo(){
@@ -162,7 +162,13 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
 void *planificador_mediano_plazo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
-        //avisar a memoria que lo pase a swap
+        //agregar semaforo de uno a la vez como vector
+        struct pcb *proceso = obtener_copia_primer_proceso_de(SUSP_BLOCKED);
+        int socket = iniciar_conexion_kernel_memoria();
+        t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
+        crear_paquete(SUSPENDER_PROCESO,buffer,socket);
+        recibir_op_code(socket);
+        cerrar_conexion(socket);
         intentar_iniciar();
     }
 }
@@ -173,7 +179,7 @@ void *planificador_mediano_plazo_fifo(){
     sem_wait(&INTENTAR_INICIAR_SUSP_READY);
     sem_wait(&UNO_A_LA_VEZ_SUSP_READY);
     struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
-        bool respuesta = consultar_si_puede_entrar(primer_proceso);
+        bool respuesta = consultar_si_puede_entrar(primer_proceso); //Darle una vuelta de tuerca para que memoria sepa que es un proceso suspendido 
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
             primer_proceso = sacar_primero_de_la_lista(SUSP_READY); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
@@ -671,7 +677,7 @@ void finalizar_proceso(struct pcb *aux, Estado estadoInicial){
     cambiarEstado(aux,estadoInicial,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
-    crear_paquete(EXIT,buffer,socket);
+    crear_paquete(FINALIZAR_PROCESO,buffer,socket);
     cerrar_conexion(socket);
     sacar_de_cola_de_estado(aux,EXIT_ESTADO);    
     liberar_proceso(aux); //free de todos los punteros, lo demas se va con el free (aux)

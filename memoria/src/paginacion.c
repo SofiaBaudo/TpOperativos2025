@@ -5,6 +5,7 @@
 t_list* lista_tablas_por_proceso;
 
 //Funcion Creacion Tabla de Niveles
+
 tabla_pagina_nivel* crear_tabla_nivel(int nivel_actual){
     tabla_pagina_nivel* tabla = malloc(sizeof(tabla_pagina_nivel)); //aca creo tabla 1
     tabla->nivel = nivel_actual;
@@ -22,10 +23,13 @@ tabla_pagina_nivel* crear_tabla_nivel(int nivel_actual){
     }
     return tabla;
 }
+
 //Funcion Creacion Tabla del Proceso
 tabla_pagina_nivel* crear_tablas_proceso() {
     return crear_tabla_nivel(1); // empieza desde el nivel 1
 }
+
+
 //Funcion Agregar Tabla del Proceso nuevo
 void agregar_tablas_proceso(int pid){ // agregar un proceso nuevo
     t_tabla_proceso* nuevo = malloc(sizeof(t_tabla_proceso));
@@ -33,6 +37,7 @@ void agregar_tablas_proceso(int pid){ // agregar un proceso nuevo
     nuevo->tabla_raiz = crear_tablas_proceso();
     list_add(lista_tablas_por_proceso, nuevo);
 }
+
 //Funcion Buscar Tabla del Proceso(POR PID)
 tabla_pagina_nivel* buscar_tabla_por_pid(int pid){ //buscar la tabla raíz por PID
     for (int i = 0; i < list_size(lista_tablas_por_proceso); i++) {
@@ -42,6 +47,7 @@ tabla_pagina_nivel* buscar_tabla_por_pid(int pid){ //buscar la tabla raíz por P
     }
     return NULL;
 }
+
 //Funcion Liberar Tabla del Proceso
 void liberar_tablas(tabla_pagina_nivel* tabla){
     if (tabla == NULL) 

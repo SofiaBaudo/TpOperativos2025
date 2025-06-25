@@ -341,20 +341,21 @@ t_buffer *crear_buffer_pid_numPag(int pid, int nroPag){
 	buffer_aux->offset += sizeof(int);
 	return buffer_aux;
 }
-t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, char* contenido, int marco){
+t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, void* contenido, int marco, int tamPag){
 	t_buffer *buffer_aux = crear_buffer();
-	int longitud = strlen(contenido);
-	buffer_aux->size = 3*sizeof(int) + longitud;
+	int longitud = tamPag;
+	buffer_aux->size = 3*sizeof(int) + longitud + sizeof(int);
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &nroPag, sizeof(int));
 	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); 
+	
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int));
 	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, contenido,longitud);
-	buffer_aux->offset += sizeof(int);	
+	memcpy(buffer_aux->stream + buffer_aux->offset, contenido, longitud);
+	buffer_aux->offset += longitud;	
 	memcpy(buffer_aux->stream + buffer_aux->offset, &marco, sizeof(int));
 	buffer_aux->offset += sizeof(int);
 	return buffer_aux;
@@ -401,19 +402,24 @@ t_buffer * crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
 */
 //DESERIALIZACIONES
 
-void *deserializar_contenido(t_paquete *paquete){
+/*void *deserializar_contenido(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
+	int longitud;
+	int offset = 0;
+	offset += sizeof(int);
+    offset += sizeof(int);
     int data;
 	stream+=sizeof(int);
-    memcpy(&data,stream,sizeof(int));
-    stream+=sizeof(int);
-    char *contenido = malloc(data+1);
-    memcpy(contenido,stream,data);
-	free(paquete->buffer->stream);
+    memcpy(&data,stream + offset,sizeof(int));
+    offset+=sizeof(int);
+   void *contenido = malloc(longitud);
+    memcpy(contenido, stream + offset, longitud);
+    offset += longitud;
+    free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
-	return contenido;
-}
+	return NULL;
+}*/
 
 char *deserializar_nombre_io(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;

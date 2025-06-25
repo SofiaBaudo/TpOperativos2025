@@ -40,6 +40,10 @@ typedef enum op_code
 	RAFAGA_ACEPTADA,
 	IO_NOMBRE,
 	//enums para conexion kernel_memoria
+	INICIALIZAR_PROCESO_DESDE_NEW,
+	INICIALIZAR_PROCESO_SUSPENDIDO,
+	ACEPTAR_PROCESO,
+	RECHAZO_PROCESO,
 	FINALIZAR_PROCESO,
 	FINALIZACION_CONFIRMADA,
 	SUSPENDER_PROCESO,
@@ -80,7 +84,7 @@ typedef enum op_code
 	ENVIO_INSTRUCCION,
 	ENVIO_PID_DIRFIS_DAT,
 	ENVIO_PID_NROPAG,
-	ENVIO_PID_NROPAG_CONTENIDO_MARCO
+	ENVIO_PID_NROPAG_CONTENIDO_MARCO,
 }op_code;
 
 //ESTRUCTURA DEL BUFFER
@@ -201,7 +205,7 @@ t_buffer *crear_buffer_MarcoMem(int pid, int entradaNivel);
 t_buffer *mandar_pid_a_memoria(int pid);
 t_buffer *devolver_pid_a_kernel(int pid);
 t_buffer *crear_buffer_pid_numPag(int pid, int nroPag);
-t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, char* contenido, int marco);
+t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, void* contenido, int marco, int tamPag);
 t_buffer *crear_buffer_io_nombre(char *nombre);
 t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradasTabla, int cantNiveles);
 t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
@@ -222,7 +226,7 @@ void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasT
 int deserializar_entradaNivel(t_paquete *paquete);
 int deserializar_entero_desde_stream(t_paquete* paquete);
 int deserializar_nroPag(t_paquete *paquete);
-void *deserializar_contenido(t_paquete *paquete);
+//void *deserializar_contenido(t_paquete *paquete);
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);

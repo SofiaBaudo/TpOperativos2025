@@ -6,7 +6,7 @@
 #include <cache.h>
 
 
-int traduccion(int direccion, int pid, char *instruccion, char *contenido){ //te tendria que devolver la dir fisica
+int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te tendria que devolver la dir fisica
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int marco;

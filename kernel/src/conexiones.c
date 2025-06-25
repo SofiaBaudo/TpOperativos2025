@@ -190,7 +190,7 @@ void *io(void *instancia_de_io) { //el aux
         //crear_paquete(RAFAGA_DE_IO,buffer,cliente_io);
         int respuesta = recibir_entero(cliente_io);
         switch(respuesta){
-            case 41: //Corresponde al enum de fin de IO
+            case FIN_DE_IO: //Corresponde al enum de fin de IO
                 pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
                 int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
                 pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
