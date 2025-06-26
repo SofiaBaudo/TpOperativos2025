@@ -593,6 +593,7 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
         //actualizarlo
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         switch(motivo_de_devolucion){
+            log_debug(kernel_debug_log,"Se recibio una syscall");
             case DESALOJO_ACEPTADO:
                 temporal_stop(proceso->duracion_ultima_rafaga);
                 proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);

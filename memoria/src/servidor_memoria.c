@@ -3,7 +3,8 @@
 t_memoria_config memoria_config;
 t_log* logger_memoria;
 void* contenido;
-
+int tamanio_total;
+int tamanio_disponible_en_memoria;
 
 void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header)
     t_config* config = config_create("memoria.config");
@@ -69,9 +70,37 @@ void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion co
         case HANDSHAKE_KERNEL:
             log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", cliente); //log oblig
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
-            int tamanio = recibir_entero(cliente);
-            op_code respuesta = verificar_si_hay_espacio(tamanio);
-            enviar_op_code(cliente,respuesta);
+            //int tamanio = recibir_entero(cliente);
+            //op_code respuesta = verificar_si_hay_espacio(tamanio);
+            //enviar_op_code(cliente,respuesta);
+            while (1) {
+                op_code peticion_kernel = recibir_op_code(cliente);
+                /*if (peticion_kernel == -1) {
+                    log_warning(logger_memoria, "CPU desconectado");
+                    break;
+                }*/
+                switch (peticion_kernel){
+                    case INICIALIZAR_PROCESO_DESDE_NEW:
+                        //Llamar Iniciailizacion Proceso
+                        //inicializacion_proceso();
+                        break;
+                    case INICIALIZAR_PROCESO_SUSPENDIDO:
+                        //Llamar Iniciailizacion Proceso Suspendido
+                        //leer_pagina_de_swap();
+                        break;
+                    case FINALIZAR_PROCESO:
+                        //Llamar Finalizar Proceso
+                        //destruir_proceso_instrucciones(pid);
+                        break;
+                    case SUSPENDER_PROCESO:
+                        //Llamar Suspender Proceso
+                        //escribir_pagina_en_swap();
+                        break;    
+                    default:
+                        log_warning(logger_memoria, "Petición desconocida de Kernel: %d", peticion_kernel);
+                        break;
+                }
+            }
             //manejar_cliente_kernel(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS. 
             break;
         case HANDSHAKE_CPU:

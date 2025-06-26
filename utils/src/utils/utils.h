@@ -226,7 +226,7 @@ void deserializar_config_memoria(t_paquete *paquete, int* tamPag, int* entradasT
 int deserializar_entradaNivel(t_paquete *paquete);
 int deserializar_entero_desde_stream(t_paquete* paquete);
 int deserializar_nroPag(t_paquete *paquete);
-//void *deserializar_contenido(t_paquete *paquete);
+void *deserializar_contenido(t_paquete *paquete);
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);

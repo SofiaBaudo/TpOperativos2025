@@ -1,7 +1,5 @@
-//hacer instrucciones random
-
-//instrucciones de ejemplo
-
+INIC_PROC "cami" 2
 READ 10 20
-
-
+WRITE 4 hola
+NOOP
+EXIT

@@ -19,8 +19,8 @@ typedef struct {
 //Declaracion los Prototipos de Funciones
 
 void inicializar_swap();
-void escribir_pagina_en_swap(int pid, int nro_pagina, void* contenido);
-void* leer_pagina_de_swap(int pid, int nro_pagina);
+void escribir_pagina_en_swap(int pid, int nro_pagina, void* contenido,int tamanio_proceso,int cliente);
+void* leer_pagina_de_swap(int pid, int nro_pagina, int tamanio_proceso,int cliente);
 void eliminar_paginas_de_proceso(int pid);
 void cerrar_swap();
 

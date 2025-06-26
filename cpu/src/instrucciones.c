@@ -19,6 +19,7 @@ int pc;
 //Me comunico con el Kernel para obtener el PC/IP y el PID.
 
 void* ejecutar_instrucciones(void* arg){
+    //hacer un semaforo donde se verifica que llega un proceso. espera que llegue un proceso --> (pensar bien donde)
     //int cpu_id = *(int *)arg;
     t_instruccion instru;
     char *instruccionEntera;
@@ -26,7 +27,7 @@ void* ejecutar_instrucciones(void* arg){
     log_debug(cpu_log_debug,"el pid es %i", pid);
     log_debug(cpu_log_debug, "el pc es %i", pc);
     instru.opcode = "INIC_PROC";
-    instru.param1 = "20";
+    instru.param1 = "holahola";
     instru.param2 = "4";
 
     mandar_syscall(instru);

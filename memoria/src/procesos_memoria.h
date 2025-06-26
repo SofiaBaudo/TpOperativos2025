@@ -1,4 +1,0 @@
-#ifndef PROCESOS_MEMORIA
-#define PROCESOS_MEMORIA
-
-#endif

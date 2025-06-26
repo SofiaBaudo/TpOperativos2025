@@ -29,14 +29,13 @@ t_instruccion* analizar_linea(char* linea){
 //Funcion que Busca la instruccion numero pc del proceso con pid.
 //Devuelve el puntero a la instruccion que necesita la CPU ejecutar.
 
-t_instruccion* obtener_instruccion(int pid, int pc){
+void obtener_instruccion(int pid, int pc){
+    t_proceso_instrucciones* p = list_get(lista_procesos_instrucciones, i);
     for (int i = 0; i < list_size(lista_procesos_instrucciones); i++) {
-        t_proceso_instrucciones* p = list_get(lista_procesos_instrucciones, i);
         if (p->pid == pid) {
-            return list_get(p->instrucciones, pc);
+            return list_get(p->instrucciones, pc); //estas haciendo el return del nodo que tiene el pid que vos le pasaste por parametro
         }
     }
-    return NULL;
 }
 
 //Funcion que Lee linea por linea un archivo de pseudocodigo (ej: "proceso1") y convierte cada linea en una t_instruccion, agregandolas a una lista.

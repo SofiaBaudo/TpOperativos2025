@@ -2,7 +2,6 @@
 #include <espacio_de_usuario.h>
 
 void* espacio_usuario_memoria = NULL;  // Memoria fisica simulada
-int tamanio_disponible_en_memoria = 30;
 
 //Funcion para inicializar Espacio de Usuario
 
@@ -54,14 +53,15 @@ void escribir_espacio_usuario(int direccion_fisica, void* origen, int tamanio){
         return;
     }
     memcpy(espacio_usuario_memoria + direccion_fisica, origen, tamanio);
+    tamanio_disponible_en_memoria = tamanio_disponible_en_memoria - tamanio;
     listado_metricas.cant_escrituras_memoria++;
 }
-op_code verificar_si_hay_espacio(int tamanio){
-    if(tamanio>tamanio_disponible_en_memoria){
+op_code verificar_si_hay_espacio(){
+    if(tamanio_total>tamanio_disponible_en_memoria){
         return NO_HAY_ESPACIO_EN_MEMORIA;
     }
     else{
-        tamanio_disponible_en_memoria-=tamanio;
+        tamanio_disponible_en_memoria-=tamanio_total;
         return HAY_ESPACIO_EN_MEMORIA;
     }
 }
