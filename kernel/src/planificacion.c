@@ -47,12 +47,6 @@ void *planificador_largo_plazo_fifo(){
     return NULL;
 }
 
-void enviar_proceso_a_memoria(struct pcb* proceso){
-    int socket = iniciar_conexion_kernel_memoria();
-    t_buffer* buffer = crear_buffer_de_envio_de_proceso(primer_proceso->pid,primer_proceso->ruta_del_archivo_de_pseudocodigo);
-    crear_paquete(ENVIO_DE_PID_Y_RUTA_ARCHIVO, buffer, socket);
-}
-
 void *planificador_largo_plazo_proceso_mas_chico_primero(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
@@ -431,6 +425,13 @@ struct pcb *sacar_primero_de_la_lista(Estado estado){
 
 //CAMBIOS DE ESTADO
 
+void enviar_proceso_a_memoria(struct pcb* proceso){
+    int socket = iniciar_conexion_kernel_memoria();
+    t_buffer* buffer = crear_buffer_de_envio_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo);
+    crear_paquete(INICIALIZAR_PROCESO_DESDE_NEW, buffer, socket);
+    cerrar_conexion(socket);
+}
+
 void transicionar_a_new(struct pcb *pcb){
  pthread_mutex_lock(&mx_usar_cola_estado[NEW]); 
     //if(strcmp(ALGORITMO_INGRESO_A_READY,FIFO)==0){
@@ -600,7 +601,6 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
         //actualizarlo
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         switch(motivo_de_devolucion){
-            log_debug(kernel_debug_log,"Se recibio una syscall");
             case DESALOJO_ACEPTADO:
                 temporal_stop(proceso->duracion_ultima_rafaga);
                 proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);

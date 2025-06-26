@@ -12,27 +12,27 @@
 #include <variables_globales_memoria.h>
 #include <utils/utils.h>
 
-
-typedef struct lista_de_pids{
-    struct infoPid pid;
-    struct lista_de_pids *siguiente;
-} lista_de_pids;
-
 typedef struct {
     int pid;
     char* path_pseudo;
     struct lista_de_pcs *sublista;
 } infoPid;
-
-typedef struct {
-    struct pc_con_instruccion pc;
-    struct lista_de_pcs *siguiente;
-}lista_de_pcs;
+typedef struct lista_de_pids{
+    infoPid pid;
+    struct lista_de_pids *siguiente;
+} lista_de_pids;
 
 typedef struct {
     int pc;
     char* instruccion_pc;
 }pc_con_instruccion;
+
+typedef struct {
+    pc_con_instruccion pc;
+    struct lista_de_pcs *siguiente;
+}lista_de_pcs;
+
+
 
 void iniciar_lista_procesos_instrucciones();
 t_instruccion* analizar_linea(char* linea);

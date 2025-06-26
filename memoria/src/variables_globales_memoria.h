@@ -34,10 +34,11 @@ extern char* PATH_SWAPHILE;
 extern char* LOG_LEVEL;
 extern char* DUMP_PATH;
 extern char* PATH_INSTRUCCIONES;
-extern int tamanio_total=TAM_MEMORIA;
-extern int tamanio_disponible_en_memoria=TAM_MEMORIA;
+extern int tamanio_total;
+extern int tamanio_disponible_en_memoria;
 
 //Declaracion Struct Memoria Config
+
 typedef struct t_memoria_config {
     int PUERTO_ESCUCHA;
     int TAM_MEMORIA;

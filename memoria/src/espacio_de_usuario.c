@@ -56,7 +56,7 @@ void escribir_espacio_usuario(int direccion_fisica, void* origen, int tamanio){
     tamanio_disponible_en_memoria = tamanio_disponible_en_memoria - tamanio;
     listado_metricas.cant_escrituras_memoria++;
 }
-op_code verificar_si_hay_espacio(){
+op_code verificar_si_hay_espacio(int tamanio){
     if(tamanio_total>tamanio_disponible_en_memoria){
         return NO_HAY_ESPACIO_EN_MEMORIA;
     }

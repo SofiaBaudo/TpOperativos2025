@@ -6,21 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-//ESTADOS DEL PROCESO
-/*typedef enum{
-  NEW, //0
-  READY,//1
-  BLOCKED,//2
-  EXEC,//3
-  EXIT_ESTADO,//4
-  READY_SUSPEND,//5
-  BLOCKED_SUSPEND//6
-} Estado;
-*/
-
-void enviar_proceso_a_memoria(struct pcb* proceso);
-
 //PLANIFICADORES
 void *planificador_largo_plazo_fifo();
 void *planificador_largo_plazo_proceso_mas_chico_primero();
@@ -53,12 +38,13 @@ void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoN
 //void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
 void intentar_iniciar();
 void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
+void enviar_proceso_a_memoria(struct pcb* proceso);
 
 //CPU
 int buscar_cpu_libre(t_list *lista);
 struct instancia_de_cpu *obtener_cpu(int posicion);
 
-//LISTA
+//LISTAS
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *));
 //int buscar_en_lista(t_list *lista,int pid);
 //SJF CON DESALOJO Y SIN DESALOJO

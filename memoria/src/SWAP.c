@@ -36,8 +36,8 @@ void escribir_pagina_en_swap(int pid, int nro_pagina, void* contenido,int tamani
     tamanio_disponible_en_memoria = tamanio_disponible_en_memoria - tamanio_proceso;
     enviar_op_code(cliente,SUSPENSION_CONFIRMADA);
 }
-void leer_pagina_de_swap(int pid, int nro_pagina, int tamanio_proceso,int cliente) {
-    if(tamanio_total >= (tamanio_disponible_en_memoria + tamanio_proceso))
+void* leer_pagina_de_swap(int pid, int nro_pagina, int tamanio_proceso,int cliente) {
+    if(TAM_MEMORIA >= (TAM_MEMORIA + tamanio_proceso))
     {
     for (int i = 0; i < list_size(paginas_en_swap); i++) {
         t_pagina_en_swap* entry = list_get(paginas_en_swap, i);

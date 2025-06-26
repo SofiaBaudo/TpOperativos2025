@@ -26,19 +26,20 @@ void* ejecutar_instrucciones(void* arg){
     obtenerDelKernelPcPid();
     log_debug(cpu_log_debug,"el pid es %i", pid);
     log_debug(cpu_log_debug, "el pc es %i", pc);
+    /*
     instru.opcode = "INIC_PROC";
     instru.param1 = "holahola";
     instru.param2 = "4";
 
     mandar_syscall(instru);
-
-    /*
+    */
+       
     instruccionEntera = fetch(pc,pid);
     instru = decode(instruccionEntera);
     execute(instru, pid);
     check_interrupt(); //ponerlo en hilo.
     return NULL;
-    */
+    
     return NULL;
 }
 

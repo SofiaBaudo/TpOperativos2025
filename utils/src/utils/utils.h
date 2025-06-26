@@ -127,6 +127,8 @@ struct pcb{
 	char *ruta_del_archivo_de_pseudocodigo;
 	int proxima_rafaga_io;
 	pthread_t hilo_al_bloquearse;
+	//int metricas_de_estado[7];
+	//t_temporal metricas_de_tiempo[7];
 	//Metricas de estado es un vector de enteros 
 };
 
