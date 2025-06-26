@@ -34,7 +34,7 @@ typedef enum op_code
     HANDSHAKE,
     CREAR_PROCESO, // ESTE Y EL DE ABAJO SE PODRIAN CREAR PARA CADA CONEXION TIPO CREAR_PROCESO_KM (DE KERNEL A MEMORIA)
     RTA_CREAR_PROCESO, // RTA MK SERIA LA RTA QUE LA MEMORIA LE PASA AL KERNEL
-
+	ENVIO_DE_PID_Y_RUTA_ARCHIVO,
 	//enums para kernel
 	EJECUTAR_RAFAGA_IO,
 	RAFAGA_ACEPTADA,
@@ -212,6 +212,7 @@ t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
 t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria, int *pid, int *pc);
 t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char *datos);
 t_buffer *crear_buffer_para_ejecucion_de_io(int pid, int milisegundos);
+t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo);
 
 //DESERIALIZACIONES
 char *deserializar_nombre_syscall_io(t_paquete *paquete);
@@ -227,6 +228,7 @@ int deserializar_entradaNivel(t_paquete *paquete);
 int deserializar_entero_desde_stream(t_paquete* paquete);
 int deserializar_nroPag(t_paquete *paquete);
 void *deserializar_contenido(t_paquete *paquete);
+char *deserializar_nombre_archivo_proceso(t_paquete *paquete);
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);

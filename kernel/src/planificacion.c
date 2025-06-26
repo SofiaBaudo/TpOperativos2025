@@ -33,18 +33,24 @@ void *planificador_largo_plazo_fifo(){
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
+            //enviar_proceso_a_memoria(primer_proceso);
             primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la cola de NEW
             transicionar_a_ready(primer_proceso,NEW);
             sem_post(&INTENTAR_INICIAR_NEW); //incremento el semaforo para que pueda iniciar el planificador.
         }   
         else{
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
-            //sem_post(&CANTIDAD_DE_PROCESOS_EN_NEW); 
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //si no hay espacio en memoria, aviso que el proceso sigue estando en new.
         }
         sem_post(&UNO_A_LA_VEZ);//me aseguro que se siga tratando de a un proceso.
     } 
     return NULL;
+}
+
+void enviar_proceso_a_memoria(struct pcb* proceso){
+    int socket = iniciar_conexion_kernel_memoria();
+    t_buffer* buffer = crear_buffer_de_envio_de_proceso(primer_proceso->pid,primer_proceso->ruta_del_archivo_de_pseudocodigo);
+    crear_paquete(ENVIO_DE_PID_Y_RUTA_ARCHIVO, buffer, socket);
 }
 
 void *planificador_largo_plazo_proceso_mas_chico_primero(){
@@ -63,6 +69,7 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
             bool respuesta = consultar_si_puede_entrar(primer_proceso);
             log_debug(kernel_debug_log,"Conexion con memoria cerrada");
             if(respuesta == true){
+                //enviar_proceso_a_memoria(primer_proceso);
                 primer_proceso = sacar_primero_de_la_lista(NEW); //saco el primer proceso de la lista de NEW
                 transicionar_a_ready(primer_proceso,NEW); // lo transiciono a READY
                 actualizar_proximo_a_consultar(NEW); //actualizo la lista de NEW

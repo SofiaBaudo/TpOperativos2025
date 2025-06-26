@@ -8,6 +8,8 @@ void iniciar_lista_procesos_instrucciones(){
     lista_instrucciones = list_create();
 }
 
+
+
 //Funcion que Convierte la linea de Codigo
 //Convierte una linea completa del pseudocodigo, como "READ 10 20", en una estructura t_instruccion con: el enum correspondiente (por ejemplo: READ) una lista de los parámetros como strings (["10", "20"])la cantidad de parámetros (2)
 

@@ -19,8 +19,7 @@
 } Estado;
 */
 
-
-
+void enviar_proceso_a_memoria(struct pcb* proceso);
 
 //PLANIFICADORES
 void *planificador_largo_plazo_fifo();

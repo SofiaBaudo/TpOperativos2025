@@ -81,7 +81,7 @@ void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion co
                 }*/
                 switch (peticion_kernel){
                     case INICIALIZAR_PROCESO_DESDE_NEW:
-                        //Llamar Iniciailizacion Proceso
+                        //Llamar Inicializacion Proceso
                         //inicializacion_proceso();
                         break;
                     case INICIALIZAR_PROCESO_SUSPENDIDO:

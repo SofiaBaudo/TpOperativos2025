@@ -12,18 +12,27 @@
 #include <variables_globales_memoria.h>
 #include <utils/utils.h>
 
-//Declaracion Struct Instrucciones Por Proceso
+
+typedef struct lista_de_pids{
+    struct infoPid pid;
+    struct lista_de_pids *siguiente;
+} lista_de_pids;
 
 typedef struct {
     int pid;
-    t_list* instrucciones;
-} t_proceso_instrucciones; //tipo de dato
+    char* path_pseudo;
+    struct lista_de_pcs *sublista;
+} infoPid;
 
-//Declaracion da la Lista de Procesos
+typedef struct {
+    struct pc_con_instruccion pc;
+    struct lista_de_pcs *siguiente;
+}lista_de_pcs;
 
-extern t_list* lista_procesos_instrucciones; //lista global
-
-//Declaracion los Prototipos de Funciones
+typedef struct {
+    int pc;
+    char* instruccion_pc;
+}pc_con_instruccion;
 
 void iniciar_lista_procesos_instrucciones();
 t_instruccion* analizar_linea(char* linea);

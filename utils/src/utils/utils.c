@@ -183,6 +183,56 @@ t_buffer *crear_buffer_vacio(){
 	return buffer_aux;	
 }
 
+t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo){
+	t_buffer * buffer_aux = crear_buffer();
+	int longitud = strlen(ruta_del_archivo);
+	buffer_aux->size = 2*sizeof(int) + longitud;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); 
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+}
+
+char *deserializar_nombre_archivo_proceso(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+	stream+= sizeof(int);
+    int longitud;
+    memcpy(&longitud,stream,sizeof(int));
+    stream+=sizeof(int);
+    char *nombre = malloc(longitud+1);
+    memcpy(nombre,stream,longitud);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return nombre;
+}
+
+t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria, int *pid, int *pc){
+	t_buffer *buffer_aux = crear_buffer();
+	int longitud = strlen(ruta_del_archivo);
+	buffer_aux->size = 4*sizeof(int) + longitud; 
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pc, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &tamanio_en_memoria, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
+	buffer_aux->offset += sizeof(int);
+	buffer_aux -> stream = buffer_aux-> stream;
+	
+	return buffer_aux;
+}
+
 t_buffer * crear_buffer_para_ejecucion_de_io(int pid, int milisegundos){ //esto se lo manda kernel a cpu
 	t_buffer *buffer_aux = crear_buffer();
 	buffer_aux->size = 2*sizeof(int);
@@ -257,26 +307,6 @@ t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel){
 	return buffer_aux;
 }
 
-t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria, int *pid, int *pc){
-	t_buffer *buffer_aux = crear_buffer();
-	int longitud = strlen(ruta_del_archivo);
-	buffer_aux->size = 4*sizeof(int) + longitud; 
-	buffer_aux->offset = 0;
-	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pc, sizeof(int)); //como un fwrite.
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &tamanio_en_memoria, sizeof(int)); //como un fwrite.
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
-	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
-	
-	return buffer_aux;
-}
 
 t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos, int *pid, int *pc){
 	t_buffer *buffer_aux = crear_buffer();
@@ -509,25 +539,6 @@ int deserializar_entradaNivel(t_paquete *paquete){
 	return entradaNivel;
 }
 
-/*
-int deserializar_pc(t_paquete *paquete) {
-    if (!paquete || !paquete->buffer || !paquete->buffer->stream) {
-        fprintf(stderr, "Puntero nulo en deserializar_pc\n");
-        return -1;
-		}
-		
-		int *stream = (int *)paquete->buffer->stream;
-		
-		int pc = stream[1];  // asumimos que el primer int es otra cosa, el segundo es el pc
-		
-		free(paquete->buffer->stream);
-		free(paquete->buffer);
-		free(paquete);
-		
-		return pc;
-		}
-*/
-		
 		
 int deserializar_nroPag(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
