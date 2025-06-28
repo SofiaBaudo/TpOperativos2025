@@ -47,7 +47,7 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            struct instancia_de_cpu *aux = malloc(sizeof(struct instancia_de_cpu));
            aux->id_cpu = id;
            aux->puede_usarse = true;
-           aux->socket_para_comunicarse = dispatch:
+           aux->socket_para_comunicarse = dispatch;
            log_debug(kernel_debug_log,"Se conecto la cpu con id %i",aux->id_cpu);
            pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
            list_add(cpus_conectadas,aux);
@@ -194,7 +194,7 @@ void *io(void *instancia_de_io) { //el aux
         proceso = obtener_primero(io_aux->procesos_esperando); //esta funcion lo saca
         //t_buffer *buffer = crear_buffer_para_ejecucion_de_io(proceso->pid,proceso->proxima_rafaga_io);
         //crear_paquete(RAFAGA_DE_IO,buffer,cliente_io);
-        int respuesta = recibir_entero(cliente_io);
+        int respuesta = recibir_entero(instancia_de_io->socket_io_para_comunicarse);
         switch(respuesta){
             case FIN_DE_IO: //Corresponde al enum de fin de IO
                 pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
@@ -241,7 +241,8 @@ int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso co
 void cerrar_conexion(int socket){
     close (socket);
 }
-
+/*
+ESTA FUNCION VA A TENER QUE RECIBIR LA IO PARA PODER USAR ESE SOCKET EN ESPECIFICO
 void solicitar_rafaga_de_io(int duracion){
     enviar_op_code(cliente_io,EJECUTAR_RAFAGA_IO); // solicita al io ejecutar una rafaga
     op_code respuesta = recibir_op_code(cliente_io); // recibe la respuesta
@@ -251,7 +252,7 @@ void solicitar_rafaga_de_io(int duracion){
     else{
         // hay que ver esto
     } // esta funcion capaz estaria mejor que solo devuelva la respuesta pero para ir probandola la dejamos en void
-}
+}*/
 
 bool solicitar_permiso_a_memoria(int socket,int tamanio){
     op_code respuesta;

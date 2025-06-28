@@ -58,7 +58,7 @@ struct pcb *buscar_el_mas_grande();
 bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct pcb *proceso);
 
 //MANEJO DE SYSCALLS
-void mandar_paquete_a_cpu(struct pcb *proceso);
+void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu)
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta);
 void liberar_cpu(struct instancia_de_cpu *cpu);
 

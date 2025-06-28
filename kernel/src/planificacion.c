@@ -139,9 +139,10 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
         else{
             bool desalojo = ver_si_hay_que_desalojar(proceso);
             if(desalojo){
+                //cambiar todo para que haya alguna funcion que te devuelva la cpu y no la posicion
                 struct pcb* proceso_a_desalojar = buscar_el_mas_grande(EXEC);
-                enviar_entero(cliente_interrupt,1); //Con esto aviso que quiero desalojar un proceso
-                enviar_entero(cliente_dispatch,proceso_a_desalojar->pid); //Con esto le indico a la cpu cual quiero desalojar
+                //enviar_entero(cliente_interrupt,1); //Con esto aviso que quiero desalojar un proceso
+                //enviar_entero(cliente_dispatch,proceso_a_desalojar->pid); //Con esto le indico a la cpu cual quiero desalojar
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
                 reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)-1);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
@@ -568,10 +569,10 @@ void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado){
     pthread_mutex_unlock(&mx_usar_cola_estado[estado]);
 }
 
-void mandar_paquete_a_cpu(struct pcb *proceso){
+void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu){
     t_buffer *buffer = crear_buffer_cpu(proceso->pid,proceso->pc);
     log_debug(kernel_debug_log,"Se creo el buffer con el pid %i y el pc %i", proceso->pid, proceso->pc);
-    crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
+    crear_paquete(ENVIO_PID_Y_PC,buffer,cpu->socket_para_comunicarse); //esta funcion crea el paquete y tambien lo envia
 }
 
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
