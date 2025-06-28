@@ -140,6 +140,7 @@ struct instancia_de_io{
     t_list *procesos_esperando;
 	int cantInstancias;
 	sem_t hay_procesos_esperando;
+	int socket_io_para_comunicarse;
 };
 
 //ESTRUCTURA DE UNA CPU
@@ -149,6 +150,8 @@ struct instancia_de_cpu{
 	struct pcb *proceso_ejecutando;
 	t_list *procesos_esperando;
 	int cantInstancias;
+	int socket_para_comunicarse;
+	int socket_interrupt;
 };
 //RECURSOS
 typedef enum{

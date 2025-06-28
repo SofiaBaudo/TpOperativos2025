@@ -21,7 +21,7 @@ int fd_memoria;
 int fd_cpu_interrupt;
 int fd_cpu_dispatch;
 int fd_io;
-int cliente_io;
+//int cliente_io;
 
 //VARIABLES PARA LAS CONFIGS
 char *IP_MEMORIA;

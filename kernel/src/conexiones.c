@@ -17,6 +17,7 @@ void *atender_kernel_dispatch(){
    log_debug(kernel_logger, "Servidor de kernel para dispatch iniciado en el puerto %s", PUERTO_ESCUCHA_DISPATCH);// Log de inicio del servidor
     while (1) { // sigue ciclando mientras no se desconecte el cliente
     // Aca esperan al cliente (CPU)
+    int cliente_dispatch;
     cliente_dispatch = esperar_cliente(servidor_kernel,kernel_logger,"CPU_DISPATCH");
     if (cliente_dispatch == -1) {
         log_error(kernel_logger, "Error al aceptar un cliente");
@@ -46,6 +47,7 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            struct instancia_de_cpu *aux = malloc(sizeof(struct instancia_de_cpu));
            aux->id_cpu = id;
            aux->puede_usarse = true;
+           aux->socket_para_comunicarse = dispatch:
            log_debug(kernel_debug_log,"Se conecto la cpu con id %i",aux->id_cpu);
            pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
            list_add(cpus_conectadas,aux);
@@ -74,6 +76,7 @@ void atender_kernel_interrupt(){
    log_debug(kernel_logger, "Servidor de kernel para interrupt iniciado en el puerto %s", PUERTO_ESCUCHA_INTERRUPT);// Log de inicio del servidor
    while (1) { // sigue ciclando mientras no se desconecte el cliente
        // Aca esperan al cliente (CPU)
+       int cliente_interrupt;
        cliente_interrupt = esperar_cliente(servidor_kernel_interrupt,kernel_logger,"CPU_INTERRUPT");
        if (cliente_interrupt == -1) {
                log_error(kernel_logger, "Error al aceptar un cliente");
@@ -99,7 +102,8 @@ void* manejar_kernel_interrupt(void *socket_interrupt){
            //LOG_INFO : ES EL LOG OBLIGATORIO
            log_info(kernel_logger, "## CPU-INTERRUPT Conectado - FD del socket: %d", interrupt);
            enviar_op_code(interrupt, HANDSHAKE_ACCEPTED);    
-    
+            //buscar la cpu con el id
+            //aux->socket_interrupt = interrupt;
            //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
            break;        
            default:
@@ -118,6 +122,7 @@ void atender_kernel_io(){
     }
     log_debug(kernel_logger, "Servidor de kernel para dispatch iniciado en el puerto %s", PUERTO_ESCUCHA_IO);// Log de inicio del servidor
     while (1) { // sigue ciclando mientras no se desconecte el cliente
+        int cliente_io;
         cliente_io = esperar_cliente(servidor_kernel,kernel_logger,"IO"); //este es el socket que hay que utilizar para comunicarse
         if (cliente_io == -1) {
            log_error(kernel_logger, "Error al aceptar un cliente");
@@ -153,6 +158,7 @@ void* manejar_kernel_io(void *socket_io){
             pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
             int pos = buscar_IO_solicitada(ios_conectados,nombre);
             pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
+            //cambiar el IO para diferenciar cada instancia, donde cada una va a tener su socket
             if(pos == -1){
                 aux->nombre = nombre;
                 aux->cantInstancias = 1;

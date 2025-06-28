@@ -642,6 +642,8 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
                     temporal_stop(proceso->duracion_ultima_rafaga);
                     sacar_de_cola_de_estado(proceso,EXEC);
                     cambiarEstado(proceso,EXEC,BLOCKED);
+                    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
+                    //pthread_detach(&aux->hilo_al_bloquearse);
                     proceso->tiempo_bloqueado = temporal_create();
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
@@ -649,8 +651,6 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     list_add(io_aux->procesos_esperando,proceso);
                     sem_post(&io_aux->hay_procesos_esperando);
-                    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
-                    //pthread_detach(&aux->hilo_al_bloquearse);
                     //sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]); Me parece que esto no va
                 }
                 bloqueante = true;
