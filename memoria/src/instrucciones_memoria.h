@@ -1,4 +1,3 @@
-//Define de Instrucciones Memoria
 #ifndef INSTRUCCIONES_MEMORIA_H
 #define INSTRUCCIONES_MEMORIA_H
 
@@ -12,34 +11,35 @@
 #include <variables_globales_memoria.h>
 #include <utils/utils.h>
 
-typedef struct {
+typedef struct infoPid{
     int pid;
-    char* path_pseudo;
+    char* PATH_INSTRUCCIONES;
     struct lista_de_pcs *sublista;
 } infoPid;
+
 typedef struct lista_de_pids{
-    infoPid pid;
+    infoPid info_pid;
     struct lista_de_pids *siguiente;
 } lista_de_pids;
 
-typedef struct {
+typedef struct pc_con_instruccion{
     int pc;
     char* instruccion_pc;
 }pc_con_instruccion;
 
-typedef struct {
-    pc_con_instruccion pc;
+typedef struct lista_de_pcs{
+    pc_con_instruccion info_pc;
     struct lista_de_pcs *siguiente;
 }lista_de_pcs;
 
+void iniciar_lista_pids();
+char* obtener_instruccion(int pid, int pc);
+lista_de_pcs *buscar_lista_pid(int pid);
+void enlazar_pid_nombre_archivo (int pid, char* PATH_INSTRUCCIONES);
+void cargar_instrucciones_desde_archivo(int pid, char* PATH_INSTRUCCIONES);
 
 
-void iniciar_lista_procesos_instrucciones();
-t_instruccion* analizar_linea(char* linea);
-t_instruccion* obtener_instruccion(int pid, int pc);
-t_list* cargar_instrucciones_desde_archivo(char* PATH_INSTRUCCIONES);
-void registrar_instrucciones_proceso(int pid, char* PATH_INSTRUCCIONES);
-void destruir_instruccion(t_instruccion* instr);
-void destruir_proceso_instrucciones(int pid);
+extern lista_de_pcs *Lista_de_pcs;
+extern lista_de_pids *Lista_de_pids;   
 
 #endif

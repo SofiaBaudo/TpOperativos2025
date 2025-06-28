@@ -83,6 +83,7 @@ void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion co
                     case INICIALIZAR_PROCESO_DESDE_NEW:
                         //Llamar Inicializacion Proceso
                         //inicializacion_proceso();
+                        
                         break;
                     case INICIALIZAR_PROCESO_SUSPENDIDO:
                         //Llamar Iniciailizacion Proceso Suspendido
@@ -150,20 +151,15 @@ void manejar_fetch_cpu(int socket_cpu){
     int pc = deserializar_pc(paquete);    // ya está en utils
     int pid = deserializar_pid(paquete);  // ya está en utils
 
-    t_instruccion* instruccion = obtener_instruccion(pid, pc);
+    char* instruccion = obtener_instruccion(pid, pc);
     if (!instruccion) {
         log_error(logger_memoria, "Instrucción no encontrada para PID %d - PC %d", pid, pc);
         return;
     }
-
-    char* codigo_str = instruccion_a_string(instruccion->codigo); //hace q en vex de q diga instruccion 6 a q diga instruccion READ, ponele
-    log_info(logger_memoria, "## PID: <%d> - Obtener instrucción: <%d> - Instrucción: <%s>", pid, pc, codigo_str); //log oblig
-    free(codigo_str);
-
-
-    t_buffer* buffer = crear_buffer_instruccion(instruccion);
-    crear_paquete(ENVIO_INSTRUCCION, buffer, socket_cpu);
-
+    log_info(logger_memoria, "## PID: <%d> - Obtener instrucción: <%d> - Instrucción: <%s>", pid, pc, instruccion); //log oblig
+    free(instruccion);
+    //t_buffer* buffer = crear_buffer_instruccion(instruccion); -. HABLAR CON FEDE JERE
+    //crear_paquete(ENVIO_INSTRUCCION, buffer, socket_cpu);
     //Sumo a la metrica de instrucciones solicitadas
     listado_metricas.instrucciones_solicitadas++;
 }

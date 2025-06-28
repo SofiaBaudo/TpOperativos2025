@@ -628,27 +628,6 @@ int deserializar_entero_desde_stream(t_paquete* paquete){ //lee un int desde el 
 
 //SIN CLASIFICACION
 
-char* instruccion_a_string(op_code codigo){
-	switch (codigo) {
-        case NOOP:
-		return strdup("NOOP");
-        case READ:
-		return strdup("READ");
-        case WRITE:
-		return strdup("WRITE");
-        case IO:
-		return strdup("IO");
-        case EXIT:
-		return strdup("EXIT");
-        case INIT_PROC:
-		return strdup("INIT_PROC");
-        case DUMP_MEMORY:
-		return strdup("DUMP_MEMORY");
-        default:
-		return strdup("INSTRUCCION_DESCONOCIDA");
-    }
-}
-
 op_code obtener_codigo_de_operacion (t_paquete * paquete){
 	op_code codigo;
 	memcpy(&codigo, &(paquete->codigo_operacion), sizeof(op_code));

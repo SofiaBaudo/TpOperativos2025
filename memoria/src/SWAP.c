@@ -7,6 +7,7 @@
 
 static FILE* swapfile = NULL;
 static t_list* paginas_en_swap = NULL;
+
 int tamanio_total;
 int tamanio_disponible_en_memoria;
 

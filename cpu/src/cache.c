@@ -7,7 +7,6 @@
 
 NodosCache *punteroCache = NULL;
 void usarCache(int pid, int numPag, char *instruccion, void* contenido){
-   
     NodosCache *aux = cache;
     
     if(estaEnCache(numPag, pid)){

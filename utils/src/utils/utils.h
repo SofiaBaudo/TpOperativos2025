@@ -156,16 +156,6 @@ typedef enum{
   REC_IO
 }Recurso;
 
-//INSTRUCCION
-
-/*
-typedef struct t_instruccion{
-    op_code codigo;
-    char** parametros;
-    int cantidad_parametros;
-} t_instruccion;
- */
-
 typedef struct {
     char* opcode; //codigo de instruccion
     char* param1; 
