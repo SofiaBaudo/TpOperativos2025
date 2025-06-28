@@ -133,7 +133,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
             proceso = sacar_primero_de_la_lista(READY);
             cambiarEstado(proceso,READY,EXEC);
-            //asignarle un hilo al proceso
+            //CREAR UN HILO PARA PONER A EJECUTAR!!!!!
             poner_a_ejecutar(proceso,cpu_aux); //esta funcion tambien va a recibir la cpu.
         }
         else{
@@ -244,7 +244,6 @@ void *funcion_para_bloqueados(struct pcb *proceso){
         cambiarEstado(proceso,BLOCKED,SUSP_BLOCKED); //A chequear
         sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
     }
-    pthread_detach(proceso->hilo_al_bloquearse);//El hilo se desacopla del hilo principal.
     return NULL;
   
 }
@@ -570,15 +569,14 @@ void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado){
 }
 
 void mandar_paquete_a_cpu(struct pcb *proceso){
-        t_buffer *buffer = crear_buffer_cpu(proceso->pid,proceso->pc);
-        log_debug(kernel_debug_log,"Se creo el buffer con el pid %i y el pc %i", proceso->pid, proceso->pc);
-        crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
+    t_buffer *buffer = crear_buffer_cpu(proceso->pid,proceso->pc);
+    log_debug(kernel_debug_log,"Se creo el buffer con el pid %i y el pc %i", proceso->pid, proceso->pc);
+    crear_paquete(ENVIO_PID_Y_PC,buffer,cliente_dispatch); //esta funcion crea el paquete y tambien lo envia
 }
 
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
     temporal_stop(aux->duracion_ultima_rafaga);
     cambiarEstado(aux,EXEC,BLOCKED);
-    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux); preguntar en el soporte
     sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
     aux->tiempo_bloqueado = temporal_create();
     int socket = iniciar_conexion_kernel_memoria();
@@ -598,7 +596,7 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
         mandar_paquete_a_cpu(proceso);
         t_paquete *paquete = recibir_paquete(cliente_dispatch); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         //deserializar el pc
-        //actualizarlo
+        //actualizarlo (hay que ponerse de acuerdo con Sofi)
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         switch(motivo_de_devolucion){
             case DESALOJO_ACEPTADO:
@@ -644,8 +642,6 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
                     temporal_stop(proceso->duracion_ultima_rafaga);
                     sacar_de_cola_de_estado(proceso,EXEC);
                     cambiarEstado(proceso,EXEC,BLOCKED);
-                    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
-                    sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
                     proceso->tiempo_bloqueado = temporal_create();
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
@@ -653,6 +649,9 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     list_add(io_aux->procesos_esperando,proceso);
                     sem_post(&io_aux->hay_procesos_esperando);
+                    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
+                    //pthread_detach(&aux->hilo_al_bloquearse);
+                    //sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]); Me parece que esto no va
                 }
                 bloqueante = true;
                 break;
@@ -688,7 +687,7 @@ void finalizar_proceso(struct pcb *aux, Estado estadoInicial){
     crear_paquete(FINALIZAR_PROCESO,buffer,socket);
     cerrar_conexion(socket);
     sacar_de_cola_de_estado(aux,EXIT_ESTADO);    
-    liberar_proceso(aux); //free de todos los punteros, lo demas se va con el free (aux)
+    liberar_proceso(aux); //free de todos los punteros, lo demas se va con el free (aux) 
     intentar_iniciar();
 
     //int confirmacion = recibir_entero(socket);
