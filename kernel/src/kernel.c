@@ -1,6 +1,8 @@
 #include <kernel.h>
 #include <conexiones.h>
 
+
+
 void *funcion_que_duerme(){
    usleep(5000000);
    log_debug(kernel_debug_log,"Ya dormi");

@@ -14,7 +14,7 @@ void *manejar_kernel_io(void *socket_io);
 void* manejar_kernel_interrupt(void *socket_interrupt);
 
 //SOLICITUDES
-void solicitar_rafaga_de_io(int duracion);
+void solicitar_rafaga_de_io(int duracion,struct instancia_de_io *io_a_usar);
 bool solicitar_permiso_a_memoria(int socket,int tamanio);
 int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 

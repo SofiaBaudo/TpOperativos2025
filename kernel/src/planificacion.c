@@ -140,7 +140,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             bool desalojo = ver_si_hay_que_desalojar(proceso);
             if(desalojo){
                 //cambiar todo para que haya alguna funcion que te devuelva la cpu y no la posicion
-                struct pcb* proceso_a_desalojar = buscar_el_mas_grande(EXEC);
+                //struct pcb* proceso_a_desalojar = buscar_el_mas_grande(EXEC);
                 //enviar_entero(cliente_interrupt,1); //Con esto aviso que quiero desalojar un proceso
                 //enviar_entero(cliente_dispatch,proceso_a_desalojar->pid); //Con esto le indico a la cpu cual quiero desalojar
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
@@ -594,8 +594,8 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
     proceso->duracion_ultima_rafaga = temporal_create();
     bool bloqueante = false;
     while(!bloqueante){
-        mandar_paquete_a_cpu(proceso);
-        t_paquete *paquete = recibir_paquete(cliente_dispatch); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
+        mandar_paquete_a_cpu(proceso,cpu_en_la_que_ejecuta);
+        t_paquete *paquete = recibir_paquete(cpu_en_la_que_ejecuta->socket_para_comunicarse); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         //deserializar el pc
         //actualizarlo (hay que ponerse de acuerdo con Sofi)
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete

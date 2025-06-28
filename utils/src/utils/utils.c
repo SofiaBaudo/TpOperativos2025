@@ -196,6 +196,7 @@ t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo){
 	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
 	buffer_aux->offset += sizeof(int);
 	buffer_aux -> stream = buffer_aux-> stream;
+	return buffer_aux;
 }
 
 char *deserializar_nombre_archivo_proceso(t_paquete *paquete){
@@ -442,8 +443,8 @@ void *deserializar_contenido(t_paquete *paquete){
 	stream+=sizeof(int);
     memcpy(&data,stream + offset,sizeof(int));
     offset+=sizeof(int);
-   void *contenido = malloc(longitud);
-    memcpy(contenido, stream + offset, longitud);
+   	void *contenido = malloc(sizeof(longitud));
+    memcpy(&contenido, stream + offset, longitud);
     offset += longitud;
     free(paquete->buffer->stream);
     free(paquete->buffer);
