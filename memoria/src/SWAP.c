@@ -11,7 +11,6 @@ static t_list* paginas_en_swap = NULL;
 int tamanio_total;
 int tamanio_disponible_en_memoria;
 
-//Funcion Iniciar SWAP
 void inicializar_swap(){
     swapfile = fopen(PATH_SWAPFILE, "rb+");
     if (!swapfile) {

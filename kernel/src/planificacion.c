@@ -133,7 +133,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
             proceso = sacar_primero_de_la_lista(READY);
             cambiarEstado(proceso,READY,EXEC);
-            //CREAR UN HILO PARA PONER A EJECUTAR!!!!!
+            //CREAR UN HILO PARA PONER A EJECUTAR Y HACERLE UN DETACH AL TOQUE!!!!!
             poner_a_ejecutar(proceso,cpu_aux); //esta funcion tambien va a recibir la cpu.
         }
         else{
