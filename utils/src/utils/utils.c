@@ -433,23 +433,26 @@ t_buffer * crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
 */
 //DESERIALIZACIONES
 
-void *deserializar_contenido(t_paquete *paquete){
-	void *stream = paquete->buffer->stream;
-	int longitud;
-	int offset = 0;
-	offset += sizeof(int);
+void *deserializar_contenido(t_paquete *paquete) {
+    void *stream = paquete->buffer->stream;
+    int offset = 0;
+
+    offset += sizeof(int); 
     offset += sizeof(int);
-    int data;
-	stream+=sizeof(int);
-    memcpy(&data,stream + offset,sizeof(int));
-    offset+=sizeof(int);
-   	void *contenido = malloc(sizeof(longitud));
-    memcpy(&contenido, stream + offset, longitud);
+
+    int longitud;
+    memcpy(&longitud, stream + offset, sizeof(int));
+    offset += sizeof(int);
+
+    void *contenido = malloc(longitud);
+    memcpy(contenido, stream + offset, longitud);
     offset += longitud;
+
     free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
-	return NULL;
+
+    return contenido;
 }
 
 char *deserializar_nombre_io(t_paquete *paquete){

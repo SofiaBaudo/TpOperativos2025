@@ -13,8 +13,8 @@ char* instruccion_recibida;
 char** obtenerInsPartes;
 char* parametros;
 char* nombre_instruccion;
-int pid;
-int pc;
+int pid = 1;
+int pc = 2;
 
 //Me comunico con el Kernel para obtener el PC/IP y el PID.
 
@@ -23,9 +23,9 @@ void* ejecutar_instrucciones(void* arg){
     //int cpu_id = *(int *)arg;
     t_instruccion instru;
     char *instruccionEntera;
-    obtenerDelKernelPcPid();
-    log_debug(cpu_log_debug,"el pid es %i", pid);
-    log_debug(cpu_log_debug, "el pc es %i", pc);
+    //obtenerDelKernelPcPid();
+    //log_debug(cpu_log_debug,"el pid es %i", pid);
+    //log_debug(cpu_log_debug, "el pc es %i", pc);
     /*
     instru.opcode = "INIC_PROC";
     instru.param1 = "holahola";
@@ -35,10 +35,12 @@ void* ejecutar_instrucciones(void* arg){
     */
        
     instruccionEntera = fetch(pc,pid);
+    /*
     instru = decode(instruccionEntera);
     execute(instru, pid);
     check_interrupt(); //ponerlo en hilo.
     return NULL;
+    */
     
     return NULL;
 }
@@ -55,10 +57,11 @@ void obtenerDelKernelPcPid(){
 //Fase fetch (Buscar proxima instruccion a realizar)(Primer Fase del Ciclo de Instruccion).
 
 char* fetch(int pid,int pc){
-    log_info(cpu_logger,"## PID: <PID> - FETCH - Program Counter: <%d>", pc);
+    log_info(cpu_logger,"## PID: <%d> - FETCH - Program Counter: <%d>",pid, pc);
     t_buffer *buffer = crear_buffer_cpu(pc, pid);
     crear_paquete(ENVIO_PID_Y_PC, buffer, fd_conexion_dispatch_memoria);
     recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(t_instruccion),0);
+    log_debug(cpu_log_debug, "instruccion recibida %c", instruccion_recibida);
     return instruccion_recibida;
 }
 

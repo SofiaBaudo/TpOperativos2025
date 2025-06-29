@@ -3,8 +3,6 @@
 t_memoria_config memoria_config;
 t_log* logger_memoria;
 void* contenido;
-int tamanio_total;
-int tamanio_disponible_en_memoria;
 
 void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header)
     t_config* config = config_create("memoria.config");

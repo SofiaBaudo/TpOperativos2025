@@ -1,74 +1,59 @@
 #include <instrucciones_memoria.h>
 
-lista_de_pcs *Lista_de_pcs = NULL;
-lista_de_pids *Lista_de_pids = NULL;
+t_list *Lista_de_pcs;
+t_list *Lista_de_pids;
 
 void iniciar_lista_pids(){
-    lista_de_pids* Lista_de_pids = list_create();
+    Lista_de_pids = list_create();
 }
 char* obtener_instruccion(int pid, int pc){
-    lista_de_pcs *aux_pc = buscar_lista_pid(pid);
+    infoPid *info = buscar_info_pid(pid); //me devuelve la info del nodo que tiene el mismo pid que el que buscamos. La info seria --> pid, el path y el puntero a la sublista
     //buscar pc dentro de la sublista
-    while(aux_pc!=NULL){
-        if(aux_pc->info_pc.pc == pc){
-            return aux_pc->info_pc.instruccion_pc;
+    for(int i = 0; i < list_size(info->sublista); i++){
+        pc_con_instruccion *instruccion = list_get(info->sublista, i); //esto se encarga de ir moviendo los punteros
+        if(instruccion->pc == pc){
+            return instruccion->instruccion_pc;
         }
-        aux_pc = aux_pc->siguiente;
     }
     return NULL;
 }
-lista_de_pcs *buscar_lista_pid(int pid){
-    lista_de_pids *aux = Lista_de_pids;
-    if(aux == NULL){
-        return NULL;
+infoPid* buscar_info_pid(int pid) { //aca tuvimos que pasar todo a t_list porque list_create() crea la lista pero en formato t_list*
+    for (int i = 0; i < list_size(Lista_de_pids); i++) { //recorro hasta el final de la lista
+        infoPid* info = list_get(Lista_de_pids, i);//agarro el nodo en la posicion i list_get
+        if (info->pid == pid) { //si el pid del nodo que agarramos es el mismo que el del parametro que retorne
+            return info;
+        }
     }
-    while(aux!=NULL && aux->info_pid.pid != pid){
-        aux = aux->siguiente;
-    }
-    if(aux == NULL){
-        return NULL; //no fue encontrado
-    }
-    if(aux->info_pid.pid == pid){
-        return aux->info_pid.sublista; //enlace a lista de pcs
-    }
-    return NULL;
+    return NULL; //si llego aca es porque nunca entro al if => no esta.
 }
 void enlazar_pid_nombre_archivo (int pid, char* PATH_INSTRUCCIONES){
-    lista_de_pids *nuevo = malloc(sizeof(lista_de_pids));
-    nuevo->info_pid.pid = pid;
-    nuevo->info_pid.PATH_INSTRUCCIONES = PATH_INSTRUCCIONES;
-    nuevo->siguiente = NULL;
-    nuevo->info_pid.sublista = list_create();
-    cargar_instrucciones_desde_archivo(pid, PATH_INSTRUCCIONES);
-    
+    infoPid *nuevo = malloc(sizeof(infoPid));
+   
+    nuevo->pid = pid;
+    nuevo->PATH_INSTRUCCIONES = PATH_INSTRUCCIONES;
+     
+    nuevo->sublista = list_create();
     list_add(Lista_de_pids, nuevo);
+    cargar_instrucciones_desde_archivo(pid, nuevo->PATH_INSTRUCCIONES);
 }
 void cargar_instrucciones_desde_archivo(int pid, char* PATH_INSTRUCCIONES){
-    FILE* archivo = fopen(PATH_INSTRUCCIONES, "rb");
+    FILE* archivo = fopen(PATH_INSTRUCCIONES, "r");
     if (!archivo) {
         perror("No se pudo abrir el archivo de pseudocodigo");
         return;
     }
-    lista_de_pcs *pcLista = buscar_lista_pid(pid);
-    lista_de_pcs *nodoAnterior = NULL;
-    char* faux;
+    infoPid *infoPid = buscar_info_pid(pid);
+    char* faux = NULL;
+    size_t len = 0;
     int contador_pcs = 1; //si es que el pc empieza desde 1
-    fread(&faux, sizeof(char*), 1, archivo);
-    while(!feof(archivo)){
-        lista_de_pcs *nuevo = malloc(sizeof(lista_de_pcs)); //crea primer nodo
-        if(pcLista == NULL){ //enlazando el nodo original con el nuevo del pc
-            pcLista = nuevo;
-            nodoAnterior = nuevo;
-        }
-        else{
-            nodoAnterior->siguiente = nuevo;
-        }// se puede reemplazar por list_add()
-        nuevo->info_pc.pc = contador_pcs; //le estoy ponienndo el numero de pc
-        nuevo->info_pc.instruccion_pc = faux;
-        nuevo->siguiente = NULL;
+    while(getline(&faux, &len, archivo) != -1){
+        pc_con_instruccion *nuevo = malloc(sizeof(pc_con_instruccion)); //crea primer nodo
+        nuevo->pc = contador_pcs; //le estoy ponienndo el numero de pc
+        nuevo->instruccion_pc = strdup(faux);
         contador_pcs++;
-        fread(&faux, sizeof(char*), 1, archivo);
+        list_add(infoPid->sublista, nuevo);
     }
+    free(faux);
     fclose(archivo);
 }
 /*
