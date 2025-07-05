@@ -3,8 +3,6 @@
 
 void* espacio_usuario_memoria = NULL;  // Memoria fisica simulada
 
-//Funcion para inicializar Espacio de Usuario
-
 void inicializar_espacio_usuario(){
     espacio_usuario_memoria = malloc(memoria_config.TAM_MEMORIA);
     if (!espacio_usuario_memoria) {
@@ -12,9 +10,6 @@ void inicializar_espacio_usuario(){
         exit(EXIT_FAILURE);
     }
 }
-
-//Funcion que Retorna toda una pagina (segun TAM_PAGINA) a partir de una direccion fisica.
-
 char* leer_pagina_completa(unsigned int direccion_fisica) {
     if (direccion_fisica + memoria_config.TAM_PAGINA > memoria_config.TAM_MEMORIA)
         return NULL;
@@ -23,9 +18,6 @@ char* leer_pagina_completa(unsigned int direccion_fisica) {
     memcpy(buffer, espacio_usuario_memoria + direccion_fisica, memoria_config.TAM_PAGINA);
     return buffer;
 }
-
-//Funcion que Copia los datos completos (una pagina) desde contenido al espacio de usuario.
-
 char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido){
     if (direccion_fisica + memoria_config.TAM_PAGINA > memoria_config.TAM_MEMORIA)
         return "Error: fuera de rango";
@@ -33,9 +25,6 @@ char* actualizar_pagina_completa(unsigned int direccion_fisica, char* contenido)
     memcpy(espacio_usuario_memoria + direccion_fisica, contenido, memoria_config.TAM_PAGINA);
     return "OK";
 }
-
-//Funcion que Lee el Espacio de usuario segun su tamanio
-
 void leer_espacio_usuario(void* destino, int direccion_fisica, int tamanio){
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
         log_error(logger_memoria, "Lectura fuera de los limites de memoria");
@@ -44,9 +33,6 @@ void leer_espacio_usuario(void* destino, int direccion_fisica, int tamanio){
     memcpy(destino, espacio_usuario_memoria + direccion_fisica, tamanio);
     listado_metricas.cant_lecturas_memoria++;
 }
-
-//Funcion que Escribe el Espacio de usuario segun su tamanio
-
 void escribir_espacio_usuario(int direccion_fisica, void* origen, int tamanio){
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
         log_error(logger_memoria, "Escritura fuera de los límites de memoria");

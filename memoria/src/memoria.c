@@ -18,8 +18,6 @@ int main(int argc, char* argv[]){
         printf("Instrucción PID %d - PC %d: %s\n", pid, pc, instruccion);
     }
 
-
-         
     //tabla_de_paginas_raiz = crear_tabla(0, memoria_config.CANTIDAD_NIVELES, memoria_config.ENTRADAS_POR_TABLA);
 
     return 0;

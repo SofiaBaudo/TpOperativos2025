@@ -10,8 +10,8 @@
 
 typedef struct {
     int pid;
-    int nro_pagina;           // nro de página lógica dentro del proceso
-    int offset_en_archivo;    // posición dentro del archivo swapfile.bin
+    int nro_pagina;// nro de pag logica dentro del proceso
+    int offset_en_archivo;// posicion dentro del archivo swapfile.bin
 } t_pagina_en_swap;
 
 void inicializar_swap();

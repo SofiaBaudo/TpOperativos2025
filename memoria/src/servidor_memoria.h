@@ -12,12 +12,8 @@
 #include <commons/config.h>
 #include <espacio_de_usuario.h>
 
-//Declaracion de los Logs
-
 extern t_memoria_config memoria_config; // agrego el extern para que no de error de redefinicion
 extern t_log* logger_memoria;
-
-//Declaracion los Prototipos de Funciones
 
 void leer_config();
 void iniciar_logger_memoria();

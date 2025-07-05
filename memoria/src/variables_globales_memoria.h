@@ -1,8 +1,5 @@
 #ifndef VARIABLES_GLOBALES_MEMORIA_H
 #define VARIABLES_GLOBALES_MEMORIA_H
-
-//Incluir las librerias
-
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <stdio.h>
@@ -11,7 +8,6 @@
 #include <utils/utils.h>
 
 //Declaracion Enum de Metricas para los Procesos
-
 typedef enum {
     ACCESO_TABLA,
     INSTRUCCIONES_SOLICITADAS,
@@ -22,7 +18,6 @@ typedef enum {
 } tipo_metrica;
 
 //Declaracion Variables Globales(Extern para que no se incluyan multiples veces)
-
 extern t_log* logger;
 extern int PUERTO_ESCUCHA;
 extern int TAM_MEMORIA;
@@ -38,7 +33,6 @@ extern int tamanio_total;
 extern int tamanio_disponible_en_memoria;
 
 //Declaracion Struct Memoria Config
-
 typedef struct t_memoria_config {
     int PUERTO_ESCUCHA;
     int TAM_MEMORIA;
@@ -50,7 +44,6 @@ typedef struct t_memoria_config {
     int RETARDO_SWAP;
     char* DUMP_PATH;
 } t_memoria_config;
-
 
 //Declaracion Struct Metricas
 typedef struct t_metricas {
@@ -64,7 +57,6 @@ typedef struct t_metricas {
 } t_metricas;
 
 //Declaracion del Listado de Metricas
-
 extern t_metricas listado_metricas;
 
 #endif

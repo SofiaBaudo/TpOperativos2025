@@ -10,7 +10,6 @@
 #include <servidor_memoria.h>
 #include <math.h>
 
-
 void* metricas_proceso(int pid, tipo_metrica metrica);
 
 #endif
