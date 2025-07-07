@@ -260,16 +260,11 @@ bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacio
     t_buffer *buffer = crear_buffer_de_envio_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo,proceso->tamanio);//tiene que tener el tamanio, el pid, el archivo de pseudocodigo
     crear_paquete(operacion,buffer,socket);
     respuesta = recibir_op_code(socket);
-    if(respuesta == HAY_ESPACIO_EN_MEMORIA){
+    if(respuesta == ACEPTAR_PROCESO){
         return true;
     }
     else{
-        if(respuesta == NO_HAY_ESPACIO_EN_MEMORIA){
-            return false;
-        }
-        else{
-            return false;
-        }
+        return false;
     }
    
 }
