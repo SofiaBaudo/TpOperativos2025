@@ -163,10 +163,11 @@ typedef enum{
   REC_IO
 }Recurso;
 
+/*
 typedef struct {
     char* opcode; //codigo de instruccion
 } t_instruccion;
-
+*/
 //CONFIG
 t_config *crear_config(char* direccion);
 void destruir_config(t_config *config);

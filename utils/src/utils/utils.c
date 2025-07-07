@@ -191,7 +191,7 @@ t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo, int
 	buffer_aux->stream = malloc(buffer_aux->size);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); 
 	buffer_aux->offset += sizeof(int);
-	emcpy(buffer_aux->stream + buffer_aux->offset, &tamanio, sizeof(int)); 
+	memcpy(buffer_aux->stream + buffer_aux->offset, &tamanio, sizeof(int)); 
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);

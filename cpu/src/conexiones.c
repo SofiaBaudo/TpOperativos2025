@@ -121,7 +121,7 @@ void* inicializar_kernel(void* arg){
     log_debug(cpu_log_debug,"Despues de crear el hilo");
     while(1){
         //op_code terminar = recibir_op_code(fd_conexion_kernel_dispatch);
-        ejecutar_instrucciones(NULL);
+        //ejecutar_instrucciones(NULL);
        /* if(terminar == -1){
             log_info(logger, "se cerro la conexion con kernel");
             break;

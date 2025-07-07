@@ -225,8 +225,8 @@ void *planificador_mediano_plazo_proceso_mas_chico_primero(){
 
 //FUNCIONES PLANI MEDIANO PLAZO
 
-void *funcion_para_bloqueados(struct pcb *proceso){
-
+void* funcion_para_bloqueados(void* arg){
+    struct pcb* proceso = (struct pcb*) arg; //lo hacemos para que pasen los argumentos al hilo.
     usleep(atoi(TIEMPO_SUSPENSION)); //preguntar 
     pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
     int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
@@ -423,7 +423,7 @@ struct pcb *sacar_primero_de_la_lista(Estado estado){
 
 void enviar_proceso_a_memoria(struct pcb* proceso){
     int socket = iniciar_conexion_kernel_memoria();
-    t_buffer* buffer = crear_buffer_de_envio_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo);
+    t_buffer* buffer = crear_buffer_de_envio_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo,proceso->tamanio);
     crear_paquete(INICIALIZAR_PROCESO_DESDE_NEW, buffer, socket);
     cerrar_conexion(socket);
 }
@@ -613,7 +613,6 @@ void crear_hilo_de_ejecucion(struct pcb *proceso, struct instancia_de_cpu *cpu_a
     pthread_detach(hilo_ejecucion);
 }
          
-
 void *poner_a_ejecutar(void *argumentos){
     struct parametros_de_ejecucion* args = (struct parametros_de_ejecucion*) argumentos;
     struct pcb* proceso = args->proceso;
@@ -672,8 +671,8 @@ void *poner_a_ejecutar(void *argumentos){
                     temporal_stop(proceso->duracion_ultima_rafaga);
                     sacar_de_cola_de_estado(proceso,EXEC);
                     cambiarEstado(proceso,EXEC,BLOCKED);
-                    //pthread_create(&aux->hilo_al_bloquearse,NULL,funcion_para_bloqueados,aux);
-                    //pthread_detach(&aux->hilo_al_bloquearse);
+                    pthread_create(&proceso->hilo_al_bloquearse,NULL,funcion_para_bloqueados,proceso);
+                    pthread_detach(proceso->hilo_al_bloquearse);
                     proceso->tiempo_bloqueado = temporal_create();
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);

@@ -79,10 +79,10 @@ extern char* nombre_instruccion;
 extern NodosCache *cache;
 
 
-typedef struct {
+typedef struct t_instruccion{
     char* opcode; //codigo de instruccion
     char* param1; 
     char* param2; 
-} instru;
+} t_instruccion;
 
 #endif

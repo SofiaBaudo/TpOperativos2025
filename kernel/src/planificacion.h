@@ -68,6 +68,6 @@ void liberar_cpu(struct instancia_de_cpu *cpu);
 void listar_metricas_de_tiempo_y_estado(struct pcb *proceso);
 
 //PlANI MEDIANO PLAZO
-void *funcion_para_bloqueados(struct pcb *proceso);
+void* funcion_para_bloqueados(void* arg);
 
 

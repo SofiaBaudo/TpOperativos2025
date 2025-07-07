@@ -257,7 +257,7 @@ void solicitar_rafaga_de_io(int duracion,struct instancia_de_io *io_a_usar){
 bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacion){
     op_code respuesta;
     //enviar_entero(socket, tamanio);
-    t_buffer *buffer = crear_buffer_inicializacion_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo,proceso->tamanio);//tiene que tener el tamanio, el pid, el archivo de pseudocodigo
+    t_buffer *buffer = crear_buffer_de_envio_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo,proceso->tamanio);//tiene que tener el tamanio, el pid, el archivo de pseudocodigo
     crear_paquete(operacion,buffer,socket);
     respuesta = recibir_op_code(socket);
     if(respuesta == HAY_ESPACIO_EN_MEMORIA){
