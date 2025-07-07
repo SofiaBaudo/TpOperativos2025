@@ -9,8 +9,8 @@ struct pcb *proximo_a_consultar;
 int estimacion_de_prueba = 50;
 
 void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
-    struct pcb* pcb = malloc(sizeof(struct pcb));
-    pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo);
+    struct pcb* pcb = malloc(sizeof(struct pcb)); 
+    pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo); 
     transicionar_a_new(pcb); //aca esta lo de ultimo proceso en entrar
     log_info(kernel_logger,"Se creo el proceso con el PID: %i",identificador_del_proceso);
     log_debug(kernel_debug_log,"Su proxima estimacion es: %f",pcb->proxima_estimacion);
@@ -24,12 +24,12 @@ void *planificador_largo_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
-        sem_wait(&UNO_A_LA_VEZ); //este semaforo hace que el planificador maneje un proceso a la vez.
+        sem_wait(&UNO_A_LA_VEZ[NEW]); //este semaforo hace que el planificador maneje un proceso a la vez.
         if(!list_is_empty(colaEstados[SUSP_READY])){
             sem_wait(&SUSP_READY_SIN_PROCESOS);
         }
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); //no lo sacamos de la lista todavia pero obtenemos una referencia
-        bool respuesta = consultar_si_puede_entrar(primer_proceso);
+        bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_DESDE_NEW);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
             primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la cola de NEW
@@ -40,7 +40,7 @@ void *planificador_largo_plazo_fifo(){
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //si no hay espacio en memoria, aviso que el proceso sigue estando en new.
         }
-        sem_post(&UNO_A_LA_VEZ);//me aseguro que se siga tratando de a un proceso.
+        sem_post(&UNO_A_LA_VEZ[NEW]);//me aseguro que se siga tratando de a un proceso.
     } 
     return NULL;
 }
@@ -51,14 +51,14 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);// si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
-        sem_wait(&UNO_A_LA_VEZ); //este semaforo hace que el planificador maneje un proceso a la vez.
+        sem_wait(&UNO_A_LA_VEZ[NEW]); //este semaforo hace que el planificador maneje un proceso a la vez.
         //verifico que la cola de SUSP_READY este vacía.
         if(!list_is_empty(colaEstados[SUSP_READY])){
             sem_wait(&SUSP_READY_SIN_PROCESOS); //espero a que se vacíe la lista de susp ready.
         }
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); 
         if(primer_proceso->pid == proximo_a_consultar->pid){ 
-            bool respuesta = consultar_si_puede_entrar(primer_proceso);
+            bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_DESDE_NEW);
             log_debug(kernel_debug_log,"Conexion con memoria cerrada");
             if(respuesta == true){
                 primer_proceso = sacar_primero_de_la_lista(NEW); //saco el primer proceso de la lista de NEW
@@ -73,7 +73,7 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
         else{
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);  //aviso que el proceso sigue en new
         }
-        sem_post(&UNO_A_LA_VEZ); //me aseguro que se siga tratando de a un proceso a la vez.
+        sem_post(&UNO_A_LA_VEZ[NEW]); //me aseguro que se siga tratando de a un proceso a la vez.
     }
 }
 
@@ -170,9 +170,9 @@ void *planificador_mediano_plazo_fifo(){
     while(1){
     sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
     sem_wait(&INTENTAR_INICIAR_SUSP_READY);
-    sem_wait(&UNO_A_LA_VEZ_SUSP_READY);
+    sem_wait(&UNO_A_LA_VEZ[SUSP_READY]);
     struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
-        bool respuesta = consultar_si_puede_entrar(primer_proceso); //Darle una vuelta de tuerca para que memoria sepa que es un proceso suspendido 
+        bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO); //Darle una vuelta de tuerca para que memoria sepa que es un proceso suspendido 
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
             primer_proceso = sacar_primero_de_la_lista(SUSP_READY); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
@@ -186,7 +186,7 @@ void *planificador_mediano_plazo_fifo(){
             log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
             sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
         }
-        sem_post(&UNO_A_LA_VEZ_SUSP_READY);
+        sem_post(&UNO_A_LA_VEZ[SUSP_READY]);
     }
 }
 
@@ -194,10 +194,10 @@ void *planificador_mediano_plazo_proceso_mas_chico_primero(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);// si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR_SUSP_READY);
-        sem_wait(&UNO_A_LA_VEZ_SUSP_READY);
+        sem_wait(&UNO_A_LA_VEZ[SUSP_READY]);
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY);
         if(primer_proceso->pid == proximo_a_consultar->pid){
-            bool respuesta = consultar_si_puede_entrar(primer_proceso);
+            bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO);
             log_debug(kernel_debug_log,"Conexion con memoria cerrada");
             if(respuesta == true){
                 primer_proceso = sacar_primero_de_la_lista(SUSP_READY);
@@ -219,7 +219,7 @@ void *planificador_mediano_plazo_proceso_mas_chico_primero(){
         else{
             sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
         }
-        sem_post(&UNO_A_LA_VEZ_SUSP_READY);
+        sem_post(&UNO_A_LA_VEZ[SUSP_READY]);
     }
 }
 
@@ -527,9 +527,9 @@ char *cambiar_a_string(Estado estado) {
 }
 
 
-bool consultar_si_puede_entrar(struct pcb *proceso){
+bool consultar_si_puede_entrar(struct pcb *proceso,op_code operacion){
     int socket = iniciar_conexion_kernel_memoria();
-    bool respuesta = solicitar_permiso_a_memoria(socket,proceso->tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
+    bool respuesta = solicitar_permiso_a_memoria(socket,proceso,operacion); //(Adentro de la funcion, vamos a manejar un op_code)
     //creamos buffer del proceso
     //crear el paquete
     //enviamos 

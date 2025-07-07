@@ -26,7 +26,7 @@ void gestionar_metrica_de_tiempo(struct pcb* proceso, Estado estadoInicial, Esta
 
 //CAMBIO Y TRANSICION DE ESTADOS
 struct pcb *obtener_copia_primer_proceso_de(Estado estado);
-bool consultar_si_puede_entrar(struct pcb *proceso);
+bool consultar_si_puede_entrar(struct pcb *proceso,op_code operacion);
 struct pcb *sacar_primero_de_la_lista(Estado estado);
 void insertar_ordenado_segun(t_list *lista, struct pcb *proceso, bool (*comparador)(void *, void *));
 bool menor_por_tamanio(void* a, void* b);

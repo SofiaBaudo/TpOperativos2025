@@ -15,7 +15,7 @@ void* manejar_kernel_interrupt(void *socket_interrupt);
 
 //SOLICITUDES
 void solicitar_rafaga_de_io(int duracion,struct instancia_de_io *io_a_usar);
-bool solicitar_permiso_a_memoria(int socket,int tamanio);
+bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacion);
 int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 
 //CONEXION CON CLIENTES

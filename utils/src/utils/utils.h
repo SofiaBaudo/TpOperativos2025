@@ -209,7 +209,7 @@ t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
 t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamanio_en_memoria, int *pid, int *pc);
 t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char *datos);
 t_buffer *crear_buffer_para_ejecucion_de_io(int pid, int milisegundos);
-t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo);
+t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo, int tamanio);
 
 //DESERIALIZACIONES
 char *deserializar_nombre_syscall_io(t_paquete *paquete);

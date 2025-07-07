@@ -183,13 +183,15 @@ t_buffer *crear_buffer_vacio(){
 	return buffer_aux;	
 }
 
-t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo){
+t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo, int tamanio){
 	t_buffer * buffer_aux = crear_buffer();
 	int longitud = strlen(ruta_del_archivo);
-	buffer_aux->size = 2*sizeof(int) + longitud;
+	buffer_aux->size = 3*sizeof(int) + longitud;
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); 
+	buffer_aux->offset += sizeof(int);
+	emcpy(buffer_aux->stream + buffer_aux->offset, &tamanio, sizeof(int)); 
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);

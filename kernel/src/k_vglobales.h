@@ -66,8 +66,7 @@ extern sem_t INGRESO_DEL_PRIMERO_READY;
 extern sem_t CPUS_LIBRES;
 extern sem_t REPLANIFICAR;
 extern sem_t CANTIDAD_DE_PROCESOS_EN[7];
-extern sem_t UNO_A_LA_VEZ;
-extern sem_t UNO_A_LA_VEZ_SUSP_READY;
+extern sem_t UNO_A_LA_VEZ[7];
 extern sem_t SUSP_READY_SIN_PROCESOS;
 
 //DECLARACIONES
