@@ -19,7 +19,7 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
 void incrementar_var_global_id_proceso();
 void esperar_enter_por_pantalla();
 void actualizar_proximo_a_consultar(Estado estadoInicial);
-void *poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
+void *poner_a_ejecutar(void *argumentos);
 void finalizar_proceso(struct pcb*proceso, Estado estadoInicial);
 void liberar_proceso(struct pcb *proceso);
 void gestionar_metrica_de_tiempo(struct pcb* proceso, Estado estadoInicial, Estado estadoNuevo);
@@ -40,6 +40,7 @@ void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado est
 void intentar_iniciar();
 void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
 void enviar_proceso_a_memoria(struct pcb* proceso);
+void crear_hilo_de_ejecucion(struct pcb*proceso, struct instancia_de_cpu*cpu_aux);
 
 //CPU
 int buscar_cpu_libre(t_list *lista);
@@ -48,9 +49,11 @@ struct instancia_de_cpu *obtener_cpu(int posicion);
 //LISTAS
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *));
 //int buscar_en_lista(t_list *lista,int pid);
+
 //SJF CON DESALOJO Y SIN DESALOJO
 void frenar_y_restar_cronometros(t_list *lista);
 void reanudar_cronometros(t_list *lista,int iterarciones);
+
 //float calcular_proxima_estimacion(struct pcb *proceso);
 bool menor_por_estimacion(void* a, void* b);
 bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b);

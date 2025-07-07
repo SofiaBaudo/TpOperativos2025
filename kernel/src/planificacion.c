@@ -81,7 +81,6 @@ void *planificador_corto_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]); //espero a que llegue un proceso a ready.
         sem_wait(&CPUS_LIBRES); //espero a que haya cpus libres.
-        //sem_wait(&INGRESO_DEL_PRIMERO_READY); // a chequear
         usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
@@ -91,15 +90,13 @@ void *planificador_corto_plazo_fifo(){
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         cambiarEstado(proceso,READY,EXEC);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
-        //poner_a_ejecutar(proceso,cpu_aux); //estaria bueno mandar tambien la cpu que usa 
-        //sem_post(&INGRESO_DEL_PRIMERO_READY);
+        crear_hilo_de_ejecucion(proceso,cpu_aux);
     }
 }   
 
 void *planificador_corto_plazo_sjf_sin_desalojo(){
       while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]);
-        //sem_wait(&CANTIDAD_DE_PROCESOS_EN_READY);
         sem_wait(&CPUS_LIBRES);
         //sem_wait(&INGRESO_DEL_PRIMERO_READY); //Preguntar si es necesario pero creeriamos que con el de cantProcesos y el de las cpus ya esta
         usleep(3000000); 
@@ -111,8 +108,8 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         cambiarEstado(proceso,READY,EXEC);
         log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
+        crear_hilo_de_ejecucion(proceso,cpu_aux);
         //poner_a_ejecutar(proceso,cpu_aux);
-        //sem_post(&INGRESO_DEL_PRIMERO_READY);
     }
 }
 
@@ -130,8 +127,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu);
             proceso = sacar_primero_de_la_lista(READY);
             cambiarEstado(proceso,READY,EXEC);
-            //CREAR UN HILO PARA PONER A EJECUTAR Y HACERLE UN DETACH AL TOQUE!!!!!
-            poner_a_ejecutar(proceso,cpu_aux); //esta funcion tambien va a recibir la cpu.
+            crear_hilo_de_ejecucion(proceso,cpu_aux); //creamos un hilo de ejecucion enviando los parametros
         }
         else{
             bool desalojo = ver_si_hay_que_desalojar(proceso);
@@ -608,15 +604,29 @@ int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta)
     return respuesta;
 }
 
-void *poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
+void crear_hilo_de_ejecucion(struct pcb *proceso, struct instancia_de_cpu *cpu_aux){
+    pthread_t hilo_ejecucion;
+    struct parametros_de_ejecucion *parametros = malloc(sizeof(struct parametros_de_ejecucion));
+    parametros->proceso = proceso;
+    parametros->cpu_aux = cpu_aux;
+    pthread_create(&hilo_ejecucion,NULL,poner_a_ejecutar,(void *)parametros);
+    pthread_detach(hilo_ejecucion);
+}
+         
+
+void *poner_a_ejecutar(void *argumentos){
+    struct parametros_de_ejecucion* args = (struct parametros_de_ejecucion*) argumentos;
+    struct pcb* proceso = args->proceso;
+    struct instancia_de_cpu* cpu_en_la_que_ejecuta = args->cpu_aux;
+    free(argumentos);
     cpu_en_la_que_ejecuta->proceso_ejecutando = proceso; //asigno un proceso a la cpu
     proceso->duracion_ultima_rafaga = temporal_create(); //creo una tiempo de rafaga en el proceso
     bool bloqueante = false; 
     while(!bloqueante){ //mientras el bloqueante sea falso.
-        mandar_paquete_a_cpu(proceso,cpu_en_la_que_ejecuta); //mando paquete a cpu
+        mandar_paquete_a_cpu(proceso,cpu_en_la_que_ejecuta); //mando paquete a cpu, le mando pid y pc del proceso
         t_paquete *paquete = recibir_paquete(cpu_en_la_que_ejecuta->socket_para_comunicarse); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
-        //deserializar el pc
-        //actualizarlo (hay que ponerse de acuerdo con Sofi)
+        int pc = deserializar_pc(paquete);
+        proceso->pc = pc;
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         switch(motivo_de_devolucion){
             case DESALOJO_ACEPTADO:

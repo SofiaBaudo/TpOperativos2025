@@ -131,6 +131,11 @@ struct pcb{
 	t_temporal *metricas_de_tiempo[7];
 };
 
+struct parametros_de_ejecucion{
+	struct pcb* proceso;
+	struct instancia_de_cpu *cpu_aux;
+};
+
 //ESTRUCTURA DE UNA IO
 struct instancia_de_io{
 	char* nombre;
