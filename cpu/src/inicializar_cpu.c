@@ -13,7 +13,6 @@ void inicializar_CPU(int id){
     inicializar_configs();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
-    log_debug(cpu_log_debug, "Valor de tamPag: %d", 4096);
     //ejecutar_instrucciones(NULL);
 
 
@@ -34,7 +33,6 @@ void inicializar_CPU(int id){
 
 // Paso 5: Imprimir el estado final de la TLB para verificar
     imprimirTLB();
-*/
 
     log_debug(cpu_log_debug, "------------------------------");
 
@@ -59,13 +57,15 @@ void inicializar_CPU(int id){
     usarCache(1, 5, "READ", contenido);
 
     imprimirCache();
+    */
 
     //inicializar_kernel(valor_id);
     pthread_t hiloKernel;
     pthread_t hiloMemoria;
     pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
-    pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
+    thread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
     pthread_join(hiloKernel, NULL);
+    pthread_join(hiloMemoria, 
     
 }
 
