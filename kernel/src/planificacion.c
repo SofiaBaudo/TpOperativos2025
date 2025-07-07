@@ -25,7 +25,6 @@ void *planificador_largo_plazo_fifo(){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // si no hay nada espera a que llegue un proceso
         sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
         sem_wait(&UNO_A_LA_VEZ); //este semaforo hace que el planificador maneje un proceso a la vez.
-        //verificar_cola_de_suspendido_ready
         if(!list_is_empty(colaEstados[SUSP_READY])){
             sem_wait(&SUSP_READY_SIN_PROCESOS);
         }
@@ -33,7 +32,6 @@ void *planificador_largo_plazo_fifo(){
         bool respuesta = consultar_si_puede_entrar(primer_proceso);
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
-            //enviar_proceso_a_memoria(primer_proceso);
             primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la cola de NEW
             transicionar_a_ready(primer_proceso,NEW);
             sem_post(&INTENTAR_INICIAR_NEW); //incremento el semaforo para que pueda iniciar el planificador.
@@ -63,7 +61,6 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
             bool respuesta = consultar_si_puede_entrar(primer_proceso);
             log_debug(kernel_debug_log,"Conexion con memoria cerrada");
             if(respuesta == true){
-                //enviar_proceso_a_memoria(primer_proceso);
                 primer_proceso = sacar_primero_de_la_lista(NEW); //saco el primer proceso de la lista de NEW
                 transicionar_a_ready(primer_proceso,NEW); // lo transiciono a READY
                 actualizar_proximo_a_consultar(NEW); //actualizo la lista de NEW
@@ -141,8 +138,6 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             if(desalojo){
                 //cambiar todo para que haya alguna funcion que te devuelva la cpu y no la posicion
                 //struct pcb* proceso_a_desalojar = buscar_el_mas_grande(EXEC);
-                //enviar_entero(cliente_interrupt,1); //Con esto aviso que quiero desalojar un proceso
-                //enviar_entero(cliente_dispatch,proceso_a_desalojar->pid); //Con esto le indico a la cpu cual quiero desalojar
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
                 reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)-1);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
@@ -310,6 +305,11 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
     pcb->proxima_estimacion = estimacion_de_prueba;
     estimacion_de_prueba-=30;
     return pcb;
+    for(int i=0; i<7; i++){
+        pcb->metricas_de_estado[i] = 0;
+    }
+    pcb->metricas_de_estado[NEW]++;
+    pcb->metricas_de_tiempo[NEW] = temporal_create();
 }
 
 void incrementar_var_global_id_proceso(){
@@ -479,26 +479,41 @@ void transicionar_a_susp_ready(struct pcb *pcb){
     //un signal de un semaforo que le avise al plani de largo plazo por menor tamanio que se creo un proceso
 }
 
-void cambiarEstado (struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo){
+void cambiarEstado (struct pcb* proceso,Estado estadoAnterior, Estado estadoNuevo){
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
     char *string_estado_anterior = cambiar_a_string(estadoAnterior);
-    log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",pcb->pid,string_estado_anterior,string_estado_nuevo);
+    log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",proceso->pid,string_estado_anterior,string_estado_nuevo);
     pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
-    list_add(colaEstados[estadoNuevo],pcb); //preguntar si hay que usar mutex
+    list_add(colaEstados[estadoNuevo],proceso); //preguntar si hay que usar mutex
+    proceso->metricas_de_estado[estadoNuevo]++;
+    gestionar_metrica_de_tiempo(proceso,estadoAnterior,estadoNuevo);
     pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
 }
 
-void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *)){
+void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *)){
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
     char *string_estado_anterior = cambiar_a_string(estadoAnterior);
-    log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",pcb->pid,string_estado_anterior,string_estado_nuevo);
+    log_info(kernel_logger,"El proceso %i cambia del estado %s a %s ",proceso->pid,string_estado_anterior,string_estado_nuevo);
     pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
-    list_add_sorted(colaEstados[estadoNuevo],pcb,comparador); //preguntar si hay que usar mutex
+    list_add_sorted(colaEstados[estadoNuevo],proceso,comparador); //preguntar si hay que usar mutex
+    proceso->metricas_de_estado[estadoNuevo]++;
+    gestionar_metrica_de_tiempo(proceso,estadoAnterior,estadoNuevo);
     pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
 }
 
- char *cambiar_a_string(Estado estado) {
-     char* nombres_estados[] = { 
+void gestionar_metrica_de_tiempo(struct pcb* proceso, Estado estadoInicial, Estado estadoNuevo){
+    temporal_stop(proceso->metricas_de_tiempo[estadoInicial]);
+    if(proceso->metricas_de_estado[estadoNuevo]==1){ //osea que es la primera vez que pasa por cierto estado
+    proceso->metricas_de_tiempo[estadoNuevo] = temporal_create();
+    }
+    else{
+        temporal_resume(proceso->metricas_de_tiempo[estadoNuevo]);
+    }
+    
+}
+
+char *cambiar_a_string(Estado estado) {
+    char* nombres_estados[] = { 
         "NEW",
         "READY",
         "BLOCKED",
@@ -519,6 +534,10 @@ void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoN
 bool consultar_si_puede_entrar(struct pcb *proceso){
     int socket = iniciar_conexion_kernel_memoria();
     bool respuesta = solicitar_permiso_a_memoria(socket,proceso->tamanio); //(Adentro de la funcion, vamos a manejar un op_code)
+    //creamos buffer del proceso
+    //crear el paquete
+    //enviamos 
+    //bool respuesta = solicitar_permiso_a _memoria(socket, )
     cerrar_conexion(socket);
     return respuesta;
 }
@@ -589,12 +608,12 @@ int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta)
     return respuesta;
 }
 
-void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
-    cpu_en_la_que_ejecuta->proceso_ejecutando = proceso;
-    proceso->duracion_ultima_rafaga = temporal_create();
-    bool bloqueante = false;
-    while(!bloqueante){
-        mandar_paquete_a_cpu(proceso,cpu_en_la_que_ejecuta);
+void *poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
+    cpu_en_la_que_ejecuta->proceso_ejecutando = proceso; //asigno un proceso a la cpu
+    proceso->duracion_ultima_rafaga = temporal_create(); //creo una tiempo de rafaga en el proceso
+    bool bloqueante = false; 
+    while(!bloqueante){ //mientras el bloqueante sea falso.
+        mandar_paquete_a_cpu(proceso,cpu_en_la_que_ejecuta); //mando paquete a cpu
         t_paquete *paquete = recibir_paquete(cpu_en_la_que_ejecuta->socket_para_comunicarse); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         //deserializar el pc
         //actualizarlo (hay que ponerse de acuerdo con Sofi)
@@ -652,7 +671,6 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     list_add(io_aux->procesos_esperando,proceso);
                     sem_post(&io_aux->hay_procesos_esperando);
-                    //sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]); Me parece que esto no va
                 }
                 bloqueante = true;
                 break;
@@ -661,7 +679,7 @@ void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_qu
                 break;
         }
     }
-    
+    return NULL;
 }
 
 void liberar_cpu(struct instancia_de_cpu *cpu){
@@ -680,25 +698,35 @@ void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_d
     transicionar_a_ready(proceso_desalojado,EXEC);
 }
 
-void finalizar_proceso(struct pcb *aux, Estado estadoInicial){
-    sacar_de_cola_de_estado(aux,estadoInicial);
-    cambiarEstado(aux,estadoInicial,EXIT_ESTADO);
+void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
+    sacar_de_cola_de_estado(proceso,estadoInicial);
+    cambiarEstado(proceso,estadoInicial,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
-    t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
+    t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
     crear_paquete(FINALIZAR_PROCESO,buffer,socket);
     cerrar_conexion(socket);
-    sacar_de_cola_de_estado(aux,EXIT_ESTADO);    
-    liberar_proceso(aux); //free de todos los punteros, lo demas se va con el free (aux) 
+    sacar_de_cola_de_estado(proceso,EXIT_ESTADO);   
+    listar_metricas_de_tiempo_y_estado(proceso); 
+    liberar_proceso(proceso); //free de todos los punteros, lo demas se va con el free (proceso) 
     intentar_iniciar();
-
-    //int confirmacion = recibir_entero(socket);
-    //return confirmacion;
 }
 
-void liberar_proceso(struct pcb *aux){
-    temporal_destroy(aux->duracion_ultima_rafaga);
-    free(aux->ruta_del_archivo_de_pseudocodigo);
-    free(aux);
+void listar_metricas_de_tiempo_y_estado(struct pcb *proceso){
+    Estado estado_actual;
+    for(int i=0; i<7; i++){
+        estado_actual = i;
+        char *estado_string = cambiar_a_string(estado_actual);
+        log_info(kernel_logger,"El proceso estuvo %i veces en el estado %s en un tiempo de total de %ld \n",proceso->metricas_de_estado[i],estado_string,temporal_gettime(proceso->metricas_de_tiempo[i]));
+    }
+}
+
+void liberar_proceso(struct pcb *proceso){
+    temporal_destroy(proceso->duracion_ultima_rafaga);
+    for (int i=0; i<7;i++){
+        temporal_destroy(proceso->metricas_de_tiempo[i]);
+    }
+    free(proceso->ruta_del_archivo_de_pseudocodigo);
+    free(proceso);
 }
 
 void intentar_iniciar(){

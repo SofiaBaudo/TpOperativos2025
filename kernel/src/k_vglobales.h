@@ -74,7 +74,7 @@ extern sem_t SUSP_READY_SIN_PROCESOS;
 
 int buscar_en_lista(t_list *lista,int pid);
 void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
-void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
+void cambiarEstado (struct pcb *proceso, Estado estadoNuevo,Estado estadoAnterior);
 void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
 float calcular_proxima_estimacion(struct pcb *proceso);
 void finalizar_proceso(struct pcb*aux, Estado estadoInicial);

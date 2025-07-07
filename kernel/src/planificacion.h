@@ -19,9 +19,10 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
 void incrementar_var_global_id_proceso();
 void esperar_enter_por_pantalla();
 void actualizar_proximo_a_consultar(Estado estadoInicial);
-void poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
-//void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
-void liberar_proceso(struct pcb *aux);
+void *poner_a_ejecutar(struct pcb* proceso, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
+void finalizar_proceso(struct pcb*proceso, Estado estadoInicial);
+void liberar_proceso(struct pcb *proceso);
+void gestionar_metrica_de_tiempo(struct pcb* proceso, Estado estadoInicial, Estado estadoNuevo);
 
 //CAMBIO Y TRANSICION DE ESTADOS
 struct pcb *obtener_copia_primer_proceso_de(Estado estado);
@@ -33,7 +34,7 @@ char *cambiar_a_string(Estado estado);
 void transicionar_a_new(struct pcb *proceso);
 //void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial);
 float calcular_proxima_estimacion(struct pcb *proceso);
-void cambiarEstadoOrdenado(struct pcb* pcb,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *));
+void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *));
 //void cambiarEstado (struct pcb *pcb, Estado estadoNuevo,Estado estadoAnterior);
 //void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado);
 void intentar_iniciar();
@@ -61,6 +62,7 @@ bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct 
 void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu);
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta);
 void liberar_cpu(struct instancia_de_cpu *cpu);
+void listar_metricas_de_tiempo_y_estado(struct pcb *proceso);
 
 //PlANI MEDIANO PLAZO
 void *funcion_para_bloqueados(struct pcb *proceso);
