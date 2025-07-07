@@ -1,12 +1,9 @@
 #ifndef MEMORIA_H
 #define MEMORIA_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <servidor_memoria.h>
-#include <utils/utils.h>
-#include <instrucciones_memoria.h>
-#include <paginacion.h>
-#include <variables_globales_memoria.h>
+#include "bibliotecas.h"
+#include <inicializar_memoria.h>
+#include "inicializar_memoria.h"
+#include "servidor_memoria.h"
 
 #endif

@@ -1,106 +1,43 @@
-#include <servidor_memoria.h>
+#include "servidor_memoria.h"
 
-t_memoria_config memoria_config;
-t_log* logger_memoria;
-void* contenido;
 
-void leer_config(){ // Lee la config y guarda todos los values de las key (struct en el header)
-    t_config* config = config_create("memoria.config");
-    if (config == NULL) {
-        printf("Error al leer el archivo de configuración\n");
-        exit(EXIT_FAILURE);
-    }
-    memoria_config.PUERTO_ESCUCHA = config_get_int_value(config, "PUERTO_ESCUCHA");
-    memoria_config.TAM_MEMORIA = config_get_int_value(config, "TAM_MEMORIA");
-    memoria_config.TAM_PAGINA = config_get_int_value(config, "TAM_PAGINA");
-    memoria_config.ENTRADAS_POR_TABLA = config_get_int_value(config, "ENTRADAS_POR_TABLA");
-    memoria_config.CANTIDAD_NIVELES = config_get_int_value(config, "CANTIDAD_NIVELES");
-    memoria_config.RETARDO_MEMORIA = config_get_int_value(config, "RETARDO_MEMORIA");
-    memoria_config.PATH_SWAPFILE = strdup(config_get_string_value(config, "PATH_SWAPFILE"));
-    memoria_config.RETARDO_SWAP = config_get_int_value(config, "RETARDO_SWAP");
-    memoria_config.DUMP_PATH = strdup(config_get_string_value(config, "DUMP_PATH"));
-    config_destroy(config); //destruye luego de guardarse los values
-}
-void iniciar_logger_memoria(){
-    logger_memoria = log_create("memoria.log", "[Memoria]", true, LOG_LEVEL_TRACE);
-    if (logger_memoria == NULL) {
-        printf("Error al crear el logger de memoria\n");
-        exit(EXIT_FAILURE);
-    }
-    //despues ver de cambiar el tipo 
-}
-void iniciar_servidor_memoria() { // Inicia el servidor multihilos para atender peticiones
-    char puerto[6]; // Buffer para almacenar el puerto como cadena (maximo 5 digitos + '\0')
-    sprintf(puerto, "%d", memoria_config.PUERTO_ESCUCHA); // Convierte el puerto a cadena.  A puerto le asigna el valor de memoria_config.puerto_escucha
+void iniciar_servidor_memoria() {
+    char puerto_escucha_str[10];
+    snprintf(puerto_escucha_str, sizeof(puerto_escucha_str), "%d", memoria_config.PUERTO_ESCUCHA);
+    int servidor_memoria = iniciar_servidor(puerto_escucha_str, logger_memoria, "Se ha iniciado el servidor de Memoria");
 
-    int servidor_memoria = iniciar_servidor(puerto, logger_memoria, "Se ha iniciado el servidor de Memoria");
     if (servidor_memoria == -1){
         log_error(logger_memoria, "Error al iniciar el servidor de memoria");
         exit(EXIT_FAILURE);
     }
-    log_debug(logger_memoria, "Servidor de memoria iniciado en el puerto %d", memoria_config.PUERTO_ESCUCHA); // Log de inicio del servidor
+    
+    log_debug(logger_memoria, "Servidor de memoria iniciado en el puerto %d", memoria_config.PUERTO_ESCUCHA);
 
     while (1) {
-        int cliente = esperar_cliente(servidor_memoria, logger_memoria, "........."); // Espera a que un cliente se conecte+
+        int cliente = esperar_cliente(servidor_memoria, logger_memoria, ".........");
         if (cliente == -1) {
             log_error(logger_memoria, "Error al aceptar un cliente");
             continue;
         }
         int *cliente_ptr = malloc(sizeof(*cliente_ptr));
         *cliente_ptr = cliente;
-        pthread_t hilo_cliente; // Crea un hilo para atender a varios clientes al mismo tiempo
+        pthread_t hilo_cliente; 
         pthread_create(&hilo_cliente, NULL, manejar_cliente, (void*) cliente_ptr);
-        pthread_detach(hilo_cliente); // Desvincula el hilo para que se libere automaticamente
+        pthread_detach(hilo_cliente);
     }
     close(servidor_memoria);
 }
-void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion con el cliente dependiendo de que modulo venga
-{   /*
-    int tamPag = memoria_config.TAM_PAGINA;
-    int entradasTabla = memoria_config.ENTRADAS_POR_TABLA;
-    int cantNiveles = memoria_config.CANTIDAD_NIVELES;
-    */
+void* manejar_cliente(void *socketCliente) 
+{   
     int cliente = *((int *)socketCliente); // Desreferencio el puntero para obtener el socket del cliente
     free(socketCliente);
-    op_code cliente_id = recibir_op_code(cliente); // !!!!!!!!!!DESPUES VER DE UNIFICAR LA FUNCION Q HIZO JERE EN EL UTILS DE RECIBIR CON UN CODE_OP PERO QUE SEA OP_CODE!!!!!!!!!!!!!!!!
+    op_code cliente_id = recibir_op_code(cliente); 
     switch (cliente_id)
     {
         case HANDSHAKE_KERNEL:
-            log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", cliente); //log oblig
+            log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", cliente); // Log obligatorio
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
-            //int tamanio = recibir_entero(cliente);
-            //op_code respuesta = verificar_si_hay_espacio(tamanio);
-            //enviar_op_code(cliente,respuesta);
-            while (1) {
-                op_code peticion_kernel = recibir_op_code(cliente);
-                /*if (peticion_kernel == -1) {
-                    log_warning(logger_memoria, "CPU desconectado");
-                    break;
-                }*/
-                switch (peticion_kernel){
-                    case INICIALIZAR_PROCESO_DESDE_NEW:
-                        //Llamar Inicializacion Proceso
-                        //inicializacion_proceso();
-                        
-                        break;
-                    case INICIALIZAR_PROCESO_SUSPENDIDO:
-                        //Llamar Iniciailizacion Proceso Suspendido
-                        //leer_pagina_de_swap();
-                        break;
-                    case FINALIZAR_PROCESO:
-                        //Llamar Finalizar Proceso
-                        //destruir_proceso_instrucciones(pid);
-                        break;
-                    case SUSPENDER_PROCESO:
-                        //Llamar Suspender Proceso
-                        //escribir_pagina_en_swap();
-                        break;    
-                    default:
-                        log_warning(logger_memoria, "Petición desconocida de Kernel: %d", peticion_kernel);
-                        break;
-                }
-            }
-            //manejar_cliente_kernel(cliente); <- HACER ESTA FUNCIONES EN LOS OTROS MODUELOS. 
+            manejar_cliente_kernel(cliente);
             break;
         case HANDSHAKE_CPU:
             log_debug(logger_memoria, "Se conecto CPU");
@@ -111,124 +48,174 @@ void *manejar_cliente(void *socketCliente) // Esta funcion maneja la conexion co
                 memoria_config.CANTIDAD_NIVELES
             );
             crear_paquete(ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES, buffer, cliente);
-            //peticiones
-            while (1) {
-                op_code peticion = recibir_op_code(cliente);
-                /*if (peticion == -1) {
-                    log_warning(logger_memoria, "CPU desconectado");
-                    break;
-                }*/
-                switch (peticion){
-                    case FETCH_INSTRUCCION:
-                        manejar_fetch_cpu(cliente);
-                        break;
-                    case READ_MEMORIA:
-                        manejar_read_memoria(cliente);
-                        break;
-                    case WRITE_MEMORIA:
-                        manejar_write_memoria(cliente);
-                        break;
-                    case DUMP_MEMORY:
-                        manejar_dump_memory(cliente, contenido);
-                        break;    
-                    default:
-                        log_warning(logger_memoria, "Petición desconocida de CPU: %d", peticion);
-                        break;
-                }
-            }
+            manejar_cliente_cpu(cliente);
+            break;
         default:
             log_debug(logger_memoria,"CLIENTE DESCONOCIDO");
             break;
-}
+    }
     close(cliente);
     return NULL;
 }
-void manejar_fetch_cpu(int socket_cpu){
-    //paquete con el PC y el PID
-    t_paquete* paquete = recibir_paquete(socket_cpu);
-    int pc = deserializar_pc(paquete);    // ya está en utils
-    int pid = deserializar_pid(paquete);  // ya está en utils
 
-    char* instruccion = obtener_instruccion(pid, pc);
-    if (!instruccion) {
-        log_error(logger_memoria, "Instrucción no encontrada para PID %d - PC %d", pid, pc);
-        return;
+void manejar_cliente_kernel(int cliente) {
+    while (1) {
+        op_code peticion_kernel = recibir_op_code(cliente);
+        if (peticion_kernel == -1) {
+            log_error(logger_memoria, "Error al recibir peticion de Kernel");
+            break; 
+        }
+        log_debug(logger_memoria, "Peticion recibida de KERNEL: %s", instruccion_a_string(peticion_kernel));
+        switch (peticion_kernel){
+            // Los OP_CODE que se envian a kernel quedan a eleccion de ellos, total es un int para memoria
+            case INICIALIZAR_PROCESO_DESDE_NEW:
+                // Recibir el paquete de proceso
+                t_proceso_paquete *proceso_paquete = recibir_proceso(cliente);
+                if(inicializar_proceso(proceso_paquete)){
+                    enviar_op_code(cliente, ACEPTAR_PROCESO);
+                    log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_paquete->pid, proceso_paquete->tamanio);
+                } else {
+                    enviar_op_code(cliente, RECHAZO_PROCESO);
+                }
+                break;
+            case INICIALIZAR_PROCESO_SUSPENDIDO:
+                //leer_pagina_de_swap();
+                break;
+            case FINALIZAR_PROCESO: {
+                int pid = recibir_entero(cliente);
+                finalizar_proceso(pid);
+                log_info(logger_memoria, "## PID: %d - Proceso Destruido ", pid); // Log obligatorio de destrucción de proceso (faltan: metricas y swaps)
+                enviar_op_code(cliente, FINALIZACION_CONFIRMADA);
+                break;
+            }
+            case SUSPENDER_PROCESO:
+                //Llamar Suspender Proceso
+                //escribir_pagina_en_swap();
+                break;
+            case DUMP_MEMORY: {
+                int pid = recibir_entero(cliente);
+                bool dump_ok = dump_memoria_proceso(pid);
+                if (dump_ok) {
+                    enviar_op_code(cliente, ACEPTAR_PROCESO); // o DUMP_OK
+                } else {
+                    enviar_op_code(cliente, RECHAZO_PROCESO); // o DUMP_ERROR
+                }
+                break;
+            }
+            default:
+                log_warning(logger_memoria, "Peticion desconocida de Kernel: %d", peticion_kernel);
+                break;
+        }
     }
-    log_info(logger_memoria, "## PID: <%d> - Obtener instrucción: <%d> - Instrucción: <%s>", pid, pc, instruccion); //log oblig
-    free(instruccion);
-    //t_buffer* buffer = crear_buffer_instruccion(instruccion); -. HABLAR CON FEDE JERE
-    //crear_paquete(ENVIO_INSTRUCCION, buffer, socket_cpu);
-    //Sumo a la metrica de instrucciones solicitadas
-    listado_metricas.instrucciones_solicitadas++;
 }
 
-void manejar_read_memoria(int socket_cpu) {
-    t_paquete* paquete = recibir_paquete(socket_cpu);
+void manejar_cliente_cpu(int cliente) {
+    while (1) {
+        op_code peticion = recibir_op_code(cliente);
+        if (peticion == -1) {
+            log_error(logger_memoria, "Error al recibir peticion de CPU");
+            break; // Salimos del bucle si hay un error
+        }
+        log_debug(logger_memoria, "Peticion recibida de CPU: %s", instruccion_a_string(peticion));
+        switch (peticion){
+            case FETCH_INSTRUCCION: {
+                // Recibir struct pedido de instrucción
+                t_pedido_instruccion* pedido = recibir_pedido_instruccion(cliente);
+                if (pedido == NULL) {
+                    log_error(logger_memoria, "Error al recibir pedido de instrucción");
+                    break;
+                }
 
-    int pid = deserializar_pid(paquete);
-    int direccion_fisica = deserializar_entero_desde_stream(paquete);
-    int tamanio = deserializar_entero_desde_stream(paquete);
+                // Obtener la instrucción correspondiente
+                char* instruccion = obtener_instruccion_proceso(pedido->pid, pedido->pc);
 
-    void* buffer = malloc(tamanio);
-    leer_espacio_usuario(buffer, direccion_fisica, tamanio);  // ya lo tenés
+                // Log obligatorio de obtención de instrucción
+                if (instruccion != NULL) {
+                    log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pedido->pid, pedido->pc, instruccion);
+                } else {
+                    log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: ", pedido->pid, pedido->pc);
+                }
 
-    log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio); //log oblig
+                // Enviar solo la instrucción a la CPU
+                if (instruccion != NULL) {
+                    enviar_instruccion(cliente, instruccion);
+                    log_debug(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: %s", pedido->pid, pedido->pc, instruccion);
+                    free(instruccion);
+                } else {
+                    enviar_instruccion(cliente, "");
+                    log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pedido->pid, pedido->pc);
+                }
+                free(pedido);
+                break;
+            }
+            case READ_MEMORIA: {
+                /*
+                 * Espera recibir un struct t_pedido_lectura_memoria con:
+                 *   - pid: PID del proceso solicitante
+                 *   - direccion_logica: dirección física absoluta (offset global en memoria de usuario, NO lógica ni relativa al proceso)
+                 *   - tamanio: cantidad de bytes a leer (puede ser cualquier valor, incluso el tamaño de página)
+                 *
+                 * La dirección recibida debe ser el offset exacto desde el inicio de memoria_usuario,
+                 * y si se solicita una página completa, debe coincidir con el byte 0 de la página.
+                 *
+                 * No se realiza traducción de direcciones ni paginación aquí: la CPU ya envía la dirección física lista.
+                 */
+                // Recibir struct pedido de lectura de memoria
+                t_pedido_lectura_memoria* pedido = recibir_pedido_lectura_memoria(cliente);
+                if (pedido == NULL) {
+                    log_error(logger_memoria, "Error al recibir paquete de READ_MEMORIA");
+                    break;
+                }
 
-    send(socket_cpu, buffer, tamanio, 0);
-    free(buffer);
-}
-void manejar_write_memoria(int socket_cpu) {
-    t_paquete* paquete = recibir_paquete(socket_cpu);
+                // Acceso real a memoria física: la dirección recibida es absoluta (offset global)
+                char valor_leido[256] = {0};
+                int resultado_lectura = leer_memoria_fisica(pedido->direccion_logica, valor_leido, pedido->tamanio);
+                if (resultado_lectura != 0) {
+                    log_error(logger_memoria, "Acceso fuera de rango en memoria física: offset %d, tamaño %d", pedido->direccion_logica, pedido->tamanio);
+                    strcpy(valor_leido, "ERROR_OUT_OF_BOUNDS");
+                } else {
+                    valor_leido[pedido->tamanio] = '\0'; // Por si es string, para debug
+                }
 
-    int pid = deserializar_pid(paquete);
-    int direccion_fisica = deserializar_entero_desde_stream(paquete); // función auxiliar
-    int tamanio = deserializar_entero_desde_stream(paquete);
+                // Log obligatorio: acceso a espacio de usuario
+                log_info(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pedido->pid, pedido->direccion_logica, pedido->tamanio);
 
-    void* valor = malloc(tamanio);
-    memcpy(valor, paquete->buffer->stream + paquete->buffer->offset, tamanio);
-    escribir_espacio_usuario(direccion_fisica, valor, tamanio);
+                // Enviar valor leído a la CPU
+                enviar_valor_leido(cliente, valor_leido, pedido->tamanio);
 
-    log_info(logger_memoria, "## PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio); //log oblig
+                free(pedido);
+                break;
+            }
+            case WRITE_MEMORIA: {
+                /*
+                 * Espera recibir un struct t_pedido_escritura_memoria con:
+                 *   - pid: PID del proceso solicitante
+                 *   - direccion_logica: dirección física absoluta (offset global en memoria de usuario)
+                 *   - tamanio: cantidad de bytes a escribir
+                 *   - buffer: datos a escribir (tamanio bytes)
+                 *
+                 * La dirección recibida debe ser el offset exacto desde el inicio de memoria_usuario.
+                 * No se realiza traducción de direcciones ni paginación aquí.
+                 */
+                t_pedido_escritura_memoria* pedido = recibir_pedido_escritura_memoria(cliente);
+                if (pedido == NULL) {
+                    log_error(logger_memoria, "Error al recibir paquete de WRITE_MEMORIA");
+                    break;
+                }
 
-    free(valor);
-    free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
-}
-void manejar_dump_memory(int socket_cpu, void* contenido){
-    t_paquete* paquete = recibir_paquete(socket_cpu);
+                // Log obligatorio: acceso a espacio de usuario
+                log_info(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d - Tamaño: %d", pedido->pid, pedido->direccion_logica, pedido->tamanio);
 
-    int pid = deserializar_pid(paquete);
-    log_info(logger_memoria, "## PID: %d - Memory Dump solicitado", pid); //log oblig
-    int direccion_fisica = deserializar_entero_desde_stream(paquete); // función auxiliar
-    int tamanio = deserializar_entero_desde_stream(paquete);
-
-    void* valor = malloc(tamanio);
-    memcpy(valor, paquete->buffer->stream + paquete->buffer->offset, tamanio);
-
-    if (direccion_fisica < 0 || tamanio <= 0) {
-        log_error(logger_memoria, "Dump fallido: dirección o tamaño inválido");
-        return;
+                int resultado = escribir_memoria_fisica(pedido->direccion_logica, pedido->buffer, pedido->tamanio);
+                if (resultado != 0) {
+                    log_error(logger_memoria, "Acceso fuera de rango en memoria física (escritura): offset %d, tamaño %d", pedido->direccion_logica, pedido->tamanio);
+                }
+                destruir_pedido_escritura_memoria(pedido);
+                break;
+            } 
+            default:
+                log_warning(logger_memoria, "Peticion desconocida de CPU: %d", peticion);
+                break;
+        }
     }
-    // Obtener timestamp con formato YYYYMMDDHHMMSS
-    char* timestamp = temporal_get_string_time("%Y%m%d%H%M%S");
-    // Crear nombre del archivo: <DUMP_PATH>/<PID>-<TIMESTAMP>.dmp
-    char* nombre_archivo = string_from_format("%s/%d-%s.dmp", memoria_config.DUMP_PATH, pid, timestamp);
-
-    // Crear y abrir archivo
-    FILE* archivo = fopen(nombre_archivo, "wb");
-    if (!archivo) {
-        log_error(logger_memoria, "No se pudo crear el archivo dump: %s", nombre_archivo);
-        free(timestamp);
-        free(nombre_archivo);
-        return;
-    }
-    // Escribir memoria del proceso en el archivo
-    //fwrite(contenido, 1, tamanio_marco, archivo);
-    fclose(archivo);
-
-    log_debug(logger_memoria, "Dump de memoria generado para PID %d en %s", pid, nombre_archivo);
-
-    free(timestamp);
-    free(nombre_archivo);
 }

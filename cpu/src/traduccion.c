@@ -48,6 +48,7 @@ int navegarNiveles(int numPag, int pid){
     int marcoFinal = numMarco;
     return marcoFinal;
 }
+
 int conseguirMarco(int pid){
     int numMarco;
     recv(fd_conexion_dispatch_memoria, &numMarco, sizeof(int), 0);

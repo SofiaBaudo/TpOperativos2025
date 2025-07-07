@@ -1,39 +1,43 @@
 #ifndef PAGINACION_H
 #define PAGINACION_H
 
-#include <stdbool.h>
-#include <variables_globales_memoria.h>
-#include <commons/collections/list.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <servidor_memoria.h>
-#include <math.h>
+#include "bibliotecas.h"
+#include "inicializar_memoria.h"
+#include "memoria_fisica.h"
+
+typedef struct t_tabla_paginas t_tabla_paginas;
 
 typedef struct {
-    int nro_entrada;             
-    int nro_marco;               
-    void* siguiente_nivel;       
-} entrada_tabla_pagina;
+    int nro_pagina;
+    int nro_marco; // Solo válido en el último nivel
+    t_tabla_paginas* tabla_nivel_inferior; // NULL si es último nivel. Es inferior porque es la parte de abajo de la jerarquía en el arbol (dibujo)
+} t_entrada_tabla;
 
-typedef struct {
-    int nivel;
-    entrada_tabla_pagina* entradas;
-} tabla_pagina_nivel;
+struct t_tabla_paginas {
+    t_entrada_tabla* entradas;
+    int cantidad_entradas;
+};
 
-typedef struct {
-    int pid;
-    tabla_pagina_nivel* tabla_raiz;
-} t_tabla_proceso;
+// Inicializa la paginación de un proceso: crea las estructuras y asigna marcos
+// Devuelve true si tuvo éxito, false si hubo error de memoria
+t_tabla_paginas* iniciar_proceso_paginacion(int pid, int tam_proceso);
 
-extern t_log* logger;
+// Crea la estructura de tablas de páginas multinivel para un proceso dado su tamaño
+t_tabla_paginas* crear_tablas_para_proceso(int tam_proceso);
 
-tabla_pagina_nivel* crear_tabla_nivel(int nivel_actual);
-tabla_pagina_nivel* crear_tablas_proceso();
-void agregar_tablas_proceso(int pid);
-tabla_pagina_nivel* buscar_tabla_por_pid(int pid);
-void liberar_tablas(tabla_pagina_nivel* tabla);
-void eliminar_tabla_proceso(int pid);
-int obtener_marco_final(tabla_pagina_nivel* tabla_raiz, int* indices_niveles);
+// Crea recursivamente los niveles de tablas de páginas
+t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes);
+
+// Asigna marcos a todas las páginas de último nivel de la estructura multinivel
+bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual);
+
+// Asigna un marco físico a una página lógica específica
+bool asignar_marco_a_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina_logica, int nro_marco);
+
+// Libera recursivamente la estructura de tablas de páginas
+void destruir_tabla_paginas_rec(t_tabla_paginas* tabla, int nivel_actual);
+
+// Libera todos los marcos asignados a las páginas de último nivel
+void liberar_marcos_de_tabla(t_tabla_paginas* tabla, int nivel_actual);
 
 #endif

@@ -161,8 +161,6 @@ typedef enum{
 
 typedef struct {
     char* opcode; //codigo de instruccion
-    char* param1; 
-    char* param2; 
 } t_instruccion;
 
 //CONFIG

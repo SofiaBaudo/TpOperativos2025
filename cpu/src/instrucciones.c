@@ -59,8 +59,8 @@ void obtenerDelKernelPcPid(){
 char* fetch(int pid,int pc){
     log_info(cpu_logger,"## PID: <%d> - FETCH - Program Counter: <%d>",pid, pc);
     t_buffer *buffer = crear_buffer_cpu(pc, pid);
-    crear_paquete(ENVIO_PID_Y_PC, buffer, fd_conexion_dispatch_memoria);
-    recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(t_instruccion),0);
+    crear_paquete(FETCH_INSTRUCCION, buffer, fd_conexion_dispatch_memoria);
+    recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(char*),0);
     log_debug(cpu_log_debug, "instruccion recibida %c", instruccion_recibida);
     return instruccion_recibida;
 }

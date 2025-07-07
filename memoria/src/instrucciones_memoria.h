@@ -1,33 +1,16 @@
 #ifndef INSTRUCCIONES_MEMORIA_H
 #define INSTRUCCIONES_MEMORIA_H
 
-#include <commons/log.h>
-#include <commons/string.h>
-#include <commons/collections/list.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <servidor_memoria.h>
-#include <variables_globales_memoria.h>
-#include <utils/utils.h>
 
-typedef struct infoPid{
-    int pid;
-    char* PATH_INSTRUCCIONES;
-    t_list *sublista;
-} infoPid;
+#include "bibliotecas.h"
+#include "inicializar_memoria.h"
+#include "procesos.h"
 
-typedef struct pc_con_instruccion{
-    int pc;
-    char* instruccion_pc;
-}pc_con_instruccion;
+// Genera una lista de instrucciones (cada elemento es un char) leyendo el archivo indicado
+// El caller debe liberar la lista y cada string con list_destroy_and_destroy_elements(..., free)
+t_list generar_instrucciones_proceso(int pid, const char* path_pseudocodigo);
 
-void iniciar_lista_pids();
-char* obtener_instruccion(int pid, int pc);
-infoPid *buscar_info_pid(int pid);
-void enlazar_pid_nombre_archivo (int pid, char* PATH_INSTRUCCIONES);
-void cargar_instrucciones_desde_archivo(int pid, char* PATH_INSTRUCCIONES);
-
-extern t_list *Lista_de_pids;   
+// Devuelve una copia de la instrucción (char) para el proceso y PC dado, o NULL si no existe
+char obtener_instruccion_proceso(int pid, int pc);
 
 #endif

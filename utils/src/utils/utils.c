@@ -195,7 +195,7 @@ t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo){
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 
@@ -229,7 +229,7 @@ t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamani
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	
 	return buffer_aux;
 }
@@ -243,7 +243,7 @@ t_buffer * crear_buffer_para_ejecucion_de_io(int pid, int milisegundos){ //esto 
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &milisegundos, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 
@@ -256,7 +256,7 @@ t_buffer * crear_buffer_MarcoMem(int pid, int entradaNivel){
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &entradaNivel, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 
@@ -267,7 +267,7 @@ t_buffer *mandar_pid_a_memoria(int pid){
 	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
 	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 
@@ -278,7 +278,7 @@ t_buffer * devolver_pid_a_kernel(int pid){
 	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
 	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradasTabla, int cantNiveles){
@@ -292,7 +292,7 @@ t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradas
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &cantNiveles, sizeof(int));
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 
@@ -326,7 +326,7 @@ t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos, int *pid
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 
@@ -341,7 +341,7 @@ t_buffer *crear_buffer_io_nombre(char *nombre){
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
 	
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 
@@ -402,7 +402,7 @@ t_buffer * crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &pc, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux-> stream;
+	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
 
@@ -632,8 +632,142 @@ int deserializar_entero_desde_stream(t_paquete* paquete){ //lee un int desde el 
 
 //SIN CLASIFICACION
 
+char* instruccion_a_string(op_code codigo) {
+    switch(codigo) {
+        // HANDSHAKE
+        case HANDSHAKE_KERNEL:
+            return "HANDSHAKE_KERNEL";
+        case HANDSHAKE_CPU:
+            return "HANDSHAKE_CPU";
+        case HANDSHAKE_MEMORIA:
+            return "HANDSHAKE_MEMORIA";
+        case HANDSHAKE_IO:
+            return "HANDSHAKE_IO";
+        case HANDSHAKE_CPU_DISPATCH:
+            return "HANDSHAKE_CPU_DISPATCH";
+        case HANDSHAKE_CPU_INTERRUPT:
+            return "HANDSHAKE_CPU_INTERRUPT";
+        case HANDSHAKE_ACCEPTED:
+            return "HANDSHAKE_ACCEPTED";
+        case HANDSHAKE_DENIED:
+            return "HANDSHAKE_DENIED";
+        case GET_INSTRUCCION:
+            return "GET_INSTRUCCION";
+        case SOLICITAR_ESPACIO:
+            return "SOLICITAR_ESPACIO";
+        case MENSAJE:
+            return "MENSAJE";
+        case PAQUETE:
+            return "PAQUETE";
+        case HANDSHAKE:
+            return "HANDSHAKE";
+        case CREAR_PROCESO:
+            return "CREAR_PROCESO";
+        case RTA_CREAR_PROCESO:
+            return "RTA_CREAR_PROCESO";
+        case ENVIO_DE_PID_Y_RUTA_ARCHIVO:
+            return "ENVIO_DE_PID_Y_RUTA_ARCHIVO";
+        
+        // enums para kernel
+        case EJECUTAR_RAFAGA_IO:
+            return "EJECUTAR_RAFAGA_IO";
+        case RAFAGA_ACEPTADA:
+            return "RAFAGA_ACEPTADA";
+        case IO_NOMBRE:
+            return "IO_NOMBRE";
+        
+        // enums para conexion kernel_memoria
+        case INICIALIZAR_PROCESO_DESDE_NEW:
+            return "INICIALIZAR_PROCESO_DESDE_NEW";
+        case INICIALIZAR_PROCESO_SUSPENDIDO:
+            return "INICIALIZAR_PROCESO_SUSPENDIDO";
+        case ACEPTAR_PROCESO:
+            return "ACEPTAR_PROCESO";
+        case RECHAZO_PROCESO:
+            return "RECHAZO_PROCESO";
+        case FINALIZAR_PROCESO:
+            return "FINALIZAR_PROCESO";
+        case FINALIZACION_CONFIRMADA:
+            return "FINALIZACION_CONFIRMADA";
+        case SUSPENDER_PROCESO:
+            return "SUSPENDER_PROCESO";
+        case SUSPENSION_CONFIRMADA:
+            return "SUSPENSION_CONFIRMADA";
+        case SOLICITAR_ESPACIO_MEMORIA:
+            return "SOLICITAR_ESPACIO_MEMORIA";
+        case HAY_ESPACIO_EN_MEMORIA:
+            return "HAY_ESPACIO_EN_MEMORIA";
+        case NO_HAY_ESPACIO_EN_MEMORIA:
+            return "NO_HAY_ESPACIO_EN_MEMORIA";
+        
+        // enums memoria con cpu
+        case SOLICITAR_INSTRUCCION:
+            return "SOLICITAR_INSTRUCCION";
+        case RESPUESTA_INSTRUCCION:
+            return "RESPUESTA_INSTRUCCION";
+        case ENVIO_PID_Y_PC:
+            return "ENVIO_PID_Y_PC";
+        case ENVIO_PID_Y_ENTRADANIVEL:
+            return "ENVIO_PID_Y_ENTRADANIVEL";
+        case ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES:
+            return "ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES";
+        
+        // enums instrucciones
+        case NOOP:
+            return "NOOP";
+        case WRITE:
+            return "WRITE";
+        case READ:
+            return "READ";
+        case GOTO:
+            return "GOTO";
+        case IO:
+            return "IO";
+        case DESALOJO_ACEPTADO:
+            return "DESALOJO_ACEPTADO";
+        case INIT_PROC:
+            return "INIT_PROC";
+        case DUMP_MEMORY:
+            return "DUMP_MEMORY";
+        case EXIT:
+            return "EXIT";
+        
+        // RESPUESTAS
+        case DUMP_ACEPTADO:
+            return "DUMP_ACEPTADO";
+        case DUMP_RECHAZADO:
+            return "DUMP_RECHAZADO";
+        
+        // INTERACCION ENTRE KERNEL E IO
+        case RAFAGA_DE_IO:
+            return "RAFAGA_DE_IO";
+        case FIN_DE_IO:
+            return "FIN_DE_IO";
+        
+        // memoria
+        case FETCH_INSTRUCCION:
+            return "FETCH_INSTRUCCION";
+        case READ_MEMORIA:
+            return "READ_MEMORIA";
+        case WRITE_MEMORIA:
+            return "WRITE_MEMORIA";
+        case ENVIO_INSTRUCCION:
+            return "ENVIO_INSTRUCCION";
+        case ENVIO_PID_DIRFIS_DAT:
+            return "ENVIO_PID_DIRFIS_DAT";
+        case ENVIO_PID_NROPAG:
+            return "ENVIO_PID_NROPAG";
+        case ENVIO_PID_NROPAG_CONTENIDO_MARCO:
+            return "ENVIO_PID_NROPAG_CONTENIDO_MARCO";
+        
+        default:
+            return "CODIGO_DESCONOCIDO";
+    }
+}
+
 op_code obtener_codigo_de_operacion (t_paquete * paquete){
 	op_code codigo;
 	memcpy(&codigo, &(paquete->codigo_operacion), sizeof(op_code));
 	return codigo;
 }
+

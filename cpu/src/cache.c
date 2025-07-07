@@ -157,10 +157,10 @@ void algoritmoClock(int pid, char *instruccion, int nroPag, void* contenido){
     while(1){
         if(punteroCache->info.bitdeUso == 0){
             if(punteroCache->info.bitModificado == 1){
-            int marco = conseguirMarcoCache(pid, punteroCache->info.numPag);
-            t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco, tamPag);
-            crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
-            log_info(cpu_logger,"PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, punteroCache->info.numPag, marco);
+                int marco = conseguirMarcoCache(pid, punteroCache->info.numPag);
+                t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco, tamPag);
+                crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
+                log_info(cpu_logger,"PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, punteroCache->info.numPag, marco);
             }
             punteroCache->info.bitdeUso = 1;
             punteroCache->info.bitModificado = bitModificado(instruccion);
