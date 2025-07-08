@@ -85,6 +85,14 @@ typedef enum op_code
 	ENVIO_PID_DIRFIS_DAT,
 	ENVIO_PID_NROPAG,
 	ENVIO_PID_NROPAG_CONTENIDO_MARCO,
+	
+	//operaciones nuevas para TLB y cache de páginas
+	ACCESO_TABLA_PAGINAS,
+	RESPUESTA_ACCESO_TABLA_PAGINAS,
+	LEER_PAGINA_COMPLETA,
+	RESPUESTA_LEER_PAGINA_COMPLETA,
+	ACTUALIZAR_PAGINA_COMPLETA,
+	RESPUESTA_ACTUALIZAR_PAGINA_COMPLETA,
 }op_code;
 
 //ESTRUCTURA DEL BUFFER
@@ -212,6 +220,14 @@ t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char *datos);
 t_buffer *crear_buffer_para_ejecucion_de_io(int pid, int milisegundos);
 t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo, int tamanio);
 
+//BUFFERS PARA NUEVAS OPERACIONES
+t_buffer *crear_buffer_acceso_tabla_paginas(int pid, int pagina_logica);
+t_buffer *crear_buffer_respuesta_acceso_tabla_paginas(int marco);
+t_buffer *crear_buffer_leer_pagina_completa(int pid, int marco);
+t_buffer *crear_buffer_respuesta_leer_pagina_completa(void* contenido, int tam_pagina);
+t_buffer *crear_buffer_actualizar_pagina_completa(int pid, int marco, void* contenido, int tam_pagina);
+t_buffer *crear_buffer_respuesta_actualizar_pagina_completa(bool exito);
+
 //DESERIALIZACIONES
 char *deserializar_nombre_syscall_io(t_paquete *paquete);
 char *deserializar_nombre_io(t_paquete *paquete);
@@ -227,6 +243,14 @@ int deserializar_entero_desde_stream(t_paquete* paquete);
 int deserializar_nroPag(t_paquete *paquete);
 void *deserializar_contenido(t_paquete *paquete);
 char *deserializar_nombre_archivo_proceso(t_paquete *paquete);
+
+//DESERIALIZACIONES PARA NUEVAS OPERACIONES
+void deserializar_acceso_tabla_paginas(t_paquete *paquete, int *pid, int *pagina_logica);
+int deserializar_respuesta_acceso_tabla_paginas(t_paquete *paquete);
+void deserializar_leer_pagina_completa(t_paquete *paquete, int *pid, int *marco);
+void* deserializar_respuesta_leer_pagina_completa(t_paquete *paquete, int *tam_pagina);
+void deserializar_actualizar_pagina_completa(t_paquete *paquete, int *pid, int *marco, void** contenido, int *tam_pagina);
+bool deserializar_respuesta_actualizar_pagina_completa(t_paquete *paquete);
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);

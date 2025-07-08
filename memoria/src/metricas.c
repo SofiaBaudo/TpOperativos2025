@@ -104,3 +104,8 @@ void destruir_metricas_proceso(int pid) {
     }
     log_warning(logger_memoria, "No se encontraron métricas para destruir del proceso PID: %d", pid);
 }
+
+// Función auxiliar para actualizar métricas de acceso a tabla de páginas
+void actualizar_metricas_acceso_tabla_paginas(int pid) {
+    incrementar_metrica_proceso(pid, ACCESO_TABLA);
+}

@@ -39,12 +39,6 @@ bool inicializar_memoria(void) {
         return false;
     }
 
-    // Paso 5: Inicializar SWAP
-    if (!inicializar_swap_sistema()) {
-        log_error(logger_memoria, "Error: Inicialización SWAP");
-        return false;
-    }
-
     mostrar_resumen_sistema();
     log_debug(logger_memoria, "Sistema inicializado correctamente");
 
@@ -118,18 +112,4 @@ void mostrar_resumen_sistema(void) {
     log_debug(logger_memoria, "Retardo SWAP: %d ms", memoria_config.RETARDO_SWAP);
     log_debug(logger_memoria, "Path dump: %s", memoria_config.DUMP_PATH);
     log_debug(logger_memoria, "==========================");
-}
-
-// Inicializa el sistema de SWAP
-bool inicializar_swap_sistema(void) {
-    log_debug(logger_memoria, "Inicializando sistema SWAP...");
-    
-    // Inicializar SWAP
-    inicializar_swap();
-    
-    // Inicializar lista de procesos para SWAP
-    inicializar_lista_procesos();
-    
-    log_debug(logger_memoria, "Sistema SWAP inicializado correctamente");
-    return true;
 }

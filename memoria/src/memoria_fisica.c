@@ -2,6 +2,7 @@
 
 // Variables globales del módulo
 void* memoria_usuario = NULL;
+//representamos la memoria con un void*
 t_marco* marcos = NULL;
 int cantidad_marcos = 0;
 int tam_pagina = 0;
@@ -75,7 +76,7 @@ void liberar_marco(int nro_marco) {
 }
 
 // Lee memoria física en un buffer seguro. Devuelve 0 OK, -1 error.
-int leer_memoria_fisica(uint32_t direccion_fisica, void* buffer, size_t tamanio) {
+int leer_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio) {
     int ret = 0;
     pthread_mutex_lock(&memoria_usuario_mutex);
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
@@ -88,7 +89,7 @@ int leer_memoria_fisica(uint32_t direccion_fisica, void* buffer, size_t tamanio)
 }
 
 // Escribe en memoria física desde un buffer. Devuelve 0 OK, -1 error.
-int escribir_memoria_fisica(uint32_t direccion_fisica, void* buffer, size_t tamanio) {
+int escribir_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio) {
     int ret = 0;
     pthread_mutex_lock(&memoria_usuario_mutex);
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {

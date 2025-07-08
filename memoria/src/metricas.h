@@ -13,5 +13,6 @@ void incrementar_metrica_proceso(int pid, tipo_metrica metrica);
 void mostrar_metricas_proceso(int pid);
 void destruir_metricas_proceso(int pid);
 t_metricas* buscar_metricas_proceso(int pid);
+void actualizar_metricas_acceso_tabla_paginas(int pid);
 
 #endif

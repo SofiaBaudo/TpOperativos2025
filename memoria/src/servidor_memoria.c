@@ -235,6 +235,66 @@ void manejar_cliente_cpu(int cliente) {
                 }
                 destruir_pedido_escritura_memoria(pedido);
                 break;
+            }
+            case ACCESO_TABLA_PAGINAS: {
+                // Recibir pedido de acceso a tabla de páginas
+                t_pedido_acceso_tabla_paginas* pedido = recibir_pedido_acceso_tabla_paginas(cliente);
+                if (pedido == NULL) {
+                    log_error(logger_memoria, "Error al recibir pedido de acceso a tabla de páginas");
+                    break;
+                }
+
+                // Obtener el número de marco navegando la tabla multinivel
+                int marco = obtener_marco_de_pagina_logica(pedido->pid, pedido->pagina_logica);
+                
+                // Enviar el número de marco a la CPU
+                enviar_numero_marco(cliente, marco);
+
+                free(pedido);
+                break;
+            }
+            case LEER_PAGINA_COMPLETA: {
+                // Recibir pedido de lectura de página completa
+                t_pedido_leer_pagina_completa* pedido = recibir_pedido_leer_pagina_completa(cliente);
+                if (pedido == NULL) {
+                    log_error(logger_memoria, "Error al recibir pedido de lectura de página completa");
+                    break;
+                }
+
+                // Obtener el contenido completo de la página
+                void* contenido = obtener_contenido_pagina_completa(pedido->marco, memoria_config.TAM_PAGINA);
+                
+                if (contenido != NULL) {
+                    // Enviar el contenido a la CPU
+                    enviar_contenido_pagina(cliente, contenido, memoria_config.TAM_PAGINA);
+                    free(contenido);
+                } else {
+                    log_error(logger_memoria, "Error al obtener contenido de página completa - Marco: %d", pedido->marco);
+                    // Enviar una página vacía en caso de error
+                    void* pagina_vacia = calloc(1, memoria_config.TAM_PAGINA);
+                    enviar_contenido_pagina(cliente, pagina_vacia, memoria_config.TAM_PAGINA);
+                    free(pagina_vacia);
+                }
+
+                free(pedido);
+                break;
+            }
+            case ACTUALIZAR_PAGINA_COMPLETA: {
+                // Recibir pedido de actualización de página completa
+                t_pedido_actualizar_pagina_completa* pedido = recibir_pedido_actualizar_pagina_completa(cliente);
+                if (pedido == NULL) {
+                    log_error(logger_memoria, "Error al recibir pedido de actualización de página completa");
+                    break;
+                }
+
+                // Actualizar el contenido de la página
+                bool exito = actualizar_contenido_pagina_completa(pedido->marco, pedido->contenido, pedido->tam_pagina);
+                
+                // Enviar confirmación a la CPU
+                enviar_confirmacion_actualizacion(cliente, exito);
+
+                destruir_pedido_actualizar_pagina_completa(pedido);
+                break;
             } 
             default:
                 log_warning(logger_memoria, "Peticion desconocida de CPU: %d", peticion);

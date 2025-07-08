@@ -32,6 +32,6 @@ int contar_marcos_libres(void);
 void liberar_marco(int nro_marco);
 
 // Funciones de acceso seguro a memoria física
-int leer_memoria_fisica(uint32_t direccion_fisica, void* buffer, size_t tamanio);
-int escribir_memoria_fisica(uint32_t direccion_fisica, void* buffer, size_t tamanio);
+int leer_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio);
+int escribir_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio);
 #endif

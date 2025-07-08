@@ -1,7 +1,6 @@
 #ifndef INSTRUCCIONES_MEMORIA_H
 #define INSTRUCCIONES_MEMORIA_H
 
-
 #include "bibliotecas.h"
 #include "inicializar_memoria.h"
 #include "procesos.h"

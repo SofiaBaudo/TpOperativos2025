@@ -41,7 +41,7 @@ void escribir_pagina_en_swap(int pid, int nro_pagina, void* contenido, int taman
     }
     fflush(swapfile);
     
-    // Crear entrada para tracking de la página en SWAP
+    // Crear entrada para seguimeitno de la página en SWAP
     t_pagina_en_swap* entrada = malloc(sizeof(t_pagina_en_swap));
     entrada->pid = pid;
     entrada->nro_pagina = nro_pagina;
