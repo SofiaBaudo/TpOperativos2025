@@ -182,22 +182,16 @@ void* manejar_kernel_io(void *socket_io){
    return NULL;
 }
 
-
 void *esperar_io_proceso(void *instancia_de_io) { //el aux
     struct instancia_de_io *io_aux = instancia_de_io;
     while (true){
         sem_wait(io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
-        pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
-        struct pcb *proceso = buscar_proceso_bloqueado_por_io(io_aux->nombre);
-        pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
+        struct pcb *proceso = buscar_proceso_a_realizar_io(io_aux);
         enviar_entero(io_aux->socket_io_para_comunicarse,proceso->proxima_rafaga_io);
         int respuesta = recibir_entero(io_aux->socket_io_para_comunicarse);
-        
         switch(respuesta){
             case FIN_DE_IO: //Corresponde al enum de fin de IO
-                pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
-                int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
-                pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
+                int pos = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
                 if(pos!=-1){
                     sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
                     proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
@@ -209,7 +203,24 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 }
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando
-                finalizar_proceso(proceso,BLOCKED);
+                int posicion = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
+                if(posicion ==-1){
+                    finalizar_proceso(proceso,SUSP_BLOCKED);
+                }
+                else{
+                    finalizar_proceso(proceso,BLOCKED);
+                }
+                pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
+                posicion = buscar_io_especifica(ios_conectados,io_aux->socket_io_para_comunicarse);
+                list_remove(ios_conectados,posicion);
+                int cantidad_restante = cantidad_de_instancias_conectadas(ios_conectados,io_aux->nombre);
+                pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
+                if(cantidad_restante==0){
+                    recorrer_lista_y_finalizar_procesos(colaEstados[BLOCKED],io_aux->nombre,BLOCKED);
+                    recorrer_lista_y_finalizar_procesos(colaEstados[SUSP_BLOCKED],io_aux->nombre,SUSP_BLOCKED);
+                }
+                
+                liberar_io(io_aux);
                 //hacer funcion que devuelva la cantidad de ios con cierto nombre
                 break;  
         }
@@ -286,40 +297,78 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
     return -1;
 }
 
-struct pcb* obtener_primero(t_list *lista){
-    if(!lista){
-        return NULL;
-    }
-    pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
-    struct pcb* aux = list_remove(lista,0);
-    pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-    return aux;
-}
 void liberar_io(struct instancia_de_io *io){
     free(io->nombre);
     sem_destroy(io->hay_procesos_esperando);
     free(io);
 }
 
-void recorrer_lista_y_finalizar_procesos(t_list * lista){
+void recorrer_lista_y_finalizar_procesos(t_list * lista,char *nombre,Estado estado){
     if (lista == NULL) { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
         printf("Lista nula\n");
     return;
     }
     t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
-    while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
-        list_iterator_next(aux);
-        struct pcb *proceso = obtener_primero(lista);
-        pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
-        int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
-        pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
-        if(pos!=-1){ //Sigue en BLOCKED
-            finalizar_proceso(proceso,BLOCKED);
-        }
-        else{ //Se suspendio
-            finalizar_proceso(proceso,SUSP_BLOCKED);
+    while (list_iterator_has_next(aux)){ //es true mientras haya un siguiente al cual avanzar.
+        struct pcb* proceso = list_iterator_next(aux);
+        if(strcmp(proceso->nombre_io_que_lo_bloqueo,nombre)==0){
+            finalizar_proceso(proceso,estado);
         }
     }
     list_iterator_destroy(aux);
     return;
+}
+
+int buscar_io_especifica(t_list *lista,int socket){
+    if (lista == NULL) { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
+        printf("Lista nula\n");
+    return -1;
+    }
+    int pos=0;
+    t_list_iterator *iterador = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
+    while (list_iterator_has_next(iterador)) { //es true mientras haya un siguiente al cual avanzar.
+       struct instancia_de_io *io_aux = list_iterator_next(iterador);
+       if(io_aux->socket_io_para_comunicarse==socket){
+        return pos;
+       }
+       pos++;
+    }
+    list_iterator_destroy(iterador);
+    return -1;
+}
+
+int cantidad_de_instancias_conectadas(t_list *lista,char*nombre){
+    if (lista == NULL) { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
+        printf("Lista nula\n");
+    return 0;
+    }
+    int cant=0;
+    t_list_iterator *iterador = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
+    while (list_iterator_has_next(iterador)) { //es true mientras haya un siguiente al cual avanzar.
+       struct instancia_de_io *io_aux = list_iterator_next(iterador);
+       if(strcmp(io_aux->nombre,nombre)==0){
+        cant++;
+       }
+    }
+    list_iterator_destroy(iterador);
+    return cant;
+}
+
+struct pcb* buscar_proceso_a_realizar_io(struct instancia_de_io *io_aux){
+    pthread_mutex_lock(&mx_usar_cola_estado[SUSP_BLOCKED]);
+    struct pcb *proceso = buscar_proceso_bloqueado_por_io(colaEstados[SUSP_BLOCKED],io_aux->nombre);
+    pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_BLOCKED]);
+    if(!proceso){
+        pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
+        proceso = buscar_proceso_bloqueado_por_io(colaEstados[BLOCKED],io_aux->nombre);
+        pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
+        }
+        return proceso;
+}
+
+int ver_si_esta_bloqueado_y_devolver_posicion(struct pcb *proceso){
+    pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
+    int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
+    pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
+    return pos;
 }

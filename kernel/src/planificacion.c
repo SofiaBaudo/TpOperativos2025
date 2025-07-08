@@ -692,13 +692,13 @@ void *poner_a_ejecutar(void *argumentos){
     return NULL;
 }
 
-struct pcb* buscar_proceso_bloqueado_por_io(char *nombre){
+struct pcb* buscar_proceso_bloqueado_por_io(t_list *lista, char *nombre){
     
-     { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
+    if(!lista){ //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
         printf("Lista nula\n");
     return NULL;
     }
-    t_list_iterator *iterador = list_iterator_create(colaEstados[BLOCKED]); //arranca apuntando a NULL, no a donde apunta a lista
+    t_list_iterator *iterador = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
     while (list_iterator_has_next(iterador)) { //es true mientras haya un siguiente al cual avanzar.
         struct pcb *proceso = list_iterator_next(iterador);
         if (proceso->nombre_io_que_lo_bloqueo == nombre) { // comparo al pid que estoy apuntando con el pid que busco.

@@ -21,8 +21,12 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 //CONEXION CON CLIENTES
 int iniciar_conexion_kernel_memoria();
 void cerrar_conexion(int socket);
-struct pcb* obtener_primero(t_list *lista);
 void *esperar_io_proceso(void *instancia_de_io);
 //MANEJO DE IOS
 
-void recorrer_lista_y_finalizar_procesos(t_list * lista);
+void recorrer_lista_y_finalizar_procesos(t_list * lista,char *nombre,Estado estado);
+int cantidad_de_instancias_conectadas(t_list *lista,char*nombre);
+void liberar_io(struct instancia_de_io *io);
+int buscar_io_especifica(t_list *lista,int socket);
+struct pcb* buscar_proceso_a_realizar_io(struct instancia_de_io *io_aux);
+int ver_si_esta_bloqueado_y_devolver_posicion(struct pcb *proceso);
