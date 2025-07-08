@@ -632,6 +632,163 @@ int deserializar_entero_desde_stream(t_paquete* paquete){ //lee un int desde el 
 	return valor;
 }
 
+//FUNCIONES PARA NUEVAS OPERACIONES
+
+// Crear buffer para solicitud de acceso a tabla de páginas
+t_buffer *crear_buffer_acceso_tabla_paginas(int pid, int pagina_logica) {
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 2*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pagina_logica, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	return buffer_aux;
+}
+
+// Crear buffer para respuesta de acceso a tabla de páginas
+t_buffer *crear_buffer_respuesta_acceso_tabla_paginas(int marco) {
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &marco, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	return buffer_aux;
+}
+
+// Crear buffer para solicitud de lectura de página completa
+t_buffer *crear_buffer_leer_pagina_completa(int pid, int marco) {
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 2*sizeof(int);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &marco, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	return buffer_aux;
+}
+
+// Crear buffer para respuesta de lectura de página completa
+t_buffer *crear_buffer_respuesta_leer_pagina_completa(void* contenido, int tam_pagina) {
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = sizeof(int) + tam_pagina;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &tam_pagina, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, contenido, tam_pagina);
+	buffer_aux->offset += tam_pagina;
+	return buffer_aux;
+}
+
+// Crear buffer para solicitud de actualización de página completa
+t_buffer *crear_buffer_actualizar_pagina_completa(int pid, int marco, void* contenido, int tam_pagina) {
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = 3*sizeof(int) + tam_pagina;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &marco, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &tam_pagina, sizeof(int));
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, contenido, tam_pagina);
+	buffer_aux->offset += tam_pagina;
+	return buffer_aux;
+}
+
+// Crear buffer para respuesta de actualización de página completa
+t_buffer *crear_buffer_respuesta_actualizar_pagina_completa(bool exito) {
+	t_buffer *buffer_aux = crear_buffer();
+	buffer_aux->size = sizeof(bool);
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &exito, sizeof(bool));
+	buffer_aux->offset += sizeof(bool);
+	return buffer_aux;
+}
+
+// Deserializar solicitud de acceso a tabla de páginas
+void deserializar_acceso_tabla_paginas(t_paquete *paquete, int *pid, int *pagina_logica) {
+	void *stream = paquete->buffer->stream;
+	memcpy(pid, stream, sizeof(int));
+	stream += sizeof(int);
+	memcpy(pagina_logica, stream, sizeof(int));
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+}
+
+// Deserializar respuesta de acceso a tabla de páginas
+int deserializar_respuesta_acceso_tabla_paginas(t_paquete *paquete) {
+	void *stream = paquete->buffer->stream;
+	int marco;
+	memcpy(&marco, stream, sizeof(int));
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+	return marco;
+}
+
+// Deserializar solicitud de lectura de página completa
+void deserializar_leer_pagina_completa(t_paquete *paquete, int *pid, int *marco) {
+	void *stream = paquete->buffer->stream;
+	memcpy(pid, stream, sizeof(int));
+	stream += sizeof(int);
+	memcpy(marco, stream, sizeof(int));
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+}
+
+// Deserializar respuesta de lectura de página completa
+void* deserializar_respuesta_leer_pagina_completa(t_paquete *paquete, int *tam_pagina) {
+	void *stream = paquete->buffer->stream;
+	memcpy(tam_pagina, stream, sizeof(int));
+	stream += sizeof(int);
+	
+	void* contenido = malloc(*tam_pagina);
+	memcpy(contenido, stream, *tam_pagina);
+	
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+	return contenido;
+}
+
+// Deserializar solicitud de actualización de página completa
+void deserializar_actualizar_pagina_completa(t_paquete *paquete, int *pid, int *marco, void** contenido, int *tam_pagina) {
+	void *stream = paquete->buffer->stream;
+	memcpy(pid, stream, sizeof(int));
+	stream += sizeof(int);
+	memcpy(marco, stream, sizeof(int));
+	stream += sizeof(int);
+	memcpy(tam_pagina, stream, sizeof(int));
+	stream += sizeof(int);
+	
+	*contenido = malloc(*tam_pagina);
+	memcpy(*contenido, stream, *tam_pagina);
+	
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+}
+
+// Deserializar respuesta de actualización de página completa
+bool deserializar_respuesta_actualizar_pagina_completa(t_paquete *paquete) {
+	void *stream = paquete->buffer->stream;
+	bool exito;
+	memcpy(&exito, stream, sizeof(bool));
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
+	return exito;
+}
+
 //SIN CLASIFICACION
 
 char* instruccion_a_string(op_code codigo) {
@@ -761,6 +918,18 @@ char* instruccion_a_string(op_code codigo) {
             return "ENVIO_PID_NROPAG";
         case ENVIO_PID_NROPAG_CONTENIDO_MARCO:
             return "ENVIO_PID_NROPAG_CONTENIDO_MARCO";
+        case ACCESO_TABLA_PAGINAS:
+            return "ACCESO_TABLA_PAGINAS";
+        case RESPUESTA_ACCESO_TABLA_PAGINAS:
+            return "RESPUESTA_ACCESO_TABLA_PAGINAS";
+        case LEER_PAGINA_COMPLETA:
+            return "LEER_PAGINA_COMPLETA";
+        case RESPUESTA_LEER_PAGINA_COMPLETA:
+            return "RESPUESTA_LEER_PAGINA_COMPLETA";
+        case ACTUALIZAR_PAGINA_COMPLETA:
+            return "ACTUALIZAR_PAGINA_COMPLETA";
+        case RESPUESTA_ACTUALIZAR_PAGINA_COMPLETA:
+            return "RESPUESTA_ACTUALIZAR_PAGINA_COMPLETA";
         
         default:
             return "CODIGO_DESCONOCIDO";
