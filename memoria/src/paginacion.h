@@ -2,10 +2,9 @@
 #define PAGINACION_H
 
 #include "bibliotecas.h"
+#include "variables_globales_memoria.h"
 #include "inicializar_memoria.h"
 #include "memoria_fisica.h"
-
-typedef struct t_tabla_paginas t_tabla_paginas;
 
 typedef struct {
     int nro_pagina;

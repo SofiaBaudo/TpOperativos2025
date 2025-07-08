@@ -3,6 +3,22 @@
 
 #include <bibliotecas.h>
 
+// Estructura de configuración
+typedef struct {
+    int PUERTO_ESCUCHA;
+    int TAM_MEMORIA;
+    int TAM_PAGINA;
+    int ENTRADAS_POR_TABLA;
+    int CANTIDAD_NIVELES;
+    int RETARDO_MEMORIA;
+    char* PATH_SWAPFILE;
+    int RETARDO_SWAP;
+    char* DUMP_PATH;
+} t_memoria_config;
+
+extern t_log* logger_memoria;
+extern t_memoria_config memoria_config;
+
 //Declaracion Enum de Metricas para los Procesos
 typedef enum {
     ACCESO_TABLA,
@@ -31,5 +47,14 @@ typedef struct t_metricas {
 
 //Declaracion de la lista de metricas por proceso
 extern t_list* lista_metricas_procesos;
+
+// Estructura del paquete de proceso
+typedef struct t_proceso_paquete {
+    int pid;
+    int tamanio;
+    char* path_pseudocodigo;
+} t_proceso_paquete;
+
+typedef struct t_tabla_paginas t_tabla_paginas;
 
 #endif

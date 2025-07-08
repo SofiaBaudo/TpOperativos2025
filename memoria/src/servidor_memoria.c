@@ -70,7 +70,7 @@ void manejar_cliente_kernel(int cliente) {
             // Los OP_CODE que se envian a kernel quedan a eleccion de ellos, total es un int para memoria
             case INICIALIZAR_PROCESO_DESDE_NEW:
                 // Recibir el paquete de proceso
-                t_proceso_paquete *proceso_paquete = recibir_proceso(cliente);
+                struct t_proceso_paquete *proceso_paquete = recibir_proceso(cliente);
                 if(inicializar_proceso(proceso_paquete)){
                     enviar_op_code(cliente, ACEPTAR_PROCESO);
                     log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_paquete->pid, proceso_paquete->tamanio);
@@ -78,9 +78,23 @@ void manejar_cliente_kernel(int cliente) {
                     enviar_op_code(cliente, RECHAZO_PROCESO);
                 }
                 break;
-            case INICIALIZAR_PROCESO_SUSPENDIDO:
-                //leer_pagina_de_swap();
+            case INICIALIZAR_PROCESO_SUSPENDIDO: {
+                // Recibir el paquete de proceso
+                struct t_proceso_paquete *proceso_paquete = recibir_proceso(cliente);
+                if (!proceso_paquete) {
+                    log_error(logger_memoria, "Error al recibir paquete de proceso suspendido");
+                    enviar_op_code(cliente, RECHAZO_PROCESO);
+                    break;
+                }
+                
+                // Intentar reanudar el proceso desde SWAP
+                reanudar_proceso_desde_kernel(proceso_paquete->pid, proceso_paquete->tamanio, cliente);
+                
+                // Liberar memoria del paquete
+                free(proceso_paquete->path_pseudocodigo);
+                free(proceso_paquete);
                 break;
+            }
             case FINALIZAR_PROCESO: {
                 int pid = recibir_entero(cliente);
                 finalizar_proceso(pid);
@@ -88,10 +102,19 @@ void manejar_cliente_kernel(int cliente) {
                 enviar_op_code(cliente, FINALIZACION_CONFIRMADA);
                 break;
             }
-            case SUSPENDER_PROCESO:
-                //Llamar Suspender Proceso
-                //escribir_pagina_en_swap();
+            case SUSPENDER_PROCESO: {
+                // Recibir el PID del proceso a suspender
+                int pid = recibir_entero(cliente);
+                if (pid <= 0) {
+                    log_error(logger_memoria, "PID inválido recibido para suspensión: %d", pid);
+                    enviar_op_code(cliente, RECHAZO_PROCESO);
+                    break;
+                }
+                
+                // Suspender el proceso
+                suspender_proceso_desde_kernel(pid, cliente);
                 break;
+            }
             case DUMP_MEMORY: {
                 int pid = recibir_entero(cliente);
                 bool dump_ok = dump_memoria_proceso(pid);

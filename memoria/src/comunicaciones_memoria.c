@@ -3,7 +3,7 @@
 /* CHEQUEAR COMO ENVIAN Y COMO RECIBEN EL RESTO DE MODULOS */
 
 // Recibe un proceso del socket y lo deserializa en un t_proceso_paquete
-t_proceso_paquete *recibir_proceso(int socket_cliente)
+struct t_proceso_paquete* recibir_proceso(int socket_cliente)
 {
     t_buffer *buffer = crear_buffer_vacio();
 
@@ -44,7 +44,7 @@ t_proceso_paquete *recibir_proceso(int socket_cliente)
 }
 
 // Recibe un pedido de instrucción como paquete (buffer serializado)
-t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
+struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
     t_buffer *buffer = crear_buffer_vacio();
     // Recibir el tamaño del buffer
     if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
@@ -75,7 +75,7 @@ void enviar_instruccion(int socket_destino, const char* instruccion) {
 }
 
 // Recibe un pedido de lectura de memoria como paquete (buffer serializado)
-t_pedido_lectura_memoria* recibir_pedido_lectura_memoria(int socket_cliente) {
+struct t_pedido_lectura_memoria* recibir_pedido_lectura_memoria(int socket_cliente) {
     t_buffer *buffer = crear_buffer_vacio();
     // Recibir el tamaño del buffer
     if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
@@ -119,7 +119,7 @@ void enviar_valor_leido(int socket_destino, void* buffer, size_t tamanio) {
 }
 
 // Recibe un pedido de escritura de memoria como paquete (buffer serializado)
-t_pedido_escritura_memoria* recibir_pedido_escritura_memoria(int socket_cliente) {
+struct t_pedido_escritura_memoria* recibir_pedido_escritura_memoria(int socket_cliente) {
     t_buffer *buffer = crear_buffer_vacio();
     // Recibir el tamaño del buffer
     if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {

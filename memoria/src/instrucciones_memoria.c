@@ -26,9 +26,9 @@ t_list* generar_instrucciones_proceso(int pid, const char* path_pseudocodigo) {
 }
 
 // Devuelve una copia de la instrucción (char) para el proceso y PC dado, o NULL si no existe
-char obtener_instruccion_proceso(int pid, int pc) {
+char* obtener_instruccion_proceso(int pid, int pc) {
     char* copia = NULL;
-    t_proceso_memoria* proc = buscar_proceso_en_memoria(pid);
+    struct t_proceso_memoria* proc = buscar_proceso_en_memoria(pid);
     pthread_mutex_lock(&mutex_procesos_en_memoria);
     if (proc && proc->instrucciones && pc >= 0 && pc < list_size(proc->instrucciones)) {
         char* original = list_get(proc->instrucciones, pc);

@@ -1,6 +1,6 @@
 #include "procesos.h"
 
-bool inicializar_proceso(t_proceso_paquete *proceso_paquete) {
+bool inicializar_proceso(t_proceso_paquete* proceso_paquete) {
     int pid = proceso_paquete->pid;
     int tam_proceso = proceso_paquete->tamanio;
     char* path_pseudocodigo = proceso_paquete->path_pseudocodigo;
@@ -37,6 +37,9 @@ bool inicializar_proceso(t_proceso_paquete *proceso_paquete) {
         pthread_mutex_lock(&mutex_procesos_en_memoria);
         list_add(procesos_en_memoria, nuevo_proceso);
         pthread_mutex_unlock(&mutex_procesos_en_memoria);
+
+        // Agregar proceso a la lista de seguimiento de SWAP
+        agregar_proceso_a_lista(pid, tam_proceso, tabla_raiz);
 
         log_info(logger_memoria, "Proceso %d inicializado correctamente con %d marcos. Path pseudocódigo: %s", pid, marcos_necesarios, path_pseudocodigo);
         return true;
@@ -75,10 +78,13 @@ bool finalizar_proceso(int pid) {
     // 4. Liberar la tabla de paginación
     destruir_tabla_paginas_rec(proc->tabla_paginacion_raiz, 1);
 
-    // 5. Liberar el struct del proceso
+    // 5. Eliminar páginas del proceso en SWAP si las hay
+    eliminar_paginas_de_proceso(pid);
+
+    // 6. Liberar el struct del proceso
     free(proc);
 
-    // 6. Loguear el resultado
+    // 7. Loguear el resultado
     log_info(logger_memoria, "Proceso %d finalizado y recursos liberados", pid);
     return true;
 }

@@ -2,12 +2,10 @@
 #define SERVIDOR_MEMORIA
 
 #include "bibliotecas.h"
+#include "variables_globales_memoria.h"
 #include "inicializar_memoria.h"
 #include "comunicaciones_memoria.h"
 #include "procesos.h"
-
-extern t_memoria_config memoria_config; // agrego el extern para que no de error de redefinicion
-extern t_log* logger_memoria;
 
 void iniciar_servidor_memoria();
 void* manejar_cliente(void* socketCliente);
