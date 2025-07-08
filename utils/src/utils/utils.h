@@ -86,7 +86,7 @@ typedef enum op_code
 	ENVIO_PID_NROPAG,
 	ENVIO_PID_NROPAG_CONTENIDO_MARCO,
 	
-	//operaciones nuevas para TLB y cache de páginas
+	//operaciones nuevas para TLB y cache de páginas desde memoria, funciones de memoria.
 	ACCESO_TABLA_PAGINAS,
 	RESPUESTA_ACCESO_TABLA_PAGINAS,
 	LEER_PAGINA_COMPLETA,
