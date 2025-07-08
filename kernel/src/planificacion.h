@@ -58,7 +58,7 @@ void reanudar_cronometros(t_list *lista,int iterarciones);
 bool menor_por_estimacion(void* a, void* b);
 bool menor_por_estimacion_de_los_que_ya_estan_ejecutando(void* a, void* b);
 bool ver_si_hay_que_desalojar(struct pcb*proceso);
-struct pcb *buscar_el_mas_grande();
+struct instancia_de_cpu *buscar_cpu_con_proceso_con_mayor_estimacion();
 bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct pcb *proceso);
 
 //MANEJO DE SYSCALLS

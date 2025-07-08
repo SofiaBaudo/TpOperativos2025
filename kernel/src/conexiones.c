@@ -201,12 +201,12 @@ void *io(void *instancia_de_io) { //el aux
                 int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
                 pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
                 if(pos!=-1){
-                    sacar_de_cola_de_estado(proceso,BLOCKED);
+                    sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
                     proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
                     transicionar_a_ready(proceso,BLOCKED);
                 }
                 else{
-                    sacar_de_cola_de_estado(proceso,SUSP_BLOCKED);
+                    sacar_proceso_de_cola_de_estado(proceso,SUSP_BLOCKED);
                     transicionar_a_susp_ready(proceso);
                 }
                 break;

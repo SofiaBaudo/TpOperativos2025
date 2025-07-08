@@ -133,7 +133,8 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             bool desalojo = ver_si_hay_que_desalojar(proceso);
             if(desalojo){
                 //cambiar todo para que haya alguna funcion que te devuelva la cpu y no la posicion
-                //struct pcb* proceso_a_desalojar = buscar_el_mas_grande(EXEC);
+                struct instancia_de_cpu *cpu_aux = buscar_cpu_con_proceso_con_mayor_estimacion();
+                enviar_entero(cpu_aux->socket_interrupt,1);
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
                 reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)-1);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
@@ -144,7 +145,6 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
             reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas));
             pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-            //sem_post(&CANTIDAD_DE_PROCESOS_EN_READY);
             sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]);
             }
         }
@@ -232,7 +232,7 @@ void* funcion_para_bloqueados(void* arg){
     int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
     pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
     if(pos!=-1){
-        sacar_de_cola_de_estado(proceso,BLOCKED);
+        sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
         cambiarEstado(proceso,BLOCKED,SUSP_BLOCKED); //A chequear
         sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
     }
@@ -250,12 +250,12 @@ bool ver_si_hay_que_desalojar(struct pcb *proceso){
     return desalojo;
 }
 
-struct pcb *buscar_el_mas_grande(){
+struct instancia_de_cpu *buscar_cpu_con_proceso_con_mayor_estimacion(){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
     ordenar_lista_segun(cpus_conectadas,menor_por_estimacion_de_los_que_ya_estan_ejecutando);
     struct instancia_de_cpu *ultima_cpu = list_get(cpus_conectadas,list_size(cpus_conectadas)-1);
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-    return ultima_cpu->proceso_ejecutando;
+    return ultima_cpu;
 }
 
 void frenar_y_restar_cronometros(t_list *lista){
@@ -577,7 +577,7 @@ bool menor_por_tamanio(void* a, void* b) {
 
 //MANEJO DE SYSCALLS
 
-void sacar_de_cola_de_estado(struct pcb *proceso,Estado estado){
+void sacar_proceso_de_cola_de_estado(struct pcb *proceso,Estado estado){
     pthread_mutex_lock(&mx_usar_cola_estado[estado]);
     int pos = buscar_en_lista(colaEstados[estado],proceso->pid);
     list_remove(colaEstados[estado],pos);
@@ -598,7 +598,7 @@ int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta)
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(DUMP_MEMORY,buffer,socket);
-    sacar_de_cola_de_estado(aux,EXEC);
+    sacar_proceso_de_cola_de_estado(aux,EXEC);
     liberar_cpu(cpu_en_la_que_ejecuta);
     int respuesta = recibir_entero(socket);
     return respuesta;
@@ -647,7 +647,7 @@ void *poner_a_ejecutar(void *argumentos){
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
-                sacar_de_cola_de_estado(proceso,EXEC);
+                sacar_proceso_de_cola_de_estado(proceso,EXEC);
                 int respuesta = manejar_dump(proceso,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
                     proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
@@ -669,7 +669,7 @@ void *poner_a_ejecutar(void *argumentos){
                 }
                 else{
                     temporal_stop(proceso->duracion_ultima_rafaga);
-                    sacar_de_cola_de_estado(proceso,EXEC);
+                    sacar_proceso_de_cola_de_estado(proceso,EXEC);
                     cambiarEstado(proceso,EXEC,BLOCKED);
                     pthread_create(&proceso->hilo_al_bloquearse,NULL,funcion_para_bloqueados,proceso);
                     pthread_detach(proceso->hilo_al_bloquearse);
@@ -701,20 +701,20 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
 }
 
 void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
-    sacar_de_cola_de_estado(proceso_desalojado,EXEC);
+    sacar_proceso_de_cola_de_estado(proceso_desalojado,EXEC);
     liberar_cpu(cpu_en_la_que_ejecuta);
     log_debug(kernel_debug_log,"Se desaloja de la cola EXECUTE al proceso con id: %i",proceso_desalojado->pid);
     transicionar_a_ready(proceso_desalojado,EXEC);
 }
 
 void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
-    sacar_de_cola_de_estado(proceso,estadoInicial);
+    sacar_proceso_de_cola_de_estado(proceso,estadoInicial);
     cambiarEstado(proceso,estadoInicial,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
     crear_paquete(FINALIZAR_PROCESO,buffer,socket);
     cerrar_conexion(socket);
-    sacar_de_cola_de_estado(proceso,EXIT_ESTADO);   
+    sacar_proceso_de_cola_de_estado(proceso,EXIT_ESTADO);   
     listar_metricas_de_tiempo_y_estado(proceso); 
     liberar_proceso(proceso); //free de todos los punteros, lo demas se va con el free (proceso) 
     intentar_iniciar();
