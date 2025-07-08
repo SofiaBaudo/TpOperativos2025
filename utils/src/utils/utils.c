@@ -338,11 +338,9 @@ t_buffer *crear_buffer_io_nombre(char *nombre){
 	buffer_aux->size = sizeof(int) + longitud;
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
-	
 	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
-	
 	buffer_aux -> stream = buffer_aux->stream;
 	return buffer_aux;
 }
@@ -460,7 +458,6 @@ void *deserializar_contenido(t_paquete *paquete) {
 char *deserializar_nombre_io(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int longitud;
-	stream+=sizeof(int);
     memcpy(&longitud,stream,sizeof(int));
     stream+=sizeof(int);
     char *nombre = malloc(longitud+1);
@@ -610,6 +607,7 @@ int deserializar_cant_segundos(t_paquete *paquete){
     free(paquete);
 	return tamanio;
 }
+
 char *deserializar_nombre_archivo(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	stream+=3*sizeof(int);

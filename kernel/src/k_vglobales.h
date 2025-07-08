@@ -78,3 +78,4 @@ void sacar_proceso_de_cola_de_estado(struct pcb *proceso,Estado estado);
 float calcular_proxima_estimacion(struct pcb *proceso);
 void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
 void transicionar_a_susp_ready(struct pcb *pcb);
+struct pcb* buscar_proceso_bloqueado_por_io(char *nombre);

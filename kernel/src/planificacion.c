@@ -306,6 +306,7 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
     }
     pcb->metricas_de_estado[NEW]++;
     pcb->metricas_de_tiempo[NEW] = temporal_create();
+    pcb->nombre_io_que_lo_bloqueo = NULL;
 }
 
 void incrementar_var_global_id_proceso(){
@@ -662,8 +663,8 @@ void *poner_a_ejecutar(void *argumentos){
                 int milisegundos = deserializar_cant_segundos(paquete);
                 proceso->proxima_rafaga_io = milisegundos;
                 char *nombre_io_a_usar = deserializar_nombre_syscall_io(paquete);
-                int posicionIO = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
-                if(posicionIO == -1){ //quiere decir que no hay ninguna syscall con ese nombre
+                int pos = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
+                if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
                     finalizar_proceso(proceso,EXEC);
                     liberar_cpu(cpu_en_la_que_ejecuta);
                 }
@@ -676,16 +677,34 @@ void *poner_a_ejecutar(void *argumentos){
                     proceso->tiempo_bloqueado = temporal_create();
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
-                    struct instancia_de_io *io_aux = list_get(ios_conectados,posicionIO);
+                    struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                    list_add(io_aux->procesos_esperando,proceso);
-                    sem_post(&io_aux->hay_procesos_esperando);
+                    proceso->nombre_io_que_lo_bloqueo = io_aux->nombre;
+                    sem_post(io_aux->hay_procesos_esperando);
                 }
                 bloqueante = true;
                 break;
             default:
                 log_debug(kernel_debug_log,"SYSCALL DESCONOCIDA");
                 break;
+        }
+    }
+    return NULL;
+}
+
+struct pcb* buscar_proceso_bloqueado_por_io(char *nombre){
+    
+     { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
+        printf("Lista nula\n");
+    return NULL;
+    }
+    t_list_iterator *iterador = list_iterator_create(colaEstados[BLOCKED]); //arranca apuntando a NULL, no a donde apunta a lista
+    while (list_iterator_has_next(iterador)) { //es true mientras haya un siguiente al cual avanzar.
+        struct pcb *proceso = list_iterator_next(iterador);
+        if (proceso->nombre_io_que_lo_bloqueo == nombre) { // comparo al pid que estoy apuntando con el pid que busco.
+            proceso->nombre_io_que_lo_bloqueo = NULL; //esto se hace para que si algun otro proceso llama a la funcion este deje de estar disponible
+            list_iterator_destroy(iterador); //delete del iterador.
+            return proceso;
         }
     }
     return NULL;
@@ -735,6 +754,7 @@ void liberar_proceso(struct pcb *proceso){
         temporal_destroy(proceso->metricas_de_tiempo[i]);
     }
     free(proceso->ruta_del_archivo_de_pseudocodigo);
+    free(proceso->nombre_io_que_lo_bloqueo);
     free(proceso);
 }
 

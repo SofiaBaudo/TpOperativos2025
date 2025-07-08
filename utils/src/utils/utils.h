@@ -129,14 +129,13 @@ struct pcb{
 	float ultima_estimacion; 
 	t_temporal *duracion_ultima_rafaga; 
 	t_temporal *tiempo_bloqueado;
-	//despues terminar lo de las metricas de estado y la otra metrica
-	//Estado estado;
 	int tamanio;
 	char *ruta_del_archivo_de_pseudocodigo;
 	int proxima_rafaga_io;
 	pthread_t hilo_al_bloquearse;
 	int metricas_de_estado[7];
 	t_temporal *metricas_de_tiempo[7];
+	char* nombre_io_que_lo_bloqueo;
 };
 
 struct parametros_de_ejecucion{
@@ -147,12 +146,10 @@ struct parametros_de_ejecucion{
 //ESTRUCTURA DE UNA IO
 struct instancia_de_io{
 	char* nombre;
-    bool puede_usarse;
-    struct pcb *proceso_ejecutando;
     t_list *procesos_esperando;
-	int cantInstancias;
-	sem_t hay_procesos_esperando;
+	sem_t *hay_procesos_esperando;
 	int socket_io_para_comunicarse;
+	pthread_t hilo_instancia_de_io;
 };
 
 //ESTRUCTURA DE UNA CPU
@@ -160,8 +157,7 @@ struct instancia_de_cpu{
 	int id_cpu;
 	bool puede_usarse;
 	struct pcb *proceso_ejecutando;
-	t_list *procesos_esperando;
-	int cantInstancias;
+	//t_list *procesos_esperando;
 	int socket_para_comunicarse;
 	int socket_interrupt;
 };

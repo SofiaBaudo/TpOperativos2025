@@ -9,10 +9,13 @@ void esperar_peticion(){
         printf("Entre al while y estoy esperando \n");
         op_code operacion = recibir_op_code(fd_kernel);
         printf("\n");
-       if(operacion == EJECUTAR_RAFAGA_IO){
+        if(operacion == EJECUTAR_RAFAGA_IO){
+        log_debug(io_debug_log,"estoy en el if dentro de operacion = ejecutar_rafaga");
         enviar_op_code(fd_kernel,RAFAGA_ACEPTADA); //falta implementar que no se este ejecutando ninguna rafaga
         tiempo_de_suspension = recibir_entero(fd_kernel);
         if(tiempo_de_suspension>0){
+        log_debug(io_debug_log,"estoy en el if de tiempo de suspension");
+        
         ejecutarPeticion(tiempo_de_suspension);
         tiempo_de_suspension  = 0;
         }

@@ -5,8 +5,8 @@
 
 //ATENCION DE CLIENTES
 void *atender_kernel_dispatch();
-void atender_kernel_io();
-void atender_kernel_interrupt();
+void *atender_kernel_io();
+void *atender_kernel_interrupt();
 
 //MANEJO
 void *manejar_kernel_dispatch(void *socket_dispatch);
@@ -22,7 +22,7 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 int iniciar_conexion_kernel_memoria();
 void cerrar_conexion(int socket);
 struct pcb* obtener_primero(t_list *lista);
-
+void *esperar_io_proceso(void *instancia_de_io);
 //MANEJO DE IOS
 
 void recorrer_lista_y_finalizar_procesos(t_list * lista);

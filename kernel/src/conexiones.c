@@ -67,7 +67,7 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
    return NULL;
 }
 
-void atender_kernel_interrupt(){
+void *atender_kernel_interrupt(){
    int servidor_kernel_interrupt = iniciar_servidor(PUERTO_ESCUCHA_INTERRUPT,kernel_logger,"El kernel se conecto y esta esperando al interrupt");
    if (servidor_kernel_interrupt == -1) {
        log_error(kernel_logger, "Error al iniciar el servidor de kernel");
@@ -113,7 +113,7 @@ void* manejar_kernel_interrupt(void *socket_interrupt){
    return NULL;
 }
 
-void atender_kernel_io(){
+void *atender_kernel_io(){
   
     int servidor_kernel = iniciar_servidor(PUERTO_ESCUCHA_IO,kernel_logger,"El kernel se conecto y esta esperando al IO");
     if (servidor_kernel == -1) {
@@ -141,7 +141,6 @@ void* manejar_kernel_io(void *socket_io){
    int io = *((int *)socket_io); // Desreferencio el puntero para obtener el socket del cliente
    free(socket_io);
    op_code io_id = recibir_op_code(io);
- 
    // log_info(kernel_logger, "Valor recibido en io_id: %d", io_id); verificammos que el valor recibido sea el correcto
    switch (io_id)
    {       
@@ -150,34 +149,31 @@ void* manejar_kernel_io(void *socket_io){
             log_info(kernel_logger, "## IO Conectado - FD del socket: %d", io);
             printf("\n");
             enviar_op_code(io, HANDSHAKE_ACCEPTED); 
-            struct instancia_de_io *aux = malloc(sizeof(struct instancia_de_io)); 
+            struct instancia_de_io *io_aux = malloc(sizeof(struct instancia_de_io)); 
             t_paquete *paquete = recibir_paquete(io);
             char *nombre = deserializar_nombre_io(paquete);
             log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
-            //Capaz estaria bueno agregar un mutex porque la lista de ios es una variable global
+            io_aux->socket_io_para_comunicarse = io;
+            io_aux->nombre = nombre;
+            io_aux->hay_procesos_esperando = malloc(sizeof(sem_t));
             pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
             int pos = buscar_IO_solicitada(ios_conectados,nombre);
             pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-            //cambiar el IO para diferenciar cada instancia, donde cada una va a tener su socket
-            if(pos == -1){
-                aux->nombre = nombre;
-                aux->cantInstancias = 1;
-                sem_init(&aux->hay_procesos_esperando,0,0);
-                log_debug(kernel_debug_log,"Inicialice el semaforo");
-                pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
-                list_add(ios_conectados,aux);
-                pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                log_debug(kernel_debug_log,"Se conecto la primera instancia de la IO: %s",nombre);
+            if(pos ==-1){
+                sem_init(io_aux->hay_procesos_esperando,0,0);
             }
-            else{
+            else{  
                 pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
-                aux = list_get(ios_conectados,pos);
+                struct instancia_de_io *io_que_ya_estaba = list_get(ios_conectados,pos);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                aux->cantInstancias++;
-                log_debug(kernel_debug_log,"Se conecto una nueva instancia de la IO %s y ahora hay %i instancias",nombre,aux->cantInstancias);
+                io_aux->hay_procesos_esperando = io_que_ya_estaba->hay_procesos_esperando;
             }
-           
-            //create hilo io
+            pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
+            list_add(ios_conectados,io_aux);
+            pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
+            log_debug(kernel_debug_log,"Se conecto una instancia de: %s",nombre);
+            pthread_create(&io_aux->hilo_instancia_de_io,NULL,esperar_io_proceso,io_aux);
+            pthread_detach(io_aux->hilo_instancia_de_io);
         break;
         default:
             log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", io); //AVISA Q FUCNIONA MAL
@@ -186,15 +182,17 @@ void* manejar_kernel_io(void *socket_io){
    return NULL;
 }
 
-void *io(void *instancia_de_io) { //el aux
+
+void *esperar_io_proceso(void *instancia_de_io) { //el aux
     struct instancia_de_io *io_aux = instancia_de_io;
     while (true){
-        sem_wait(&io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
-        struct pcb *proceso = malloc(sizeof(struct pcb));
-        proceso = obtener_primero(io_aux->procesos_esperando); //esta funcion lo saca
-        //t_buffer *buffer = crear_buffer_para_ejecucion_de_io(proceso->pid,proceso->proxima_rafaga_io);
-        //crear_paquete(RAFAGA_DE_IO,buffer,cliente_io);
+        sem_wait(io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
+        pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
+        struct pcb *proceso = buscar_proceso_bloqueado_por_io(io_aux->nombre);
+        pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
+        enviar_entero(io_aux->socket_io_para_comunicarse,proceso->proxima_rafaga_io);
         int respuesta = recibir_entero(io_aux->socket_io_para_comunicarse);
+        
         switch(respuesta){
             case FIN_DE_IO: //Corresponde al enum de fin de IO
                 pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
@@ -212,15 +210,11 @@ void *io(void *instancia_de_io) { //el aux
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando
                 finalizar_proceso(proceso,BLOCKED);
-                io_aux->cantInstancias--;
-                if(io_aux->cantInstancias == 0){
-                    recorrer_lista_y_finalizar_procesos(io_aux->procesos_esperando);
-                }
+                //hacer funcion que devuelva la cantidad de ios con cierto nombre
                 break;  
         }
     }
- }
-
+}
 
 
 int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
@@ -300,6 +294,11 @@ struct pcb* obtener_primero(t_list *lista){
     struct pcb* aux = list_remove(lista,0);
     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
     return aux;
+}
+void liberar_io(struct instancia_de_io *io){
+    free(io->nombre);
+    sem_destroy(io->hay_procesos_esperando);
+    free(io);
 }
 
 void recorrer_lista_y_finalizar_procesos(t_list * lista){

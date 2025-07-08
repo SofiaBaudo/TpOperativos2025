@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
    pthread_t hilo_dispatch;
    //pthread_t hilo_funcion_que_duerme;
    //pthread_t hilo_plani_largo_plazo;
-   pthread_create(&hilo_dispatch,NULL,atender_kernel_dispatch,NULL); //Creamos el hilo
+   pthread_create(&hilo_dispatch,NULL,atender_kernel_io,NULL); //Creamos el hilo
    //pthread_detach(hilo_dispatch);
    //pthread_create(&hilo_funcion_que_duerme,NULL,funcion_que_duerme,NULL);
    //pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
