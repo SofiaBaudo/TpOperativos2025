@@ -62,11 +62,6 @@ void manejar_cliente_kernel(int cliente) {
         //nos mande un opcode
         op_code peticion_kernel = -2;
         enviar_op_code(cliente, MEMORIA_LISTA);
-        /*if (peticion_kernel == -1) {
-            log_error(logger_memoria, "Error al recibir peticion de Kernel");
-            return;
-        }*/
-        //log_debug(logger_memoria, "Peticion recibida de KERNEL: %s", instruccion_a_string(peticion_kernel));
         while (peticion_kernel != DESCONEXION_KERNEL){
             peticion_kernel = recibir_op_code(cliente);
             log_debug(logger_memoria, "Peticion recibida de KERNEL: %s", instruccion_a_string(peticion_kernel));
@@ -147,15 +142,11 @@ void manejar_cliente_kernel(int cliente) {
 void manejar_cliente_cpu(int cliente) {
     while (1) {
         op_code peticion = recibir_op_code(cliente);
-        if (peticion == -1) {
-            log_error(logger_memoria, "Error al recibir peticion de CPU");
-            break; // Salimos del bucle si hay un error
-        }
         log_debug(logger_memoria, "Peticion recibida de CPU: %s", instruccion_a_string(peticion));
         switch (peticion){
             case FETCH_INSTRUCCION: {
                 // Recibir struct pedido de instrucción
-                t_paquete* pedido = recibir_paquete(cliente);
+                t_paquete *pedido = recibir_paquete(cliente);
                 int pid = deserializar_pid_memoria(pedido);
                 int pc = deserializar_pc_memoria(pedido);
                 log_debug(logger_memoria,"EL pid es %i", pid);
