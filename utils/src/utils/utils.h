@@ -259,6 +259,7 @@ char *deserializar_nombre_archivo_memoria(t_paquete *paquete);
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);
+int deserializar_pc_memoria(t_paquete *paquete);
 op_code obtener_codigo_de_operacion (t_paquete * paquete);
 
 

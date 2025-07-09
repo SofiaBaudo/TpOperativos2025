@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
    //atender_kernel_dispatch();
   
  
-   crear_proceso(3,"/home/utnso/tp-2025-1c-Sinergia-SO-13/memoria/src/Pseudocodigo/pseudocodigo.txt");
+   crear_proceso(3,"/home/utnso/tp-2025-1c-Sinergia-SO-13/memoria/src/Pseudocodigo/fede.txt");
    //crear_proceso(2,"f1");
    //atender_kernel_io();
    //crear_proceso(5,"f3");

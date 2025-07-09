@@ -1,4 +1,3 @@
 READ 2 'hola'
 WRITE 2 5
 GOTO
-

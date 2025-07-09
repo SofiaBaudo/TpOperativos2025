@@ -77,6 +77,7 @@ void manejar_cliente_kernel(int cliente) {
                     int pid = deserializar_pid_memoria(proceso_paquete);
                     int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
                     char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
+                    log_debug(logger_memoria, "el pseudocodigo es: %s", path_pseudocodigo);
                     if(inicializar_proceso(pid,tam_proceso,path_pseudocodigo)){
                         log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
                         enviar_op_code(cliente, ACEPTAR_PROCESO);
@@ -154,30 +155,34 @@ void manejar_cliente_cpu(int cliente) {
         switch (peticion){
             case FETCH_INSTRUCCION: {
                 // Recibir struct pedido de instrucción
-                t_pedido_instruccion* pedido = recibir_pedido_instruccion(cliente);
+                t_paquete* pedido = recibir_paquete(cliente);
+                int pid = deserializar_pid_memoria(pedido);
+                int pc = deserializar_pc_memoria(pedido);
+                log_debug(logger_memoria,"EL pid es %i", pid);
+                log_debug(logger_memoria, "El pc es %i", pc);
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir pedido de instrucción");
                     break;
                 }
 
                 // Obtener la instrucción correspondiente
-                char* instruccion = obtener_instruccion_proceso(pedido->pid, pedido->pc);
+                char* instruccion = obtener_instruccion_proceso(pid, pc);
 
                 // Log obligatorio de obtención de instrucción
                 if (instruccion != NULL) {
-                    log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pedido->pid, pedido->pc, instruccion);
+                    log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
                 } else {
-                    log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: ", pedido->pid, pedido->pc);
+                    log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: ", pid, pc);
                 }
 
                 // Enviar solo la instrucción a la CPU
                 if (instruccion != NULL) {
                     enviar_instruccion(cliente, instruccion);
-                    log_debug(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: %s", pedido->pid, pedido->pc, instruccion);
+                    log_debug(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: %s", pid, pc, instruccion);
                     free(instruccion);
                 } else {
                     enviar_instruccion(cliente, "");
-                    log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pedido->pid, pedido->pc);
+                    log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }
                 free(pedido);
                 break;

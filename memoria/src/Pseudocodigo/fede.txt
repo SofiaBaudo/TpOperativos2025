@@ -1,0 +1,3 @@
+READ 20 30
+INIT_PROC 4 "fede.txt"
+EXIT

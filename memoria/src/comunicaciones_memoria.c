@@ -1,40 +1,7 @@
 #include <comunicaciones_memoria.h>
 
-/* CHEQUEAR COMO ENVIAN Y COMO RECIBEN EL RESTO DE MODULOS */
-
-/*
-struct t_proceso_paquete* recibir_proceso(int socket_cliente){
-    t_buffer *buffer = crear_buffer_vacio();
-    recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
-    log_debug(logger_memoria,"Pase el primer recv");
-    buffer->stream = malloc(buffer->size);
-    recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL);
-    log_debug(logger_memoria,"Pase el segundo recv");
-    t_proceso_paquete *proceso_paquete = malloc(sizeof(t_proceso_paquete));
-    int offset = 0;
-
-    memcpy(&(proceso_paquete->pid), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
-
-    memcpy(&(proceso_paquete->tamanio), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
-    // Extraigo el path del pseudocódigo
-    int pseudocodigo_len = buffer->size - offset;
-    char *path_pseudocodigo = malloc(pseudocodigo_len + 1);
-    memcpy(path_pseudocodigo, buffer->stream + offset, pseudocodigo_len);
-    path_pseudocodigo[pseudocodigo_len] = '\0';
-    
-    // Guardar el path del pseudocódigo en el proceso_paquete
-    proceso_paquete->path_pseudocodigo = path_pseudocodigo;
-    log_debug(logger_memoria,"Llegue al if final");
-    if (buffer != NULL)
-        free(buffer->stream);
-    free(buffer);
-    return proceso_paquete; 
-}
-*/
-
 // Recibe un pedido de instrucción como paquete (buffer serializado)
+
 struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
     t_buffer *buffer = crear_buffer_vacio();
     if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {

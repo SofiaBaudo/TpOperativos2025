@@ -163,7 +163,7 @@ t_paquete* recibir_paquete(int socket){
 	// Primero recibimos el codigo de operacion
 	recv(socket, &paquete->codigo_operacion, sizeof(paquete->codigo_operacion), 0);
 	
-	// Después ya podemos recibir el buffer. Primero su tamaño seguido del contenido
+	// Después ya podemos recibir el buffer. Primero su tamanio seguido del contenido
 	recv(socket, &(paquete->buffer->size), sizeof(int), 0);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	recv(socket, paquete->buffer->stream, paquete->buffer->size, 0);
@@ -1007,6 +1007,17 @@ int deserializar_pid_memoria(t_paquete *paquete){
 	int pid;
     memcpy(&pid,stream,sizeof(int));
 	return pid;
+}
+
+int deserializar_pc_memoria(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+	stream+=sizeof(int);
+	int pc;
+    memcpy(&pc,stream,sizeof(int));
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return pc;
 }
 
 int deserializar_tamanio_memoria(t_paquete *paquete){
