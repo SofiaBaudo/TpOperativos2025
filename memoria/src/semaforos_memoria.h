@@ -2,7 +2,14 @@
 #define SEMAFOROS_MEMORIA_H
 
 #include "bibliotecas.h"
-#include "variables_globales_memoria.h"
+
+// Declaración de todos los mutex del sistema
+extern pthread_mutex_t mutex_procesos_en_memoria;
+extern pthread_mutex_t memoria_usuario_mutex;
+extern pthread_mutex_t mutex_lista_metricas_procesos;
+extern pthread_mutex_t mutex_paginas_en_swap;
+extern pthread_mutex_t mutex_lista_procesos_swap;
+extern pthread_mutex_t mutex_marcos;
 
 bool inicializar_mutex(void);
 

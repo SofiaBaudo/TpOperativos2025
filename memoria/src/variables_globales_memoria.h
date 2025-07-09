@@ -21,10 +21,6 @@ typedef struct {
 extern t_log* logger_memoria;
 extern t_memoria_config memoria_config;
 
-///semaforos
-extern pthread_mutex_t mutex_procesos_en_memoria;
-extern pthread_mutex_t memoria_usuario_mutex;
-
 //Declaracion Enum de Metricas para los Procesos
 typedef enum {
     ACCESO_TABLA,

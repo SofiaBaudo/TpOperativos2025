@@ -2,11 +2,12 @@
 
 /* CHEQUEAR COMO ENVIAN Y COMO RECIBEN EL RESTO DE MODULOS */
 
-// Recibe un proceso del socket y lo deserializa en un t_proceso_paquete
+struct t_proceso_paquete* recibir_proceso(int socket_cliente){
 
-t_paquete *recibir_proceso(int socket_cliente){
-    t_paquete *paquete = recibir_paquete(socket_cliente);
-    return paquete;
+    t_paquete *recibir_proceso(int socket_cliente){
+        t_paquete *paquete = recibir_paquete(socket_cliente);
+        return paquete;
+    }
 }
 
 /*

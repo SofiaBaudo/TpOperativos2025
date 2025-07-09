@@ -69,15 +69,12 @@ void manejar_cliente_kernel(int cliente) {
         switch (peticion_kernel){
             case INICIALIZAR_PROCESO_DESDE_NEW:
                 struct t_proceso_paquete *proceso_paquete = recibir_proceso(cliente);
-                //t_paquete *proceso_paquete = recibir_proceso(cliente);
-                log_debug(logger_memoria,"Proceso recibido");
+                log_debug(logger_memoria, "Termine de recibir proceso");
                 if(inicializar_proceso(proceso_paquete)){
-                    log_debug(logger_memoria,"Estoy en el if");
                     enviar_op_code(cliente, ACEPTAR_PROCESO);
                     log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_paquete->pid, proceso_paquete->tamanio);
                 } 
                 else {
-                    log_debug(logger_memoria,"Estoy en el else");
                     enviar_op_code(cliente, RECHAZO_PROCESO);
                 }
                 break;
