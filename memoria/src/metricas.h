@@ -6,7 +6,6 @@
 #include "variables_globales_memoria.h"
 #include "inicializar_memoria.h"
 
-// Funciones para manejo de métricas por proceso
 void inicializar_metricas_procesos();
 void crear_metricas_proceso(int pid);
 void incrementar_metrica_proceso(int pid, tipo_metrica metrica);

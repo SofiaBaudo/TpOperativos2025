@@ -1,9 +1,8 @@
 #include "memoria_fisica.h"
 
-// Variables globales del módulo
 void* memoria_usuario = NULL;
-//representamos la memoria con un void*
-t_marco* marcos = NULL;
+
+t_marco* marcos = NULL; //represento la memoria con un void*
 int cantidad_marcos = 0;
 int tam_pagina = 0;
 
@@ -19,7 +18,7 @@ bool inicializar_memoria_fisica(void) {
         return false;
     }
    
-    // PASO 3: Crear array de marcos
+    // PASO 3: Crear array de marcos --> BITMAPPPP visto en clase
     marcos = malloc(cantidad_marcos * sizeof(t_marco));
     if (marcos == NULL) {
         log_error(logger_memoria, "Error al crear array de marcos");

@@ -1,8 +1,8 @@
 #ifndef COMUNICACIONES_MEMORIA_H
 #define COMUNICACIONES_MEMORIA_H
 
-#include "bibliotecas.h"
-#include "inicializar_memoria.h"
+#include <bibliotecas.h>
+#include <inicializar_memoria.h>
 
 // Estructura para pedido de instrucción
 typedef struct t_pedido_instruccion {

@@ -1,4 +1,4 @@
-#include "comunicaciones_memoria.h"
+#include <comunicaciones_memoria.h>
 
 /* CHEQUEAR COMO ENVIAN Y COMO RECIBEN EL RESTO DE MODULOS */
 
@@ -6,28 +6,18 @@
 struct t_proceso_paquete* recibir_proceso(int socket_cliente)
 {
     t_buffer *buffer = crear_buffer_vacio();
-
-    // Recibir el tamaño del buffer
     recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
-
-    // Asignar memoria para el stream con el tamaño recibido
     buffer->stream = malloc(buffer->size);
     recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL);
-
-    // Deserializar el contenido del stream en un t_proceso_paquete
     t_proceso_paquete *proceso_paquete = malloc(sizeof(t_proceso_paquete));
     int offset = 0;
 
-    // Extraer el pid
     memcpy(&(proceso_paquete->pid), buffer->stream + offset, sizeof(int));
     offset += sizeof(int);
 
-    // Extraer el tamaño
     memcpy(&(proceso_paquete->tamanio), buffer->stream + offset, sizeof(int));
     offset += sizeof(int);
-    
-    // instrucciones
-    // Extraer el path del pseudocódigo
+    // Extraigo el path del pseudocódigo
     int pseudocodigo_len = buffer->size - offset;
     char *path_pseudocodigo = malloc(pseudocodigo_len + 1);
     memcpy(path_pseudocodigo, buffer->stream + offset, pseudocodigo_len);
@@ -36,7 +26,6 @@ struct t_proceso_paquete* recibir_proceso(int socket_cliente)
     // Guardar el path del pseudocódigo en el proceso_paquete
     proceso_paquete->path_pseudocodigo = path_pseudocodigo;
 
-    // Liberar memoria del buffer
     if (buffer != NULL)
         free(buffer->stream);
     free(buffer);
@@ -46,7 +35,6 @@ struct t_proceso_paquete* recibir_proceso(int socket_cliente)
 // Recibe un pedido de instrucción como paquete (buffer serializado)
 struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
     t_buffer *buffer = crear_buffer_vacio();
-    // Recibir el tamaño del buffer
     if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
         free(buffer);
         return NULL;
@@ -68,13 +56,11 @@ struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
     return pedido;
 }
 
-// Envía una instrucción (string) a la CPU usando enviar_mensaje de utils. 
 void enviar_instruccion(int socket_destino, const char* instruccion) {
     send(socket_destino, instruccion, strlen(instruccion) + 1, 0); // Enviar string con null terminator
     return;
 }
 
-// Recibe un pedido de lectura de memoria como paquete (buffer serializado)
 struct t_pedido_lectura_memoria* recibir_pedido_lectura_memoria(int socket_cliente) {
     t_buffer *buffer = crear_buffer_vacio();
     // Recibir el tamaño del buffer
@@ -156,6 +142,8 @@ void destruir_pedido_escritura_memoria(t_pedido_escritura_memoria* pedido) {
     free(pedido);
 }
 
+
+///////////////////////////////////// Cami: ver con SOFI ///////////////////////////////////////
 //IMPLEMENTACION DE FUNCIONES COMUNICACION CON CPU.
 // Recibe un pedido de acceso a tabla de páginas
 struct t_pedido_acceso_tabla_paginas* recibir_pedido_acceso_tabla_paginas(int socket_cliente) {
@@ -269,21 +257,6 @@ void enviar_contenido_pagina(int socket_destino, void* contenido, int tam_pagina
     free(paquete);
 }
 
-// Envía confirmación de actualización (éxito/fallo)
-void enviar_confirmacion_actualizacion(int socket_destino, bool exito) {
-    size_t paquete_size = sizeof(int) + sizeof(bool);
-    void* paquete = malloc(paquete_size);
-    int tam = sizeof(bool);
-    memcpy(paquete, &tam, sizeof(int));
-    memcpy((char*)paquete + sizeof(int), &exito, sizeof(bool));
-    size_t total_enviado = 0;
-    while (total_enviado < paquete_size) {
-        ssize_t enviado = send(socket_destino, (char*)paquete + total_enviado, paquete_size - total_enviado, 0);
-        if (enviado <= 0) break;
-        total_enviado += enviado;
-    }
-    free(paquete);
-}
 
 // Destruye un pedido de actualizar página completa
 void destruir_pedido_actualizar_pagina_completa(t_pedido_actualizar_pagina_completa* pedido) {
@@ -292,4 +265,23 @@ void destruir_pedido_actualizar_pagina_completa(t_pedido_actualizar_pagina_compl
     if (pedido->contenido) 
         free(pedido->contenido);
     free(pedido);
+}
+
+// Envía confirmación de actualización de página completa (OK o ERROR)
+void enviar_confirmacion_actualizacion(int socket_destino, bool exito) {
+    size_t paquete_size = sizeof(int) + sizeof(int);
+    void* paquete = malloc(paquete_size);
+    int tam = sizeof(int);
+    int resultado = exito ? 1 : 0; // 1 para OK, 0 para ERROR
+    
+    memcpy(paquete, &tam, sizeof(int));
+    memcpy((char*)paquete + sizeof(int), &resultado, sizeof(int));
+    
+    size_t total_enviado = 0;
+    while (total_enviado < paquete_size) {
+        ssize_t enviado = send(socket_destino, (char*)paquete + total_enviado, paquete_size - total_enviado, 0);
+        if (enviado <= 0) break;
+        total_enviado += enviado;
+    }
+    free(paquete);
 }

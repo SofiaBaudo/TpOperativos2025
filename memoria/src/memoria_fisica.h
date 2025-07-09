@@ -13,8 +13,6 @@ typedef struct {
 } t_marco;
 
 
-
-// Variables globales del módulo de memoria física
 extern void* memoria_usuario;   // Bloque de memoria física simulada
 extern t_marco* marcos;         // Array de marcos físicos
 extern int cantidad_marcos;     // Cantidad total de marcos
@@ -22,16 +20,10 @@ extern int tam_pagina;          // Tamaño de cada página/marco
 
 
 
-// Inicializa la memoria física y los marcos. Devuelve true si tuvo éxito, false si hubo error
 bool inicializar_memoria_fisica(void);
-// Devuelve el número del siguiente marco libre, o -1 si no hay disponibles
 int obtener_siguiente_marco_libre(void);
-// Devuelve la cantidad de marcos libres actualmente en memoria
 int contar_marcos_libres(void);
-// Libera un marco físico, marcándolo como libre y reseteando sus datos
 void liberar_marco(int nro_marco);
-
-// Funciones de acceso seguro a memoria física
 int leer_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio);
 int escribir_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio);
 #endif

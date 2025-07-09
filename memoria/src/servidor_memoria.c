@@ -67,9 +67,7 @@ void manejar_cliente_kernel(int cliente) {
         }
         log_debug(logger_memoria, "Peticion recibida de KERNEL: %s", instruccion_a_string(peticion_kernel));
         switch (peticion_kernel){
-            // Los OP_CODE que se envian a kernel quedan a eleccion de ellos, total es un int para memoria
             case INICIALIZAR_PROCESO_DESDE_NEW:
-                // Recibir el paquete de proceso
                 struct t_proceso_paquete *proceso_paquete = recibir_proceso(cliente);
                 if(inicializar_proceso(proceso_paquete)){
                     enviar_op_code(cliente, ACEPTAR_PROCESO);
@@ -79,7 +77,6 @@ void manejar_cliente_kernel(int cliente) {
                 }
                 break;
             case INICIALIZAR_PROCESO_SUSPENDIDO: {
-                // Recibir el paquete de proceso
                 struct t_proceso_paquete *proceso_paquete = recibir_proceso(cliente);
                 if (!proceso_paquete) {
                     log_error(logger_memoria, "Error al recibir paquete de proceso suspendido");
@@ -275,7 +272,7 @@ void manejar_cliente_cpu(int cliente) {
                 destruir_pedido_actualizar_pagina_completa(pedido);
                 break;
             }
-            case ENVIO_PID_Y_ENTRADANIVEL: {
+            case ENVIO_PID_Y_ENTRADANIVEL: {//hablar de cambiar el nombre
                 // Recibir pedido con PID y entrada de nivel para navegación de tabla de páginas
                 t_buffer *buffer = crear_buffer_vacio();
                 if (recv(cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
@@ -310,7 +307,7 @@ void manejar_cliente_cpu(int cliente) {
                 free(buffer);
                 break;
             }
-            case ENVIO_PID_NROPAG: {
+            case ENVIO_PID_NROPAG: { //hablar de cambiar el nombre
                 // Recibir pedido con PID y número de página para obtener contenido
                 t_buffer *buffer = crear_buffer_vacio();
                 if (recv(cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
@@ -331,10 +328,8 @@ void manejar_cliente_cpu(int cliente) {
                 offset += sizeof(int);
                 int nroPag;
                 memcpy(&nroPag, buffer->stream + offset, sizeof(int));
-                
-                // Obtener el marco de la página
+            
                 int marco = obtener_marco_de_pagina_logica(pid, nroPag);
-                
                 if (marco != -1) {
                     // Obtener el contenido completo de la página
                     void* contenido = obtener_contenido_pagina_completa(marco, memoria_config.TAM_PAGINA);

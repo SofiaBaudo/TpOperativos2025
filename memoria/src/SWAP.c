@@ -220,8 +220,7 @@ int obtener_marco_de_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina) {
 }
 
 // Función para recorrer todas las páginas de un proceso
-void recorrer_paginas_proceso(t_tabla_paginas* tabla_raiz, int nivel, int offset_pagina, 
-                             void (*callback)(int, int, void*), void* contexto) {
+void recorrer_paginas_proceso(t_tabla_paginas* tabla_raiz, int nivel, int offset_pagina, void (*callback)(int, int, void*), void* contexto) {
     if (!tabla_raiz) {
         return;
     }
@@ -355,8 +354,7 @@ void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
             // Obtener marco para esta página
             int nro_marco = obtener_marco_de_pagina(tabla_raiz, entrada->nro_pagina);
             if (nro_marco == -1) {
-                log_error(logger_memoria, "No se pudo obtener marco para página %d del proceso %d", 
-                          entrada->nro_pagina, pid);
+                log_error(logger_memoria, "No se pudo obtener marco para página %d del proceso %d", entrada->nro_pagina, pid);
                 error_carga = true;
                 break;
             }
@@ -367,8 +365,7 @@ void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
             size_t bytes_leidos = fread(direccion_fisica, 1, memoria_config.TAM_PAGINA, swapfile);
             
             if (bytes_leidos != memoria_config.TAM_PAGINA) {
-                log_error(logger_memoria, "Error al leer página %d del proceso %d desde SWAP", 
-                          entrada->nro_pagina, pid);
+                log_error(logger_memoria, "Error al leer página %d del proceso %d desde SWAP", entrada->nro_pagina, pid);
                 error_carga = true;
                 break;
             }
@@ -380,8 +377,7 @@ void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
             // Incrementar métrica de subidas a memoria principal
             incrementar_metrica_proceso(pid, SUBIDAS_MEMORIA);
             
-            log_debug(logger_memoria, "## PID: <%d> - Página <%d> cargada desde SWAP a marco <%d>", 
-                      pid, entrada->nro_pagina, nro_marco);
+            log_debug(logger_memoria, "## PID: <%d> - Página <%d> cargada desde SWAP a marco <%d>", pid, entrada->nro_pagina, nro_marco);
         }
     }
     

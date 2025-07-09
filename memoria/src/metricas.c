@@ -3,12 +3,10 @@
 
 t_list* lista_metricas_procesos;     // Lista que contiene las métricas de cada proceso
 
-// Función para inicializar la lista de métricas
 void inicializar_metricas_procesos() {
     lista_metricas_procesos = list_create();
 }
 
-// Función para crear métricas de un nuevo proceso
 void crear_metricas_proceso(int pid) {
     t_metricas* nuevas_metricas = malloc(sizeof(t_metricas));
     nuevas_metricas->pid = pid;
@@ -22,7 +20,7 @@ void crear_metricas_proceso(int pid) {
     list_add(lista_metricas_procesos, nuevas_metricas);
 }
 
-// Función para buscar las métricas de un proceso específico
+// Función para buscar las métricas de un proceso específico -> no se si tiene ucho sentido
 t_metricas* buscar_metricas_proceso(int pid) {
     for (int i = 0; i < list_size(lista_metricas_procesos); i++) {
         t_metricas* metricas = list_get(lista_metricas_procesos, i);

@@ -1,7 +1,6 @@
 #include "paginacion.h"
 
 
-
 // -------------------- FUNCIÓN PRINCIPAL DEL MÓDULO DE PAGINACIÓN -------------------- //
 
 // Crea las estructuras de paginación y asigna los marcos necesarios
@@ -58,7 +57,6 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes) {
 }
 
 // Asigna marcos a todas las páginas de último nivel de la estructura multinivel
-// Devuelve true si tuvo éxito, false si faltan marcos
 bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual) {
     if (!tabla) 
         return false;
@@ -81,7 +79,6 @@ bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual
 }
 
 // Asigna un marco físico a una página lógica específica
-// Retorna true si tuvo éxito, false si la página no existe
 bool asignar_marco_a_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina_logica, int nro_marco) {
     int niveles = memoria_config.CANTIDAD_NIVELES;
     int entradas = memoria_config.ENTRADAS_POR_TABLA;

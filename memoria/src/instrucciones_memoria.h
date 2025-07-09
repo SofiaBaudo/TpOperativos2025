@@ -10,7 +10,6 @@
 // El caller debe liberar la lista y cada string con list_destroy_and_destroy_elements(..., free)
 t_list* generar_instrucciones_proceso(int pid, const char* path_pseudocodigo);
 
-// Devuelve una copia de la instrucción (char) para el proceso y PC dado, o NULL si no existe
 char* obtener_instruccion_proceso(int pid, int pc);
 
 #endif

@@ -1,4 +1,4 @@
-#include "inicializar_memoria.h"
+#include <inicializar_memoria.h>
 
 t_log* logger_memoria;
 t_memoria_config memoria_config;
