@@ -2,14 +2,6 @@
 
 /* CHEQUEAR COMO ENVIAN Y COMO RECIBEN EL RESTO DE MODULOS */
 
-struct t_proceso_paquete* recibir_proceso(int socket_cliente){
-
-    t_paquete *recibir_proceso(int socket_cliente){
-        t_paquete *paquete = recibir_paquete(socket_cliente);
-        return paquete;
-    }
-}
-
 /*
 struct t_proceso_paquete* recibir_proceso(int socket_cliente){
     t_buffer *buffer = crear_buffer_vacio();
@@ -98,6 +90,7 @@ struct t_pedido_lectura_memoria* recibir_pedido_lectura_memoria(int socket_clien
 }
 
 // Envía un buffer de memoria leído a la CPU como un solo paquete (tamaño + datos juntos)
+
 void enviar_valor_leido(int socket_destino, void* buffer, size_t tamanio) {
     int tam = (int)tamanio;
     size_t paquete_size = sizeof(int) + tamanio;
@@ -155,7 +148,8 @@ void destruir_pedido_escritura_memoria(t_pedido_escritura_memoria* pedido) {
 
 ///////////////////////////////////// Cami: ver con SOFI ///////////////////////////////////////
 //IMPLEMENTACION DE FUNCIONES COMUNICACION CON CPU.
-// Recibe un pedido de acceso a tabla de páginas
+// Recibe un pedido de acceso a tabla de páginas.
+
 struct t_pedido_acceso_tabla_paginas* recibir_pedido_acceso_tabla_paginas(int socket_cliente) {
     t_buffer *buffer = crear_buffer_vacio();
     // Recibir el tamaño del buffer

@@ -13,8 +13,8 @@ char* instruccion_recibida;
 char** obtenerInsPartes;
 char* parametros;
 char* nombre_instruccion;
-int pid = 1;
-int pc = 2;
+int pid;
+int pc;
 
 //Me comunico con el Kernel para obtener el PC/IP y el PID.
 
@@ -23,25 +23,15 @@ void* ejecutar_instrucciones(void* arg){
     //int cpu_id = *(int *)arg;
     t_instruccion instru;
     char *instruccionEntera;
-    //obtenerDelKernelPcPid();
-    //log_debug(cpu_log_debug,"el pid es %i", pid);
-    //log_debug(cpu_log_debug, "el pc es %i", pc);
-    /*
-    instru.opcode = "INIC_PROC";
-    instru.param1 = "holahola";
-    instru.param2 = "4";
-
-    mandar_syscall(instru);
-    */
-       
+    obtenerDelKernelPcPid();
+    log_debug(cpu_log_debug, "obtuve el pid y el pc");   
     instruccionEntera = fetch(pc,pid);
-    /*
+    log_debug(cpu_log_debug, "finalizo el fetch");    
     instru = decode(instruccionEntera);
+    log_debug(cpu_log_debug,"terminado el split de decode");
     execute(instru, pid);
-    check_interrupt(); //ponerlo en hilo.
-    return NULL;
-    */
-    
+    log_debug(cpu_log_debug, "mande la syscall?");
+    check_interrupt(); //ponerlo en hilo.    
     return NULL;
 }
 
@@ -49,6 +39,9 @@ void obtenerDelKernelPcPid(){
     t_paquete *paquete = malloc(sizeof(t_paquete)); 
     paquete = recibir_paquete(fd_conexion_kernel_dispatch);
     deserializar_pid_y_pc(paquete,&pid,&pc);
+    log_debug(cpu_log_debug,"EL pid es %i", pid);
+    log_debug(cpu_log_debug, "El pc es %i", pc);
+
     if(pc < 0){
     log_error(cpu_logger, "El PC no puede ser negativo");
     }
@@ -60,6 +53,7 @@ char* fetch(int pid,int pc){
     log_info(cpu_logger,"## PID: <%d> - FETCH - Program Counter: <%d>",pid, pc);
     t_buffer *buffer = crear_buffer_cpu(pc, pid);
     crear_paquete(FETCH_INSTRUCCION, buffer, fd_conexion_dispatch_memoria);
+    log_debug(cpu_log_debug, "por recibir instru");
     recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(char*),0);
     log_debug(cpu_log_debug, "instruccion recibida %s", instruccion_recibida);
     return instruccion_recibida;
@@ -98,7 +92,7 @@ void execute(t_instruccion instruccion, int pid){
     if(strcmp(nombre_instruccion, "GOTO") == 0){   
         instruccion_goto(param1);
     }
-    if(strcmp(nombre_instruccion, "INIC_PROC") == 0 || strcmp(nombre_instruccion, "EXIT") == 0 || strcmp(nombre_instruccion, "DUMP_MEMORY") == 0 || strcmp(nombre_instruccion, "IO") == 0){
+    if(strcmp(nombre_instruccion, "INIT_PROC") == 0 || strcmp(nombre_instruccion, "EXIT") == 0 || strcmp(nombre_instruccion, "DUMP_MEMORY") == 0 || strcmp(nombre_instruccion, "IO") == 0){
         mandar_syscall(instruccion);
         pc++;
     }
@@ -154,7 +148,7 @@ void instruccion_goto(int parametro){
 
 void mandar_syscall(t_instruccion instruccion){
     log_debug(cpu_log_debug,"Estoy por mandar syscall");
-    if(strcmp(instruccion.opcode, "INIC_PROC") == 0){
+    if(strcmp(instruccion.opcode, "INIT_PROC") == 0){
         int tamanio = atoi(instruccion.param2);
         t_buffer *buffer = crear_buffer_instruccion_init_proc(instruccion.param1, tamanio, &pid, &pc);
         crear_paquete(INIT_PROC,buffer,fd_conexion_kernel_dispatch);

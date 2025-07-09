@@ -1,9 +1,7 @@
 #include "procesos.h"
 
-bool inicializar_proceso(t_proceso_paquete* proceso_paquete){
-    int pid = proceso_paquete->pid;
-    int tam_proceso = proceso_paquete->tamanio;
-    char* path_pseudocodigo = proceso_paquete->path_pseudocodigo;
+bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
+    
     // 1. Validar que el tamaño del proceso no sea mayor que la memoria total
     if (tam_proceso > memoria_config.TAM_MEMORIA) {
         log_warning(logger_memoria, "El proceso %d solicita %d bytes, mayor que la memoria total (%d)", pid, tam_proceso, memoria_config.TAM_MEMORIA);
@@ -15,6 +13,7 @@ bool inicializar_proceso(t_proceso_paquete* proceso_paquete){
 
     // 3. Contar marcos libres usando función de memoria_fisica
     int libres = contar_marcos_libres();
+    log_debug(logger_memoria, "cantidad libres es %i", libres);
     if (libres < marcos_necesarios) {
         log_warning(logger_memoria, "No hay marcos libres suficientes para el proceso %d: necesita %d, hay %d", pid, marcos_necesarios, libres);
         return false;

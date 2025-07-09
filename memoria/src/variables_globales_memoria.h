@@ -50,14 +50,6 @@ typedef struct t_metricas {
 //Declaracion de la lista de metricas por proceso
 extern t_list* lista_metricas_procesos;
 
-// Estructura del paquete de proceso
-
-typedef struct t_proceso_paquete {
-    int pid;
-    int tamanio;
-    char* path_pseudocodigo;
-} t_proceso_paquete;
-
 typedef struct t_tabla_paginas t_tabla_paginas;
 
 #endif

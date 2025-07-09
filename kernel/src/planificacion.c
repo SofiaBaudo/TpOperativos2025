@@ -576,7 +576,6 @@ void sacar_proceso_de_cola_de_estado(struct pcb *proceso,Estado estado){
 
 void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu){
     t_buffer *buffer = crear_buffer_cpu(proceso->pid,proceso->pc);
-    log_info(kernel_logger,"Se creo el buffer con el pid %i y el pc %i", proceso->pid, proceso->pc);
     crear_paquete(ENVIO_PID_Y_PC,buffer,cpu->socket_para_comunicarse); //esta funcion crea el paquete y tambien lo envia
 }
 
@@ -613,10 +612,12 @@ void *poner_a_ejecutar(void *argumentos){
     bool bloqueante = false; 
     while(!bloqueante){ //mientras el bloqueante sea falso.
         mandar_paquete_a_cpu(proceso,cpu_en_la_que_ejecuta); //mando paquete a cpu, le mando pid y pc del proceso
+        log_debug(kernel_debug_log,"Esperando syscall");
         t_paquete *paquete = recibir_paquete(cpu_en_la_que_ejecuta->socket_para_comunicarse); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         int pc = deserializar_pc(paquete);
         proceso->pc = pc;
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
+        log_debug(kernel_debug_log,"Antes del if");
         if(motivo_de_devolucion!=DESALOJO_ACEPTADO){
             char *syscall = cambiar_syscall_a_string(motivo_de_devolucion);
             log_info(kernel_logger,"## (<PID: %i>) - Solicitó syscall: <%s>",proceso->pid,syscall);

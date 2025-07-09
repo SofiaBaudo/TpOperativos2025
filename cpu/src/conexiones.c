@@ -21,7 +21,6 @@ void* iniciar_conexion_kernel_dispatch(void *arg){
         log_error(cpu_logger, "Error en la conexion con el kernel dispatch");
         exit(EXIT_FAILURE);
     }
-   
     return NULL;
 }
 
@@ -120,13 +119,7 @@ void* inicializar_kernel(void* arg){
     pthread_join(hilo_cliente_kernel, NULL);
     log_debug(cpu_log_debug,"Despues de crear el hilo");
     while(1){
-        //op_code terminar = recibir_op_code(fd_conexion_kernel_dispatch);
-        //ejecutar_instrucciones(NULL);
-       /* if(terminar == -1){
-            log_info(logger, "se cerro la conexion con kernel");
-            break;
-        }
-        */
+        ejecutar_instrucciones(NULL);
     }
     log_info(logger, "Finalizando hilo de Kernel");
     log_destroy(logger);

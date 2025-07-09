@@ -19,6 +19,7 @@
 typedef enum op_code
 {
 	// HANDSHAKE
+	DESCONEXION_KERNEL = -1,
 	HANDSHAKE_KERNEL,
 	HANDSHAKE_CPU,
 	HANDSHAKE_MEMORIA,
@@ -48,6 +49,7 @@ typedef enum op_code
 	FINALIZACION_CONFIRMADA,
 	SUSPENDER_PROCESO,
 	SUSPENSION_CONFIRMADA,
+	MEMORIA_LISTA,
 	SOLICITAR_ESPACIO_MEMORIA,
 	HAY_ESPACIO_EN_MEMORIA,
 	NO_HAY_ESPACIO_EN_MEMORIA,
@@ -98,29 +100,31 @@ typedef enum op_code
 //-------------ESTRUCTURAS ADMINISTRATIVAS--------
 
 //ESTRUCTURA DEL BUFFER
-typedef struct
-{
+typedef struct{
 	int size;
 	int offset;
 	void* stream;
 } t_buffer;
 
 //ESTRUCTURA DEL PAQUETE
-typedef struct
-{
+typedef struct{
 	op_code codigo_operacion;
 	t_buffer* buffer;
 } t_paquete;
 
+// Estructura del paquete de proceso
+
+
+
 //ESTADOS
 typedef enum{
-	NEW, //0
-	READY,//1
-	BLOCKED,//2
-	EXEC,//3
-	EXIT_ESTADO,//4
-	SUSP_READY,//5
-	SUSP_BLOCKED//6
+	NEW, 			//0
+	READY,			//1
+	BLOCKED,		//2
+	EXEC,			//3
+	EXIT_ESTADO,	//4
+	SUSP_READY,		//5
+	SUSP_BLOCKED	//6
 } Estado;
 
 //ESTRUCTURA DE UN PROCESO
@@ -249,8 +253,13 @@ void deserializar_leer_pagina_completa(t_paquete *paquete, int *pid, int *marco)
 void* deserializar_respuesta_leer_pagina_completa(t_paquete *paquete, int *tam_pagina);
 void deserializar_actualizar_pagina_completa(t_paquete *paquete, int *pid, int *marco, void** contenido, int *tam_pagina);
 bool deserializar_respuesta_actualizar_pagina_completa(t_paquete *paquete);
+int deserializar_pid_memoria(t_paquete *paquete);
+int deserializar_tamanio_memoria(t_paquete *paquete);
+char *deserializar_nombre_archivo_memoria(t_paquete *paquete);
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);
 op_code obtener_codigo_de_operacion (t_paquete * paquete);
+
+
 #endif

@@ -44,7 +44,7 @@ typedef struct t_pedido_actualizar_pagina_completa {
     int tam_pagina;
 } t_pedido_actualizar_pagina_completa;
 
-struct t_proceso_paquete* recibir_proceso(int socket_cliente);
+
 struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente);
 void enviar_instruccion(int socket_destino, const char* instruccion);
 // Recibe un pedido de lectura de memoria del socket y lo deserializa

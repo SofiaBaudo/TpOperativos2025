@@ -2,12 +2,15 @@
 
 t_list* generar_instrucciones_proceso(int pid, const char* path_pseudocodigo) {
     FILE* archivo = fopen(path_pseudocodigo, "r");
-    if (!archivo) 
+    if (!archivo) {
+        log_debug(logger_memoria, "el archivo es nulo");
         return NULL;
+    }
 
     t_list* instrucciones = list_create();
     if (!instrucciones) {
         fclose(archivo);
+        log_debug(logger_memoria, "se cerro el archivo porque la lista es vacia");
         return NULL;
     }
 

@@ -223,7 +223,6 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 }
                 
                 liberar_io(io_aux);
-                //hacer funcion que devuelva la cantidad de ios con cierto nombre
                 break;  
         }
     }
@@ -236,6 +235,7 @@ int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso co
    op_code respuesta = recibir_op_code(fd_kernel_memoria); //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
    if (respuesta == HANDSHAKE_ACCEPTED){
        log_info(kernel_logger, "Conexion con memoria establecida correctamente");
+       op_code esperar_a_memoria = recibir_op_code(fd_kernel_memoria);
        return fd_kernel_memoria; // en realidad tendriamos que devolver si se puede o no iniciar cierto proceso
    }
    else{
@@ -246,7 +246,8 @@ int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso co
 //aca hay que hacer una funcion que cierre la conexion con memoria cuando yo quiera, haciendo un close del socket fdkernelmemoria 
 
 void cerrar_conexion(int socket){
-    close (socket);
+    enviar_op_code(socket,DESCONEXION_KERNEL);
+    close(socket);
 }
 
 
@@ -266,7 +267,6 @@ bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacio
     t_buffer *buffer = crear_buffer_de_envio_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo,proceso->tamanio);//tiene que tener el tamanio, el pid, el archivo de pseudocodigo
     crear_paquete(operacion,buffer,socket);
     respuesta = recibir_op_code(socket);
-    log_debug(kernel_debug_log,"opcode recibido");
     if(respuesta == ACEPTAR_PROCESO){
         return true;
     }

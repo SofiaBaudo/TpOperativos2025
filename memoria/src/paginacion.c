@@ -5,13 +5,16 @@
 
 // Crea las estructuras de paginación y asigna los marcos necesarios
 // Retorna la tabla de páginas raíz del proceso si tuvo éxito, NULL si hubo error de memoria
+
 t_tabla_paginas* iniciar_proceso_paginacion(int pid, int tam_proceso) {
     t_tabla_paginas* tabla_raiz = crear_tablas_para_proceso(tam_proceso);
-    if (!tabla_raiz)
+    if (!tabla_raiz){
+        log_debug(logger_memoria, "es null la tabla de raiz");
         return NULL;
+    }     
     if (!asignar_marcos_a_todas_las_paginas(tabla_raiz, 1)) {
+        log_debug(logger_memoria, "vacia a asignacion");
         destruir_tabla_paginas_rec(tabla_raiz, 1);
-        return NULL;
     }
     return tabla_raiz;
 }
@@ -19,6 +22,7 @@ t_tabla_paginas* iniciar_proceso_paginacion(int pid, int tam_proceso) {
 // -------------------- FUNCIONES AUXILIARES USADAS POR iniciar_proceso_paginacion --------------------
 
 // Crea la estructura de tablas para un proceso dado su tamaño
+
 t_tabla_paginas* crear_tablas_para_proceso(int tam_proceso) {
     int tam_pagina = memoria_config.TAM_PAGINA;
     int paginas_necesarias = (tam_proceso + tam_pagina - 1) / tam_pagina;
@@ -58,8 +62,10 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes) {
 
 // Asigna marcos a todas las páginas de último nivel de la estructura multinivel
 bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual) {
-    if (!tabla) 
+    if (!tabla){
+        log_debug(logger_memoria, "tabla vacia de asignar marcos");
         return false;
+    }
     if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
         for (int i = 0; i < tabla->cantidad_entradas; i++) {
             int marco = obtener_siguiente_marco_libre();
@@ -75,6 +81,7 @@ bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual
                 return false;
         }
     }
+    log_debug(logger_memoria, "pase toda la funcion, voy a retornar true");
     return true;
 }
 
