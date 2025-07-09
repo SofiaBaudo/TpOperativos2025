@@ -95,6 +95,8 @@ typedef enum op_code
 	RESPUESTA_ACTUALIZAR_PAGINA_COMPLETA,
 }op_code;
 
+//-------------ESTRUCTURAS ADMINISTRATIVAS--------
+
 //ESTRUCTURA DEL BUFFER
 typedef struct
 {
@@ -125,16 +127,16 @@ typedef enum{
 struct pcb{
 	int pid;
 	int pc;
+	int tamanio;
+	int metricas_de_estado[7];
+	t_temporal *metricas_de_tiempo[7];
+	char *ruta_del_archivo_de_pseudocodigo;
 	float proxima_estimacion; 
 	float ultima_estimacion; 
 	t_temporal *duracion_ultima_rafaga; 
 	t_temporal *tiempo_bloqueado;
-	int tamanio;
-	char *ruta_del_archivo_de_pseudocodigo;
-	int proxima_rafaga_io;
 	pthread_t hilo_al_bloquearse;
-	int metricas_de_estado[7];
-	t_temporal *metricas_de_tiempo[7];
+	int proxima_rafaga_io;
 	char* nombre_io_que_lo_bloqueo;
 };
 

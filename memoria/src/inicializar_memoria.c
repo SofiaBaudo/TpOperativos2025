@@ -2,8 +2,6 @@
 
 t_log* logger_memoria;
 t_memoria_config memoria_config;
-pthread_mutex_t mutex_procesos_en_memoria;
-pthread_mutex_t memoria_usuario_mutex;
 t_list* procesos_en_memoria; // Lista global de procesos en memoria
 
 bool inicializar_memoria(void) {
@@ -45,17 +43,6 @@ bool inicializar_memoria(void) {
     return true;
 }
 
-
-// Inicializa todos los mutex/semaforos globales del sistema de memoria
-bool inicializar_mutex(void) {
-    if (pthread_mutex_init(&mutex_procesos_en_memoria, NULL) != 0) {
-        return false;
-    }
-    if (pthread_mutex_init(&memoria_usuario_mutex, NULL) != 0) {  // MUTEX para memoria de usuario y marcos pues estan fuertemente ligados
-        return false;
-    }
-    return true;
-}
 
 // Inicializa todas las listas globales del sistema de memoria
 bool inicializar_listas_globales(void) {

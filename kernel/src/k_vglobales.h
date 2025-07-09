@@ -57,12 +57,8 @@ extern pthread_mutex_t mx_usar_recurso[2];
 
 //SEMAFOROS
 //extern sem_t INGRESO_DEL_PRIMERO;
-extern sem_t CANTIDAD_DE_PROCESOS_EN_NEW;
-extern sem_t CANTIDAD_DE_PROCESOS_EN_READY;
-extern sem_t CANTIDAD_DE_PROCESOS_EN_BLOCKED;
 extern sem_t INTENTAR_INICIAR_NEW;
 extern sem_t INTENTAR_INICIAR_SUSP_READY;
-extern sem_t INGRESO_DEL_PRIMERO_READY;
 extern sem_t CPUS_LIBRES;
 extern sem_t REPLANIFICAR;
 extern sem_t CANTIDAD_DE_PROCESOS_EN[7];

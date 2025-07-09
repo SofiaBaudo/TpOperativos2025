@@ -189,21 +189,22 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
         struct pcb *proceso = buscar_proceso_a_realizar_io(io_aux);
         enviar_entero(io_aux->socket_io_para_comunicarse,proceso->proxima_rafaga_io);
         int respuesta = recibir_entero(io_aux->socket_io_para_comunicarse);
+        int posicion = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
         switch(respuesta){
             case FIN_DE_IO: //Corresponde al enum de fin de IO
-                int pos = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
-                if(pos!=-1){
+                if(posicion!=-1){
                     sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
                     proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
+                    log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a READY",proceso->pid);
                     transicionar_a_ready(proceso,BLOCKED);
                 }
                 else{
+                    log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a SUSP_READY",proceso->pid);
                     sacar_proceso_de_cola_de_estado(proceso,SUSP_BLOCKED);
                     transicionar_a_susp_ready(proceso);
                 }
                 break;
             case -1: //desconexion de la instancia con la que estamos trabajando
-                int posicion = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
                 if(posicion ==-1){
                     finalizar_proceso(proceso,SUSP_BLOCKED);
                 }
@@ -216,6 +217,7 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 int cantidad_restante = cantidad_de_instancias_conectadas(ios_conectados,io_aux->nombre);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 if(cantidad_restante==0){
+                    sem_destroy(io_aux->hay_procesos_esperando); 
                     recorrer_lista_y_finalizar_procesos(colaEstados[BLOCKED],io_aux->nombre,BLOCKED);
                     recorrer_lista_y_finalizar_procesos(colaEstados[SUSP_BLOCKED],io_aux->nombre,SUSP_BLOCKED);
                 }
@@ -261,10 +263,10 @@ void solicitar_rafaga_de_io(int duracion,struct instancia_de_io *io_a_usar){
 
 bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacion){
     op_code respuesta;
-    //enviar_entero(socket, tamanio);
     t_buffer *buffer = crear_buffer_de_envio_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo,proceso->tamanio);//tiene que tener el tamanio, el pid, el archivo de pseudocodigo
     crear_paquete(operacion,buffer,socket);
     respuesta = recibir_op_code(socket);
+    log_debug(kernel_debug_log,"opcode recibido");
     if(respuesta == ACEPTAR_PROCESO){
         return true;
     }
@@ -299,7 +301,7 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
 
 void liberar_io(struct instancia_de_io *io){
     free(io->nombre);
-    sem_destroy(io->hay_procesos_esperando);
+    //sem_destroy(io->hay_procesos_esperando);
     free(io);
 }
 

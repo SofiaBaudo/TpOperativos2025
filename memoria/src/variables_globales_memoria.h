@@ -2,6 +2,7 @@
 #define VARIABLES_GLOBALES_MEMORIA_H
 
 #include <bibliotecas.h>
+#include <semaforos_memoria.h>
 
 // Estructura de configuración
 typedef struct {
@@ -16,8 +17,13 @@ typedef struct {
     char* DUMP_PATH;
 } t_memoria_config;
 
+// Estructura de log
 extern t_log* logger_memoria;
 extern t_memoria_config memoria_config;
+
+///semaforos
+extern pthread_mutex_t mutex_procesos_en_memoria;
+extern pthread_mutex_t memoria_usuario_mutex;
 
 //Declaracion Enum de Metricas para los Procesos
 typedef enum {
@@ -49,6 +55,7 @@ typedef struct t_metricas {
 extern t_list* lista_metricas_procesos;
 
 // Estructura del paquete de proceso
+
 typedef struct t_proceso_paquete {
     int pid;
     int tamanio;

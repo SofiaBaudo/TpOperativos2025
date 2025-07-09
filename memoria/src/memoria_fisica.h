@@ -1,8 +1,9 @@
 #ifndef MEMORIA_FISICA_H
 #define MEMORIA_FISICA_H
 
-#include "inicializar_memoria.h"
-#include "bibliotecas.h"
+#include <inicializar_memoria.h>
+#include <bibliotecas.h>
+#include <semaforos_memoria.h>
 
 // Estructura que representa un marco físico de memoria
 typedef struct {

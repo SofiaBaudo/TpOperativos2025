@@ -11,10 +11,6 @@ pthread_mutex_t mx_usar_recurso[2];
 //SEMAFOROS
 
 //sem_t INGRESO_DEL_PRIMERO; //POR SI ES NECESARIO.
-sem_t CANTIDAD_DE_PROCESOS_EN_NEW;
-sem_t CANTIDAD_DE_PROCESOS_EN_READY;
-sem_t CANTIDAD_DE_PROCESOS_EN_BLOCKED;
-sem_t INGRESO_DEL_PRIMERO_READY;
 sem_t CPUS_LIBRES;
 sem_t REPLANIFICAR;
 sem_t CANTIDAD_DE_PROCESOS_EN[7];
@@ -37,22 +33,13 @@ void inicializar_sincronizacion() {
         sem_init(&CANTIDAD_DE_PROCESOS_EN[i],0,0);
         sem_init(&UNO_A_LA_VEZ[i],0,1);
     }
-    //sem_init(&INGRESO_DEL_PRIMERO, 0, 1); // El segundo parámetro es 0 para semáforo binario
-    sem_init(&INTENTAR_INICIAR_NEW, 0, 1); 
-    /*if(strcmp(ALGORITMO_INGRESO_A_READY,"FIFO")==0){
+    if(strcmp(ALGORITMO_INGRESO_A_READY,"FIFO")==0){
         sem_init(&INTENTAR_INICIAR_NEW, 0, 1);
-        sem_init(&INTENTAR_INICIAR_SUSP_READY,0,1); 
     }
     else{
-        sem_init(&INTENTAR_INICIAR_NEW, 0, 0); 
-         sem_init(&INTENTAR_INICIAR_SUSP_READY,0,1); 
-
-    }*/
-    sem_init(&INTENTAR_INICIAR_SUSP_READY,0,0);
-    sem_init(&CANTIDAD_DE_PROCESOS_EN_NEW,0,0);
-    sem_init(&CANTIDAD_DE_PROCESOS_EN_READY,0,0);
-    sem_init(&CANTIDAD_DE_PROCESOS_EN_BLOCKED,0,0);
-    sem_init(&INGRESO_DEL_PRIMERO_READY,0,1);
+        sem_init(&INTENTAR_INICIAR_NEW, 0, 0);
+    }
+    sem_init(&INTENTAR_INICIAR_SUSP_READY,0,0); 
     sem_init(&CPUS_LIBRES,0,0);
     sem_init(&REPLANIFICAR,0,0);
     sem_init(&SUSP_READY_SIN_PROCESOS,0,0);

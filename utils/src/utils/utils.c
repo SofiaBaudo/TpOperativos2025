@@ -169,6 +169,7 @@ t_paquete* recibir_paquete(int socket){
 	recv(socket, paquete->buffer->stream, paquete->buffer->size, 0);
 	return paquete;
 }
+
 //CREACION DE BUFFERS
 t_buffer *crear_buffer(){
 	t_buffer *buffer_aux = malloc (sizeof(t_buffer));

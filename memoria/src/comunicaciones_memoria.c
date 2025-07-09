@@ -3,12 +3,20 @@
 /* CHEQUEAR COMO ENVIAN Y COMO RECIBEN EL RESTO DE MODULOS */
 
 // Recibe un proceso del socket y lo deserializa en un t_proceso_paquete
-struct t_proceso_paquete* recibir_proceso(int socket_cliente)
-{
+
+t_paquete *recibir_proceso(int socket_cliente){
+    t_paquete *paquete = recibir_paquete(socket_cliente);
+    return paquete;
+}
+
+/*
+struct t_proceso_paquete* recibir_proceso(int socket_cliente){
     t_buffer *buffer = crear_buffer_vacio();
     recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
+    log_debug(logger_memoria,"Pase el primer recv");
     buffer->stream = malloc(buffer->size);
     recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL);
+    log_debug(logger_memoria,"Pase el segundo recv");
     t_proceso_paquete *proceso_paquete = malloc(sizeof(t_proceso_paquete));
     int offset = 0;
 
@@ -25,12 +33,13 @@ struct t_proceso_paquete* recibir_proceso(int socket_cliente)
     
     // Guardar el path del pseudocódigo en el proceso_paquete
     proceso_paquete->path_pseudocodigo = path_pseudocodigo;
-
+    log_debug(logger_memoria,"Llegue al if final");
     if (buffer != NULL)
         free(buffer->stream);
     free(buffer);
     return proceso_paquete; 
 }
+*/
 
 // Recibe un pedido de instrucción como paquete (buffer serializado)
 struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {

@@ -63,7 +63,7 @@ void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu);
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta);
 void liberar_cpu(struct instancia_de_cpu *cpu);
 void listar_metricas_de_tiempo_y_estado(struct pcb *proceso);
-
+char *cambiar_syscall_a_string(op_code syscall);
 //PlANI MEDIANO PLAZO
 void* funcion_para_bloqueados(void* arg);
 

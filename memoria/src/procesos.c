@@ -1,6 +1,6 @@
 #include "procesos.h"
 
-bool inicializar_proceso(t_proceso_paquete* proceso_paquete) {
+bool inicializar_proceso(t_proceso_paquete* proceso_paquete){
     int pid = proceso_paquete->pid;
     int tam_proceso = proceso_paquete->tamanio;
     char* path_pseudocodigo = proceso_paquete->path_pseudocodigo;
