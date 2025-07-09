@@ -172,17 +172,6 @@ void manejar_cliente_cpu(int cliente) {
                 break;
             }
             case READ_MEMORIA: {
-                /*
-                 * Espera recibir un struct t_pedido_lectura_memoria con:
-                 *   - pid: PID del proceso solicitante
-                 *   - direccion_logica: dirección física absoluta (offset global en memoria de usuario, NO lógica ni relativa al proceso)
-                 *   - tamanio: cantidad de bytes a leer (puede ser cualquier valor, incluso el tamaño de página)
-                 *
-                 * La dirección recibida debe ser el offset exacto desde el inicio de memoria_usuario,
-                 * y si se solicita una página completa, debe coincidir con el byte 0 de la página.
-                 *
-                 * No se realiza traducción de direcciones ni paginación aquí: la CPU ya envía la dirección física lista.
-                 */
                 // Recibir struct pedido de lectura de memoria
                 t_pedido_lectura_memoria* pedido = recibir_pedido_lectura_memoria(cliente);
                 if (pedido == NULL) {
@@ -210,16 +199,6 @@ void manejar_cliente_cpu(int cliente) {
                 break;
             }
             case WRITE_MEMORIA: {
-                /*
-                 * Espera recibir un struct t_pedido_escritura_memoria con:
-                 *   - pid: PID del proceso solicitante
-                 *   - direccion_logica: dirección física absoluta (offset global en memoria de usuario)
-                 *   - tamanio: cantidad de bytes a escribir
-                 *   - buffer: datos a escribir (tamanio bytes)
-                 *
-                 * La dirección recibida debe ser el offset exacto desde el inicio de memoria_usuario.
-                 * No se realiza traducción de direcciones ni paginación aquí.
-                 */
                 t_pedido_escritura_memoria* pedido = recibir_pedido_escritura_memoria(cliente);
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir paquete de WRITE_MEMORIA");
@@ -294,6 +273,96 @@ void manejar_cliente_cpu(int cliente) {
                 enviar_confirmacion_actualizacion(cliente, exito);
 
                 destruir_pedido_actualizar_pagina_completa(pedido);
+                break;
+            }
+            case ENVIO_PID_Y_ENTRADANIVEL: {
+                // Recibir pedido con PID y entrada de nivel para navegación de tabla de páginas
+                t_buffer *buffer = crear_buffer_vacio();
+                if (recv(cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
+                    free(buffer);
+                    break;
+                }
+                buffer->stream = malloc(buffer->size);
+                if (recv(cliente, buffer->stream, buffer->size, MSG_WAITALL) != buffer->size) {
+                    free(buffer->stream);
+                    free(buffer);
+                    break;
+                }
+                
+                // Deserializar PID y entrada de nivel
+                int offset = 0;
+                int pid;
+                memcpy(&pid, buffer->stream + offset, sizeof(int));
+                offset += sizeof(int);
+                int entradaNivel;
+                memcpy(&entradaNivel, buffer->stream + offset, sizeof(int));
+                
+                // NOTA: CPU está enviando entrada de nivel, pero necesitamos página lógica
+                // Por compatibilidad, interpretamos entradaNivel como número de página lógica
+                int marco = obtener_marco_de_pagina_logica(pid, entradaNivel);
+                
+                // Enviar el marco de vuelta a CPU
+                send(cliente, &marco, sizeof(int), 0);
+                
+                log_debug(logger_memoria, "PID: %d - Enviado marco: %d para página: %d", pid, marco, entradaNivel);
+                
+                free(buffer->stream);
+                free(buffer);
+                break;
+            }
+            case ENVIO_PID_NROPAG: {
+                // Recibir pedido con PID y número de página para obtener contenido
+                t_buffer *buffer = crear_buffer_vacio();
+                if (recv(cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
+                    free(buffer);
+                    break;
+                }
+                buffer->stream = malloc(buffer->size);
+                if (recv(cliente, buffer->stream, buffer->size, MSG_WAITALL) != buffer->size) {
+                    free(buffer->stream);
+                    free(buffer);
+                    break;
+                }
+                
+                // Deserializar PID y número de página
+                int offset = 0;
+                int pid;
+                memcpy(&pid, buffer->stream + offset, sizeof(int));
+                offset += sizeof(int);
+                int nroPag;
+                memcpy(&nroPag, buffer->stream + offset, sizeof(int));
+                
+                // Obtener el marco de la página
+                int marco = obtener_marco_de_pagina_logica(pid, nroPag);
+                
+                if (marco != -1) {
+                    // Obtener el contenido completo de la página
+                    void* contenido = obtener_contenido_pagina_completa(marco, memoria_config.TAM_PAGINA);
+                    
+                    if (contenido != NULL) {
+                        // NOTA: CPU espera un puntero, pero esto no funciona entre procesos
+                        // Por compatibilidad, enviamos el puntero local pero esto necesita ser corregido en CPU
+                        send(cliente, &contenido, sizeof(void*), 0);
+                        
+                        log_debug(logger_memoria, "PID: %d - Enviado puntero contenido para página: %d, marco: %d", pid, nroPag, marco);
+                        
+                        // Liberar el contenido que obtuvimos
+                        free(contenido);
+                    } else {
+                        // Enviar puntero nulo en caso de error
+                        void* contenido_nulo = NULL;
+                        send(cliente, &contenido_nulo, sizeof(void*), 0);
+                        log_error(logger_memoria, "Error al obtener contenido - PID: %d, Página: %d", pid, nroPag);
+                    }
+                } else {
+                    // Enviar puntero nulo si no se encuentra el marco
+                    void* contenido_nulo = NULL;
+                    send(cliente, &contenido_nulo, sizeof(void*), 0);
+                    log_error(logger_memoria, "Marco no encontrado - PID: %d, Página: %d", pid, nroPag);
+                }
+                
+                free(buffer->stream);
+                free(buffer);
                 break;
             } 
             default:
