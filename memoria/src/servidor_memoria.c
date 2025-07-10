@@ -295,8 +295,7 @@ void manejar_cliente_cpu(int cliente){
                 // Recibir pedido con PID y entrada de nivel para navegación de tabla de páginas
                 // Deserializar PID y entrada de nivel
                 int offset = 0;
-                int pid;
-                
+                int pid = 
                 
                 // NOTA: CPU está enviando entrada de nivel, pero necesitamos página lógica
                 // Por compatibilidad, interpretamos entradaNivel como número de página lógica
