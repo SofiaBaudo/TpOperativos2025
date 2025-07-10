@@ -224,7 +224,7 @@ void algoritmoClockM(int pid, char *instruccion, int nroPag, void*contenido){
         punteroCache = punteroCache->sgte;
     }
 }
-void desalojarProceso(int pid){
+void desalojarProcesoCache(int pid){
     NodosCache *aux = cache;
     for(int i = 0; i < ENTRADAS_CACHE; i++){
         if(aux->info.bitModificado == 1){

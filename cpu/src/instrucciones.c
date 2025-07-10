@@ -76,7 +76,16 @@ t_instruccion decode(char* instruccion_recibida){
     obtenerInsPartes = string_split(instruccion_recibida, " "); //te recibe el string tal como es si no lo encuentra
     instruccion.opcode = obtenerInsPartes[0];
     instruccion.param1 = obtenerInsPartes[1];
-    instruccion.param2 = obtenerInsPartes[2];
+    log_debug(cpu_log_debug, "primer parametro de decode : %s", instruccion.param1);
+    if(strcmp(instruccion.opcode, "GOTO") == 0 || strcmp(instruccion.opcode, "EXIT") == 0 || strcmp(instruccion.opcode, "DUMP MEMORY") == 0 || strcmp(instruccion.opcode, "NOOP") == 0 ){
+        instruccion.param2 = " ";
+        log_debug(cpu_log_debug, "adentro del if de decode");
+    }  
+    else{
+        instruccion.param2 = obtenerInsPartes[2];
+        log_debug(cpu_log_debug, "el segundo parametro del decode es : %s", instruccion.param2);
+    }
+    
     return instruccion;  
 } 
 
@@ -85,8 +94,13 @@ t_instruccion decode(char* instruccion_recibida){
 void execute(t_instruccion instruccion, int pid){
     char *nombre_instruccion = instruccion.opcode;
     char *param1Char = instruccion.param1;
-    int param1 = atoi(param1Char);
+    int param1 = -5; 
+    log_debug(cpu_log_debug, "el primer parametro es %s", param1Char);
+    if(strcmp(param1Char," ")!=0){
+    param1 = atoi(param1Char);
+    }
     char *param2 = instruccion.param2;
+    log_debug(cpu_log_debug,"el segundo parametro es %s", param2);
     if(strcmp(nombre_instruccion, "NOOP") == 0){
         instruccion_noop();
         pc++;
@@ -175,25 +189,33 @@ void mandar_syscall(t_instruccion instruccion){
         log_debug(cpu_log_debug,"El pc que estoy por mandar es: %i",pc);
         t_buffer *buffer = crear_buffer_instruccion_init_proc(instruccion.param1, tamanio, &pid, &pc);
         crear_paquete(INIT_PROC,buffer,fd_conexion_kernel_dispatch);
+        pc++;
         log_debug(cpu_log_debug,"ESTOY POR ENVIARLE EL INIT PROC A KERNEL");
-        recibir_entero(fd_conexion_kernel_dispatch);
-        usleep(2000000);
+        recibir_op_code(fd_conexion_kernel_dispatch);
         return;
     }
     else if(strcmp(instruccion.opcode, "EXIT") == 0){
-    t_buffer *buffer = crear_buffer_vacio();
-    crear_paquete(EXIT, buffer, fd_conexion_kernel_dispatch);
-    return;
+        //t_buffer *buffer = crear_buffer_vacio();
+        t_buffer* buffer = crear_buffer_cpu(pid, pc);
+        crear_paquete(EXIT, buffer, fd_conexion_kernel_dispatch);
+        pc++;
+        log_debug(cpu_log_debug,"LE ENVIE EL EXIT A KERNEL");
+        recibir_op_code(fd_conexion_kernel_dispatch); //este opcode avisa que memoria ya autorizó que el proceso termine
+        desalojarProcesoTLB(pid);
+        desalojarProcesoCache(pid);
+        return;
     }
     else if(strcmp(instruccion.opcode, "IO") == 0){
         int milisegundos = atoi(instruccion.param2);
         t_buffer *buffer = crear_buffer_instruccion_io(instruccion.param1,milisegundos,&pid,&pc);
         crear_paquete(IO, buffer, fd_conexion_kernel_dispatch);
+        pc++;
         return;
     }
     else if(strcmp(instruccion.opcode, "DUMP_MEMORY") == 0){
         t_buffer *buffer = crear_buffer_vacio();
         crear_paquete(DUMP_MEMORY, buffer, fd_conexion_kernel_dispatch);
+        pc++;
         return;
     }
 }

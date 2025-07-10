@@ -15,7 +15,7 @@ NodosCache *retornarEspacioLibreCache();
 bool hayEspacioLibreCache();
 void agregarConAlgoritmos(int pid, char *instruccion, int nroPag, void* contenido);
 int conseguirMarcoCache(int pid, int nroPag);
-void desalojarProceso(int pid);
+void desalojarProcesoCache(int pid);
 void imprimirCache();
 void algoritmoClockM(int pid, char *instruccion, int nroPag, void*contenido);
 

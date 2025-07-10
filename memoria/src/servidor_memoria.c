@@ -101,7 +101,8 @@ void manejar_cliente_kernel(int cliente) {
                     break;
                 }
                 case FINALIZAR_PROCESO: {
-                    int pid = recibir_entero(cliente);
+                    t_paquete *paquete = recibir_paquete(cliente);
+                    int pid = deserializar_pid_memoria(paquete);
                     finalizar_proceso(pid);
                     log_info(logger_memoria, "## PID: %d - Proceso Destruido ", pid); // Log obligatorio de destrucción de proceso (faltan: metricas y swaps)
                     enviar_op_code(cliente, FINALIZACION_CONFIRMADA);

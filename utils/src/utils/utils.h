@@ -59,6 +59,7 @@ typedef enum op_code
 	ENVIO_PID_Y_PC,
 	ENVIO_PID_Y_ENTRADANIVEL,
 	ENVIO_TAMPAG_ENTRADASTABLA_CANTIDADNIVELES,
+	FUERA_DE_RANGo,
 	//enums instrucciones
 	NOOP,
 	WRITE,
@@ -99,6 +100,7 @@ typedef enum op_code
 	MANDAR_PID_Y_PC_FETCH,
 	ENVIO_VALOR_LEIDO,
 	CPU_LISTA,
+	PROCESO_EJECUTANDO,
 }op_code;
 
 //-------------ESTRUCTURAS ADMINISTRATIVAS--------

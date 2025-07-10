@@ -73,6 +73,7 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
             }
         }
         else{
+            log_debug(kernel_debug_log,"El ultimo proceso en entrar no es el mas chico");
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);  //aviso que el proceso sigue en new
         }
         sem_post(&UNO_A_LA_VEZ[NEW]); //me aseguro que se siga tratando de a un proceso a la vez.
@@ -477,9 +478,9 @@ void cambiarEstado (struct pcb* proceso,Estado estadoAnterior, Estado estadoNuev
     log_info(kernel_logger,"## (<PID: %i>) Pasa del estado <%s> al estado <%s>", proceso->pid,string_estado_anterior,string_estado_nuevo);
     pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
     list_add(colaEstados[estadoNuevo],proceso); 
+    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
     proceso->metricas_de_estado[estadoNuevo]++;
     gestionar_metrica_de_tiempo(proceso,estadoAnterior,estadoNuevo);
-    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
 }
 
 void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *)){
@@ -488,9 +489,9 @@ void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado est
     log_info(kernel_logger,"## (<PID: %i>) Pasa del estado <%s> al estado <%s>", proceso->pid,string_estado_anterior,string_estado_nuevo);
     pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
     list_add_sorted(colaEstados[estadoNuevo],proceso,comparador); 
+    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
     proceso->metricas_de_estado[estadoNuevo]++;
     gestionar_metrica_de_tiempo(proceso,estadoAnterior,estadoNuevo);
-    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
 }
 
 void gestionar_metrica_de_tiempo(struct pcb* proceso, Estado estadoInicial, Estado estadoNuevo){
@@ -619,9 +620,8 @@ void *poner_a_ejecutar(void *argumentos){
         log_debug(kernel_debug_log,"Esperando syscall");
         t_paquete *paquete = recibir_paquete(cpu_en_la_que_ejecuta->socket_para_comunicarse); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
         log_debug(kernel_debug_log,"Paquete recibido");
-        int pc = deserializar_pc(paquete);
-        log_debug(kernel_debug_log,"El PC ES: %i",pc);
-        proceso->pc = pc;
+        proceso->pc = deserializar_pc(paquete);
+        log_debug(kernel_debug_log,"El PC ES: %i",proceso->pc);
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         log_debug(kernel_debug_log,"Antes del if");
         if(motivo_de_devolucion!=DESALOJO_ACEPTADO){
@@ -635,19 +635,25 @@ void *poner_a_ejecutar(void *argumentos){
                 desalojar_proceso_de_cpu(proceso,cpu_en_la_que_ejecuta);
                 log_info(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
                 bloqueante = true;
+                break;
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo_init_proc(paquete);
                 int tamanio = deserializar_tamanio (paquete);
                 crear_proceso(tamanio,nombre_archivo);
                 log_debug(kernel_debug_log,"Proceso creado");
-                enviar_opcode(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
+                proceso->pc++;
+                enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
                 //avisar que termine
                 break;
             case EXIT:
+                log_debug(kernel_debug_log, "estoy en exit");
                 //Hay que sacarlo de la lista de exit
                 finalizar_proceso(proceso,EXEC);
                 liberar_cpu(cpu_en_la_que_ejecuta);
                 //tener en cuenta lo del mediano plazo
+                enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
+                log_debug(kernel_debug_log,"Se envio el opcode: %i",SYSCALL_EJECUTADA);
+                usleep(1000000);
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
@@ -665,14 +671,14 @@ void *poner_a_ejecutar(void *argumentos){
             case IO:
                 int milisegundos = deserializar_cant_segundos(paquete);
                 proceso->proxima_rafaga_io = milisegundos;
-                char *nombre_io_a_usar = deserializar_nombre_syscall_io(paquete);
-                int pos = buscar_IO_solicitada(ios_conectados,nombre_io_a_usar);
+                proceso->nombre_io_que_lo_bloqueo = deserializar_nombre_syscall_io(paquete);
+                int pos = buscar_IO_solicitada(ios_conectados,proceso->nombre_io_que_lo_bloqueo);
                 if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
                     finalizar_proceso(proceso,EXEC);
                     liberar_cpu(cpu_en_la_que_ejecuta);
                 }
                 else{
-                    log_info(kernel_logger,"## (<PID: %i>) - Bloqueado por IO: <%s>",proceso->pid,nombre_io_a_usar);
+                    log_info(kernel_logger,"## (<PID: %i>) - Bloqueado por IO: <%s>",proceso->pid,proceso->nombre_io_que_lo_bloqueo);
                     temporal_stop(proceso->duracion_ultima_rafaga);
                     sacar_proceso_de_cola_de_estado(proceso,EXEC);
                     cambiarEstado(proceso,EXEC,BLOCKED);
@@ -685,7 +691,6 @@ void *poner_a_ejecutar(void *argumentos){
                     pthread_mutex_lock(&mx_usar_recurso[IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                    proceso->nombre_io_que_lo_bloqueo = io_aux->nombre;
                     sem_post(io_aux->hay_procesos_esperando);
                 }
                 bloqueante = true;
@@ -738,8 +743,11 @@ void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
     cambiarEstado(proceso,estadoInicial,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
+    enviar_op_code(socket,FINALIZAR_PROCESO);
     crear_paquete(FINALIZAR_PROCESO,buffer,socket);
+    op_code confirmacion = recibir_op_code(socket);
     cerrar_conexion(socket);
+    log_debug(kernel_debug_log,"Llego la finalizacion %i",confirmacion);
     sacar_proceso_de_cola_de_estado(proceso,EXIT_ESTADO);   
     listar_metricas_de_tiempo_y_estado(proceso); 
     log_info(kernel_logger,"## (<PID: %i>) - Finaliza el proceso",proceso->pid);
@@ -752,17 +760,27 @@ void listar_metricas_de_tiempo_y_estado(struct pcb *proceso){
     for(int i=0; i<7; i++){
         estado_actual = i;
         char *estado_string = cambiar_a_string(estado_actual);
+        if(proceso->metricas_de_estado[i]!=0){ //que haya estado alguna vez en ese estado
         log_info(kernel_logger,"## (<PID: %i>) - Metricas de estado: %s %i %ld",proceso->pid,estado_string,proceso->metricas_de_estado[i],temporal_gettime(proceso->metricas_de_tiempo[i]));
+        }
     }
 }
 
 void liberar_proceso(struct pcb *proceso){
+    log_debug(kernel_debug_log,"Adentro de liberar proceso");
     temporal_destroy(proceso->duracion_ultima_rafaga);
+    log_debug(kernel_debug_log,"Ultima rafaga destruida");
     for (int i=0; i<7;i++){
+        if(proceso->metricas_de_estado[i]!=0){
         temporal_destroy(proceso->metricas_de_tiempo[i]);
+        }
     }
-    free(proceso->ruta_del_archivo_de_pseudocodigo);
+    //free(proceso->ruta_del_archivo_de_pseudocodigo);
+    log_debug(kernel_debug_log,"Antes de lo del nombre de IO");
+    if(proceso->nombre_io_que_lo_bloqueo){
     free(proceso->nombre_io_que_lo_bloqueo);
+    }
+    log_debug(kernel_debug_log,"DESPUES de lo del nombre de IO");
     free(proceso);
 }
 

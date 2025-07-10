@@ -1,4 +1,2 @@
-WRITE 20 "hola_como_andas_fede"
-READ 20 20
 INIT_PROC 4 "fede.txt"
-EXIT
+EXIT 

@@ -232,7 +232,7 @@ void* obtener_contenido_pagina_completa(int marco, int tam_pagina) {
     memcpy(contenido, direccion_marco, tam_pagina);
     pthread_mutex_unlock(&memoria_usuario_mutex);
     
-    log_info(logger_memoria, "Acceso a página completa - Marco: %d - Tamaño: %d", marco, tam_pagina);
+    log_debug(logger_memoria, "Acceso a página completa - Marco: %d - Tamaño: %d", marco, tam_pagina);
     
     return contenido;
 }
@@ -258,7 +258,7 @@ bool actualizar_contenido_pagina_completa(int marco, void* contenido, int tam_pa
     memcpy(direccion_marco, contenido, tam_pagina);
     pthread_mutex_unlock(&memoria_usuario_mutex);
     
-    log_info(logger_memoria, "Actualización de página completa - Marco: %d - Tamaño: %d", marco, tam_pagina);
+    log_debug(logger_memoria, "Actualización de página completa - Marco: %d - Tamaño: %d", marco, tam_pagina);
     
     return true;
 }

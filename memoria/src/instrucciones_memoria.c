@@ -28,7 +28,7 @@ t_list* generar_instrucciones_proceso(int pid, const char* path_pseudocodigo) {
     return instrucciones;
 }
 
-// Devuelve una copia de la instrucción (char) para el proceso y PC dado, o NULL si no existe
+// Devuelve una copia de la instrucción (char) para el proceso y PC dado, o "FUERA_DE_RANGO" si no existe
 char* obtener_instruccion_proceso(int pid, int pc) {
     char* copia = NULL;
     struct t_proceso_memoria* proc = buscar_proceso_en_memoria(pid);
@@ -38,7 +38,13 @@ char* obtener_instruccion_proceso(int pid, int pc) {
         if (original){
             copia = strdup(original);
             log_debug(logger_memoria,"Copia es: %s",copia);
+        } else {
+            copia = strdup("FUERA_DE_RANGO");
+            log_warning(logger_memoria, "PC %d del proceso %d apunta a una línea vacía", pc, pid);
         }
+    } else {
+        copia = strdup("FUERA_DE_RANGO");
+        log_warning(logger_memoria, "PC %d fuera de rango para el proceso %d", pc, pid);
     }
     pthread_mutex_unlock(&mutex_procesos_en_memoria);
     return copia;
