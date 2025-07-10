@@ -1,30 +1,6 @@
 #include <comunicaciones_memoria.h>
 
-// Recibe un pedido de instrucción como paquete (buffer serializado)
-/*
-struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
-    t_buffer *buffer = crear_buffer_vacio();
-    if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
-        free(buffer);
-        return NULL;
-    }
-    buffer->stream = malloc(buffer->size);
-    if (recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL) != buffer->size) {
-        free(buffer->stream);
-        free(buffer);
-        return NULL;
-    }
-    t_pedido_instruccion* pedido = malloc(sizeof(t_pedido_instruccion));
-    int offset = 0;
-    memcpy(&(pedido->pc), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
-    memcpy(&(pedido->pid), buffer->stream + offset, sizeof(int));
-    // Liberar buffer
-    free(buffer->stream);
-    free(buffer);
-    return pedido;
-}
-*/
+
 void enviar_instruccion(int socket_destino, char* instruccion) {
     log_debug(logger_memoria, "se esta por enviar la instruccion");
     t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
@@ -63,18 +39,7 @@ struct t_pedido_lectura_memoria* recibir_pedido_lectura_memoria(int socket_clien
 // Envía un buffer de memoria leído a la CPU como un solo paquete (tamaño + datos juntos)
 
 void enviar_valor_leido(int socket_destino, void* buffer, size_t tamanio) {
-    int tam = (int)tamanio;
-    size_t paquete_size = sizeof(int) + tamanio;
-    void* paquete = malloc(paquete_size);
-    memcpy(paquete, &tam, sizeof(int));
-    memcpy((char*)paquete + sizeof(int), buffer, tamanio);
-    size_t total_enviado = 0;
-    while (total_enviado < paquete_size) {
-        ssize_t enviado = send(socket_destino, (char*)paquete + total_enviado, paquete_size - total_enviado, 0);
-        if (enviado <= 0) break;
-        total_enviado += enviado;
-    }
-    free(paquete);
+    enviar_entero(socket_destino,555);
     return;
 }
 

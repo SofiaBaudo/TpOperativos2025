@@ -148,18 +148,12 @@ void manejar_cliente_cpu(int cliente){
         log_debug(logger_memoria, "Peticion recibida de CPU: %s", instruccion_a_string(peticion));
         switch (peticion){
             case FETCH_INSTRUCCION: {
-             // Recibir struct pedido de instrucción
-               // enviar_op_code(cliente,MANDAR_PID_Y_PC_FETCH);
-                //t_paquete *pedido = recibir_paquete(cliente);
                 int pid;
                 int pc;
                 deserializar_pid_y_pc(pedido,&pid,&pc);
                 log_debug(logger_memoria,"EL pid es %i", pid);
                 log_debug(logger_memoria, "El pc es %i", pc);
-                //int pid = deserializar_pid_memoria(pedido);
-               //int pc = deserializar_pc_memoria(pedido);
-                //log_debug(logger_memoria,"EL pid es %d", pid);
-                //log_debug(logger_memoria, "El pc es %d", pc);
+
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir pedido de instrucción");
                     break;
@@ -187,31 +181,33 @@ void manejar_cliente_cpu(int cliente){
                 //free(pedido);
                 break;
             }
-            case READ_MEMORIA: {
+            case ENVIO_PID_DIRFIS_DAT: {
                 // Recibir struct pedido de lectura de memoria
-                t_pedido_lectura_memoria* pedido = recibir_pedido_lectura_memoria(cliente);
+                log_debug(logger_memoria,"Antes de deserializar las 3 cosas");
+                int pid = deserializar_pid_memoria(pedido);
+                int direccion_fisica = deserializar_dirFis(pedido);
+                char* tamanio_char = deserializar_dataIns(pedido);
+                int tamanio = atoi(tamanio_char);
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir paquete de READ_MEMORIA");
                     break;
                 }
 
-                // Acceso real a memoria física: la dirección recibida es absoluta (offset global)
+                // Acceso real a memoria física: la dirección recibida es absoluta (offset global) 
                 char valor_leido[256] = {0};
-                int resultado_lectura = leer_memoria_fisica(pedido->direccion_logica, valor_leido, pedido->tamanio);
+                int resultado_lectura = leer_memoria_fisica(direccion_fisica, valor_leido, tamanio);
                 if (resultado_lectura != 0) {
-                    log_error(logger_memoria, "Acceso fuera de rango en memoria física: offset %d, tamaño %d", pedido->direccion_logica, pedido->tamanio);
+                    log_error(logger_memoria, "Acceso fuera de rango en memoria física: offset %d, tamaño %d", direccion_fisica, tamanio);
                     strcpy(valor_leido, "ERROR_OUT_OF_BOUNDS");
                 } else {
-                    valor_leido[pedido->tamanio] = '\0'; // Por si es string, para debug
+                    valor_leido[tamanio] = '\0'; // Por si es string, para debug
                 }
 
                 // Log obligatorio: acceso a espacio de usuario
-                log_info(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pedido->pid, pedido->direccion_logica, pedido->tamanio);
+                log_info(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio);
 
                 // Enviar valor leído a la CPU
-                enviar_valor_leido(cliente, valor_leido, pedido->tamanio);
-
-                free(pedido);
+                enviar_valor_leido(cliente, valor_leido, tamanio);
                 break;
             }
             case WRITE_MEMORIA: {
@@ -294,16 +290,16 @@ void manejar_cliente_cpu(int cliente){
             case ENVIO_PID_Y_ENTRADANIVEL: {//hablar de cambiar el nombre
                 // Recibir pedido con PID y entrada de nivel para navegación de tabla de páginas
                 // Deserializar PID y entrada de nivel
-                int offset = 0;
+                //int offset = 0;
                 int pid = deserializar_pid_memoria(pedido);
-                int entradaNIvel = deserializar_entradaNivel(pedido);
+                int entradaNivel = deserializar_entradaNivel(pedido);
                 
                 // NOTA: CPU está enviando entrada de nivel, pero necesitamos página lógica
                 // Por compatibilidad, interpretamos entradaNivel como número de página lógica
                 int marco = obtener_marco_de_pagina_logica(pid, entradaNivel);
                 
                 // Enviar el marco de vuelta a CPU
-                enviar_entero(cliente);
+                enviar_entero(cliente,marco);
                 log_debug(logger_memoria, "PID: %d - Enviado marco: %d para página: %d", pid, marco, entradaNivel);
                 break;
             }

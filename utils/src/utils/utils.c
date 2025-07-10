@@ -312,6 +312,20 @@ t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel){
 }
 
 
+
+t_buffer *crear_buffer_io_nombre(char *nombre){
+	t_buffer *buffer_aux = crear_buffer();
+	int longitud = strlen(nombre);
+	buffer_aux->size = sizeof(int) + longitud;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
+	buffer_aux -> stream = buffer_aux->stream;
+	return buffer_aux;
+}
+
 t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos, int *pid, int *pc){
 	t_buffer *buffer_aux = crear_buffer();
 	int longitud = strlen(nombre);
@@ -333,32 +347,20 @@ t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos, int *pid
 	return buffer_aux;
 }
 
-t_buffer *crear_buffer_io_nombre(char *nombre){
-	t_buffer *buffer_aux = crear_buffer();
-	int longitud = strlen(nombre);
-	buffer_aux->size = sizeof(int) + longitud;
-	buffer_aux->offset = 0;
-	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
-	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
-	buffer_aux -> stream = buffer_aux->stream;
-	return buffer_aux;
-}
-
 t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char* datos){
 	t_buffer *buffer_aux = crear_buffer();
-	int valor1 = 2*sizeof(int);
+	int valor1 = 3*sizeof(int);
 	int longitud = strlen(datos);
 	buffer_aux->size = valor1 + longitud;
 	buffer_aux->offset = 0;
-	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); 
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, datos,longitud);
-	buffer_aux->offset += sizeof(int);
+	buffer_aux->stream = malloc(buffer_aux->size);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); 
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &dirFis, sizeof(int)); 
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); 
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, datos,longitud);
 	buffer_aux->offset += sizeof(int);
 	return buffer_aux;
 }
@@ -568,17 +570,15 @@ int deserializar_marco(t_paquete *paquete){
 int deserializar_dirFis(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	int dirFis;
+	stream +=sizeof(int);
 	memcpy(&dirFis,stream,sizeof(int));
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
-	free(paquete);
 	return dirFis;
 }
 
 char *deserializar_dataIns(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
     int data;
-	stream+=sizeof(int);
+	stream+=2*sizeof(int);
     memcpy(&data,stream,sizeof(int));
     stream+=sizeof(int);
     char *nombre = malloc(data+1);

@@ -258,7 +258,8 @@ int deserializar_pid_memoria(t_paquete *paquete);
 int deserializar_tamanio_memoria(t_paquete *paquete);
 char *deserializar_nombre_archivo_memoria(t_paquete *paquete);
 char *deserializar_nombre_instruccion(t_paquete *paquete);
-
+char *deserializar_dataIns(t_paquete *paquete);
+int deserializar_dirFis(t_paquete *paquete);
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);

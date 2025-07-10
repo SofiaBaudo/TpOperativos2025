@@ -14,16 +14,20 @@ char* parametros;
 char* nombre_instruccion;
 int pid;
 int pc;
-
+//bool mande_syscall;
 //Me comunico con el Kernel para obtener el PC/IP y el PID.
 
 void* ejecutar_instrucciones(void* arg){
     //hacer un semaforo donde se verifica que llega un proceso. espera que llegue un proceso --> (pensar bien donde)
     //int cpu_id = *(int *)arg;
+    log_debug(cpu_log_debug,"INICIANDO CICLO");
     t_instruccion instru;
     char *instruccionEntera;
-    obtenerDelKernelPcPid();
-    log_debug(cpu_log_debug, "obtuve el pid y el pc");   
+    //if(mande_syscall){
+        obtenerDelKernelPcPid();
+        log_debug(cpu_log_debug, "obtuve el pid y el pc");  
+    //} 
+    log_debug(cpu_log_debug, "el pc es: %i", pc);
     instruccionEntera = fetch(pc,pid);
     log_debug(cpu_log_debug, "finalizo el fetch");    
     instru = decode(instruccionEntera);
@@ -31,7 +35,6 @@ void* ejecutar_instrucciones(void* arg){
     execute(instru, pid);
     log_debug(cpu_log_debug, "mande la syscall?");
     check_interrupt(); //ponerlo en hilo.    
-    pc++;
     return NULL;
 }
 
@@ -85,18 +88,18 @@ void execute(t_instruccion instruccion, int pid){
         instruccion_noop();
         pc++;
     }
-    if(strcmp(nombre_instruccion, "WRITE") == 0){
+    else if(strcmp(nombre_instruccion, "WRITE") == 0){
         instruccion_write(param1, param2, pid);
         pc++;
     }
-    if(strcmp(nombre_instruccion, "READ") == 0){
+    else if(strcmp(nombre_instruccion, "READ") == 0){
         instruccion_read(param1, param2, pid);
         pc++;
     } 
-    if(strcmp(nombre_instruccion, "GOTO") == 0){   
+    else if(strcmp(nombre_instruccion, "GOTO") == 0){   
         instruccion_goto(param1);
     }
-    if(strcmp(nombre_instruccion, "INIT_PROC") == 0 || strcmp(nombre_instruccion, "EXIT") == 0 || strcmp(nombre_instruccion, "DUMP_MEMORY") == 0 || strcmp(nombre_instruccion, "IO") == 0){
+    else if(strcmp(nombre_instruccion, "INIT_PROC") == 0 || strcmp(nombre_instruccion, "EXIT") == 0 || strcmp(nombre_instruccion, "DUMP_MEMORY") == 0 || strcmp(nombre_instruccion, "IO") == 0){
         mandar_syscall(instruccion);
         pc++;
     }
@@ -133,15 +136,20 @@ void instruccion_read(int direccion, char* param2, int pid){
     int direccionFisica = traduccion(direccion, pid, "READ", param2);
     log_debug(cpu_log_debug,"Termine la traduccion");
     log_debug(cpu_log_debug,"Direccion Fisica : %i",direccionFisica);
+    int entero;
     if(direccionFisica == -1){
         //entro por cache
     }
     else{
+        log_debug(cpu_log_debug,"Estoy en el else definitivo");
         t_buffer *buffer = crear_buffer_pid_dirFis_datos(pid, direccion,param2);
+        log_debug(cpu_log_debug, "cre el buffer, ahora voy a enviar el paquete");
         crear_paquete(ENVIO_PID_DIRFIS_DAT, buffer, fd_conexion_dispatch_memoria);
+        log_debug(cpu_log_debug,"Ya mande el paquete");
+        entero = recibir_entero(fd_conexion_dispatch_memoria); //CAMBIAR LA RESPUESTA -> NO ES UN ENTERO ??
     }
     log_info(cpu_logger,"## PID: %d - Ejecutando: <READ>",pid);
-    log_info(cpu_logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%d> - Valor: <%s>",pid,direccion,param2);
+    log_info(cpu_logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%d> - Valor: <%i>",pid,direccion,entero);
 }
 
 void instruccion_goto(int parametro){
@@ -153,6 +161,7 @@ void instruccion_goto(int parametro){
 }
 
 void mandar_syscall(t_instruccion instruccion){
+    //mande_syscall = true;
     log_debug(cpu_log_debug,"Estoy por mandar syscall");
     if(strcmp(instruccion.opcode, "INIT_PROC") == 0){
         int tamanio = atoi(instruccion.param2);

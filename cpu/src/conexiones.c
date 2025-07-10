@@ -66,6 +66,7 @@ void* iniciar_conexion_memoria_dispatch(void* arg){
         exit(EXIT_FAILURE);
     }
     while(1){
+        // tiene que estar esperando algo o se corta?
     }
     return NULL;
 }

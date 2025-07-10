@@ -26,6 +26,7 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
                 marco = navegarNiveles(numPag, pid);
                 log_debug(cpu_log_debug, "navegue los niveles");
                 agregarEntradaATLB(numPag, marco);
+                log_debug(cpu_log_debug, "agregue entradas a la tlb");
         }
         else{
             marco = tlbrespuesta;
@@ -42,6 +43,7 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
 void enviarValoresMem(int entradaNivel, int pid){
     t_buffer *buffer = crear_buffer_MarcoMem(pid,entradaNivel);
     crear_paquete(ENVIO_PID_Y_ENTRADANIVEL, buffer,fd_conexion_dispatch_memoria);
+    log_debug(cpu_log_debug, "envie el paquete");
 }
 
 int navegarNiveles(int numPag, int pid){
@@ -52,6 +54,7 @@ int navegarNiveles(int numPag, int pid){
         log_debug(cpu_log_debug, "por enviar valores mem");
         enviarValoresMem(entradaNivel, pid);
         numMarco = conseguirMarco(pid);
+        log_debug(cpu_log_debug, "el marco es %i", numMarco);
     }
     //el numero de marco que tenemos despues del if es el num de marco final(el ultimo de todos --> es el marco fisico)
     int marcoFinal = numMarco;
