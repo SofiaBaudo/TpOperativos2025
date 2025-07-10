@@ -160,11 +160,11 @@ void manejar_cliente_cpu(int cliente){
                 }
                 // Obtener la instrucción correspondiente
                 char* instruccion = obtener_instruccion_proceso(pid, pc);
-
+                log_debug(logger_memoria, "obtuve la instruccionn %s", instruccion);
                 // Log obligatorio de obtención de instrucción
                 if (instruccion != NULL) {
                     log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
-                    usleep(3000000);
+                    usleep(1000000);
                 } else {
                     log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: ", pid, pc);
                 }
@@ -178,53 +178,64 @@ void manejar_cliente_cpu(int cliente){
                     enviar_instruccion(cliente, "");
                     log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }
+                log_debug(logger_memoria,"YA MANDE LA INSTRUCCION Y ESTOY POR SALIR DEL FETCH");
+                usleep(2000000);
                 //free(pedido);
                 break;
             }
-            case ENVIO_PID_DIRFIS_DAT: {
+            case ENVIO_PID_DIRFIS_DAT: { //READ_MEMORIA
                 // Recibir struct pedido de lectura de memoria
                 log_debug(logger_memoria,"Antes de deserializar las 3 cosas");
                 int pid = deserializar_pid_memoria(pedido);
                 int direccion_fisica = deserializar_dirFis(pedido);
                 char* tamanio_char = deserializar_dataIns(pedido);
                 int tamanio = atoi(tamanio_char);
-                if (pedido == NULL) {
+                log_debug(logger_memoria,"el tamanio: %i",tamanio); 
+                if (pedido == NULL) {             
                     log_error(logger_memoria, "Error al recibir paquete de READ_MEMORIA");
                     break;
                 }
-
                 // Acceso real a memoria física: la dirección recibida es absoluta (offset global) 
-                char valor_leido[256] = {0};
+                char *valor_leido = malloc(tamanio);
                 int resultado_lectura = leer_memoria_fisica(direccion_fisica, valor_leido, tamanio);
+                log_debug(logger_memoria,"Sali de leer la memoria fisica");      
                 if (resultado_lectura != 0) {
                     log_error(logger_memoria, "Acceso fuera de rango en memoria física: offset %d, tamaño %d", direccion_fisica, tamanio);
                     strcpy(valor_leido, "ERROR_OUT_OF_BOUNDS");
-                } else {
-                    valor_leido[tamanio] = '\0'; // Por si es string, para debug
-                }
-
+                    break; //charlarlo con chicas
+                } //else {
+                    //valor_leido[tamanio] = '\0'; // Por si es string, para debug
+                //}
+                
                 // Log obligatorio: acceso a espacio de usuario
                 log_info(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio);
-
+                
                 // Enviar valor leído a la CPU
-                enviar_valor_leido(cliente, valor_leido, tamanio);
+                t_buffer* buffer_valor_leido = crear_buffer_char_asterisco(valor_leido);
+                log_debug(logger_memoria,"El valor enviado es: %s",valor_leido);
+                usleep(2000000);
+                crear_paquete(ENVIO_VALOR_LEIDO,buffer_valor_leido,cliente);
+                //enviar_valor_leido(cliente, valor_leido, tamanio);
                 break;
             }
             case WRITE_MEMORIA: {
-                t_pedido_escritura_memoria* pedido = recibir_pedido_escritura_memoria(cliente);
+                int pid = deserializar_pid_memoria(pedido);
+                int direccion_fisica = deserializar_dirFis(pedido);
+                int tamanio = deserializar_tamanio_escritura_memoria(pedido);
+                char* datos = deserializar_datos_escritura_memoria(pedido);
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir paquete de WRITE_MEMORIA");
                     break;
                 }
 
                 // Log obligatorio: acceso a espacio de usuario
-                log_info(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d - Tamaño: %d", pedido->pid, pedido->direccion_logica, pedido->tamanio);
+                log_info(logger_memoria, "## PID: %i - Escritura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica,tamanio);
 
-                int resultado = escribir_memoria_fisica(pedido->direccion_logica, pedido->buffer, pedido->tamanio);
+                int resultado = escribir_memoria_fisica(direccion_fisica, datos, tamanio);
                 if (resultado != 0) {
-                    log_error(logger_memoria, "Acceso fuera de rango en memoria física (escritura): offset %d, tamaño %d", pedido->direccion_logica, pedido->tamanio);
+                    log_error(logger_memoria, "Acceso fuera de rango en memoria física (escritura): offset %d, tamaño %d", direccion_fisica, tamanio);
                 }
-                destruir_pedido_escritura_memoria(pedido);
+                enviar_op_code(cliente,INSTRUCCION_TERMINADA);
                 break;
             }
             case ACCESO_TABLA_PAGINAS: {
@@ -236,10 +247,10 @@ void manejar_cliente_cpu(int cliente){
                 }
 
                 // Obtener el número de marco navegando la tabla multinivel
-                int marco = obtener_marco_de_pagina_logica(pedido->pid, pedido->pagina_logica);
+                //int marco = obtener_marco_de_pagina_logica(pid, pagina_fisica);
                 
                 // Enviar el número de marco a la CPU
-                enviar_numero_marco(cliente, marco);
+                //enviar_numero_marco(cliente, marco);
 
                 free(pedido);
                 break;

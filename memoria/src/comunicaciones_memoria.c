@@ -5,7 +5,7 @@ void enviar_instruccion(int socket_destino, char* instruccion) {
     log_debug(logger_memoria, "se esta por enviar la instruccion");
     t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
     crear_paquete(MANDAR_INSTRUCCION,buffer,socket_destino);
-    usleep(2000000);
+    usleep(1000000);
     log_debug(logger_memoria, "por salir");
     return;
 }

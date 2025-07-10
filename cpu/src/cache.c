@@ -6,14 +6,16 @@
 #include <traduccion.h>
 
 NodosCache *punteroCache = NULL;
-void usarCache(int pid, int numPag, char *instruccion, void* contenido){
+int usarCache(int pid, int numPag, char *instruccion, void* contenido){
     NodosCache *aux = cache;
-    
+    int numMarco;
     if(estaEnCache(numPag, pid)){
         for(int i = 0; i < ENTRADAS_CACHE; i++){
             if(aux->info.numPag == numPag){
                 aux->info.bitdeUso = 1;
                 aux->info.bitModificado = bitModificado(instruccion);
+                numMarco = conseguirMarcoCache(pid, numPag);
+                return numMarco;
                 break;
             }
             aux = aux->sgte;
@@ -23,19 +25,20 @@ void usarCache(int pid, int numPag, char *instruccion, void* contenido){
         log_debug(cpu_log_debug,"Entre al else");
         usleep(2000000);
         agregarPagCache(numPag, pid, instruccion);
-    }    
+        return -1;
+    }  
+    return -1;
 }
 
 void agregarPagCache(int nroPag, int pid, char* instruccion){
         NodosCache *aux = cache;
         log_debug(cpu_log_debug, "por obtener contenido");
         void* contenido = obtenerContenido(nroPag, pid);
-        usleep(2000000);
+        usleep(1000000);
         log_debug(cpu_log_debug, "contenido obtenido");
         
         if(hayEspacioLibreCache()){
-            log_debug(cpu_log_debug, "adentro del if");
-            usleep(3000000);
+            usleep(1000000);
             aux = retornarEspacioLibreCache();
             aux->info.numPag = nroPag;
             aux->info.contenido = contenido;

@@ -222,9 +222,9 @@ t_buffer * crear_buffer_instruccion_init_proc(char* ruta_del_archivo, int tamani
 	buffer_aux->size = 4*sizeof(int) + longitud; 
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
+	memcpy(buffer_aux->stream + buffer_aux->offset, pid, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pc, sizeof(int)); //como un fwrite.
+	memcpy(buffer_aux->stream + buffer_aux->offset, pc, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &tamanio_en_memoria, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
@@ -525,12 +525,7 @@ int deserializar_pc(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	stream+=sizeof(int);
 	int pc;
-	fprintf(stderr, "Puntero nulo en deserializar_pc\n");
 	memcpy(&pc,stream,sizeof(int));
-	fprintf(stderr, "Ya pase el memcpy");
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
-	free(paquete);
 	return pc;
 }
 
@@ -1005,6 +1000,65 @@ char *deserializar_nombre_instruccion(t_paquete *paquete){
     stream+=sizeof(int);
     char *nombre = malloc(longitud+1);
     memcpy(nombre,stream,longitud);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return nombre;
+}
+
+t_buffer *crear_buffer_char_asterisco(char *nombre){
+	t_buffer *buffer_aux = crear_buffer();
+	int longitud = strlen(nombre);
+	buffer_aux->size = sizeof(int) + longitud;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
+	buffer_aux -> stream = buffer_aux->stream;
+	return buffer_aux;
+}
+
+char *deserializar_char_asterisco(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int longitud;
+    memcpy(&longitud,stream,sizeof(int));
+    stream+=sizeof(int);
+    char *nombre = malloc(longitud+1);
+    memcpy(nombre,stream,longitud);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return nombre;
+}
+
+char *deserializar_nombre_archivo_init_proc(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+	stream+=3*sizeof(int);
+    int longitud;
+    memcpy(&longitud,stream,sizeof(int));
+    stream+=sizeof(int);
+    char *nombre = malloc(longitud+1);
+    memcpy(nombre,stream,longitud);
+	return nombre;
+}
+
+int deserializar_tamanio_escritura_memoria(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int tamanio;
+	stream+=2*sizeof(int);
+    memcpy(&tamanio,stream,sizeof(int));
+	return tamanio;
+}
+
+char *deserializar_datos_escritura_memoria(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int data;
+	stream+=2*sizeof(int);
+    memcpy(&data,stream,sizeof(int));
+    stream+=sizeof(int);
+    char *nombre = malloc(data+1);
+    memcpy(nombre,stream,data);
 	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);

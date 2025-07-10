@@ -73,7 +73,6 @@ typedef enum op_code
 	//RESPUESTAS
 	DUMP_ACEPTADO,
 	DUMP_RECHAZADO,
-
 	//INTERACCION ENTRE KERNEL E IO
 	RAFAGA_DE_IO,
 	FIN_DE_IO,
@@ -87,6 +86,8 @@ typedef enum op_code
 	ENVIO_PID_DIRFIS_DAT,
 	ENVIO_PID_NROPAG,
 	ENVIO_PID_NROPAG_CONTENIDO_MARCO,
+	INSTRUCCION_TERMINADA,
+	SYSCALL_EJECUTADA,
 	
 	//operaciones nuevas para TLB y cache de páginas desde memoria, funciones de memoria.
 	ACCESO_TABLA_PAGINAS,
@@ -95,7 +96,9 @@ typedef enum op_code
 	RESPUESTA_LEER_PAGINA_COMPLETA,
 	ACTUALIZAR_PAGINA_COMPLETA,
 	RESPUESTA_ACTUALIZAR_PAGINA_COMPLETA,
-	MANDAR_PID_Y_PC_FETCH
+	MANDAR_PID_Y_PC_FETCH,
+	ENVIO_VALOR_LEIDO,
+	CPU_LISTA,
 }op_code;
 
 //-------------ESTRUCTURAS ADMINISTRATIVAS--------
@@ -266,5 +269,10 @@ char* instruccion_a_string(op_code codigo);
 int deserializar_pc_memoria(t_paquete *paquete);
 op_code obtener_codigo_de_operacion (t_paquete * paquete);
 
+t_buffer *crear_buffer_char_asterisco(char *nombre);
+char *deserializar_char_asterisco(t_paquete *paquete);
+char *deserializar_nombre_archivo_init_proc(t_paquete *paquete);
 
+int deserializar_tamanio_escritura_memoria(t_paquete *paquete);
+char *deserializar_datos_escritura_memoria(t_paquete *paquete);
 #endif

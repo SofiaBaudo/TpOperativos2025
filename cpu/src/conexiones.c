@@ -5,6 +5,8 @@
 #include <instrucciones.h>
 // Funcion Iniciar Conexion Kernel
 
+bool tengo_que_solicitar_pid_y_pc;
+
 void* iniciar_conexion_kernel_dispatch(void *arg){
     int identificador_cpu = *((int*) arg);
     log_debug(cpu_log_debug,"El id es: %i",identificador_cpu);
@@ -97,6 +99,7 @@ void* inicializar_memoria(void* arg){
 
 void* inicializar_kernel(void* arg){   
     int id = *(int *)arg;
+    tengo_que_solicitar_pid_y_pc = true;
     log_debug(cpu_log_debug, "entre a kernel");
     t_log* logger;
     char archivo_log_cpu[50];

@@ -13,8 +13,11 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
     int marco;
     if(estaHabilitadaCache()){
         if(estaEnCache(numPag, pid)){
-            usarCache(pid, numPag, instruccion,contenido);
-            return -1; //no hace falta devolver porque se hizo en cache
+            int resultado = usarCache(pid, numPag, instruccion,contenido);
+            if(resultado != -1){
+                marco = resultado;
+            }
+             //no hace falta devolver porque se hizo en cache
         }
         else{
             agregarPagCache(numPag, pid, instruccion);

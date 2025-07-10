@@ -25,6 +25,6 @@ bool inicializar_memoria_fisica(void);
 int obtener_siguiente_marco_libre(void);
 int contar_marcos_libres(void);
 void liberar_marco(int nro_marco);
-int leer_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio);
-int escribir_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio);
+int leer_memoria_fisica(int direccion_fisica, char* valor_leido, size_t tamanio);
+int escribir_memoria_fisica(int direccion_fisica, char* buffer, size_t tamanio);
 #endif

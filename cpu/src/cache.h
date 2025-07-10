@@ -3,7 +3,7 @@
 
 #include <variables_globales_cpu.h>
 
-void usarCache(int pid, int numPag, char *instruccion, void *contenido);
+int usarCache(int pid, int numPag, char *instruccion, void* contenido);
 void agregarPagCache(int nroPag, int pid, char* instruccion);
 void* obtenerContenido(int nroPag, int pid);
 bool estaHabilitadaCache();

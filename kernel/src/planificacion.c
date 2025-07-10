@@ -63,9 +63,12 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
                 primer_proceso = sacar_primero_de_la_lista(NEW); //saco el primer proceso de la lista de NEW
                 transicionar_a_ready(primer_proceso,NEW); // lo transiciono a READY
                 actualizar_proximo_a_consultar(NEW); //actualizo la lista de NEW
-                sem_post(&INTENTAR_INICIAR_NEW); //intento iniciar nuevamente la lista de NEW
+                if(!list_is_empty(colaEstados[NEW])){
+                    sem_post(&INTENTAR_INICIAR_NEW); //intento iniciar nuevamente la lista de NEW
+                }
             }
             else{
+                log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
                 sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //aviso que el proceso sigue en new
             }
         }
@@ -611,10 +614,13 @@ void *poner_a_ejecutar(void *argumentos){
     proceso->duracion_ultima_rafaga = temporal_create(); //creo una tiempo de rafaga en el proceso
     bool bloqueante = false; 
     while(!bloqueante){ //mientras el bloqueante sea falso.
+        recibir_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse);
         mandar_paquete_a_cpu(proceso,cpu_en_la_que_ejecuta); //mando paquete a cpu, le mando pid y pc del proceso
         log_debug(kernel_debug_log,"Esperando syscall");
         t_paquete *paquete = recibir_paquete(cpu_en_la_que_ejecuta->socket_para_comunicarse); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
+        log_debug(kernel_debug_log,"Paquete recibido");
         int pc = deserializar_pc(paquete);
+        log_debug(kernel_debug_log,"El PC ES: %i",pc);
         proceso->pc = pc;
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
         log_debug(kernel_debug_log,"Antes del if");
@@ -630,9 +636,11 @@ void *poner_a_ejecutar(void *argumentos){
                 log_info(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
                 bloqueante = true;
             case INIT_PROC:
-                char *nombre_archivo = deserializar_nombre_archivo(paquete);
+                char *nombre_archivo = deserializar_nombre_archivo_init_proc(paquete);
                 int tamanio = deserializar_tamanio (paquete);
                 crear_proceso(tamanio,nombre_archivo);
+                log_debug(kernel_debug_log,"Proceso creado");
+                enviar_opcode(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
                 //avisar que termine
                 break;
             case EXIT:
@@ -686,6 +694,7 @@ void *poner_a_ejecutar(void *argumentos){
                 log_debug(kernel_debug_log,"SYSCALL DESCONOCIDA");
                 break;
         }
+        /*------*/
     }
     return NULL;
 }

@@ -75,20 +75,20 @@ void liberar_marco(int nro_marco) {
 }
 
 // Lee memoria física en un buffer seguro. Devuelve 0 OK, -1 error.
-int leer_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio) {
+int leer_memoria_fisica(int direccion_fisica, char* valor_leido, size_t tamanio) {
     int ret = 0;
     pthread_mutex_lock(&memoria_usuario_mutex);
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
         ret = -1;
     } else {
-        memcpy(buffer, (char*)memoria_usuario + direccion_fisica, tamanio);
+        memcpy(valor_leido, (char*)memoria_usuario + direccion_fisica, tamanio);
     }
     pthread_mutex_unlock(&memoria_usuario_mutex);
     return ret;
 }
 
 // Escribe en memoria física desde un buffer. Devuelve 0 OK, -1 error.
-int escribir_memoria_fisica(int direccion_fisica, void* buffer, size_t tamanio) {
+int escribir_memoria_fisica(int direccion_fisica, char* buffer, size_t tamanio) {
     int ret = 0;
     pthread_mutex_lock(&memoria_usuario_mutex);
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {

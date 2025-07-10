@@ -68,7 +68,7 @@ extern int cantNiveles;
 extern int entradasTabla;
 extern int pid;
 extern int pc;
-
+extern bool tengo_que_solicitar_pid_y_pc;
 //Declaracion Variables Globales
 
 extern char* instruccion_recibida;
