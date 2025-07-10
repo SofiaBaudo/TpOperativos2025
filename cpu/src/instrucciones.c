@@ -41,7 +41,6 @@ void obtenerDelKernelPcPid(){
     deserializar_pid_y_pc(paquete,&pid,&pc);
     log_debug(cpu_log_debug,"EL pid es %i", pid);
     log_debug(cpu_log_debug, "El pc es %i", pc);
-
     if(pc < 0){
     log_error(cpu_logger, "El PC no puede ser negativo");
     }
@@ -52,8 +51,11 @@ void obtenerDelKernelPcPid(){
 char* fetch(int pid,int pc){
     log_info(cpu_logger,"## PID: <%d> - FETCH - Program Counter: <%d>",pid, pc);
     enviar_op_code(FETCH_INSTRUCCION,fd_conexion_dispatch_memoria);
+    //recibir_op_code(fd_conexion_dispatch_memoria);
     t_buffer *buffer = crear_buffer_cpu(pid, pc);
-    crear_paquete(FETCH_INSTRUCCION, buffer, fd_conexion_dispatch_memoria);
+    crear_paquete(ENVIO_PID_Y_PC, buffer, fd_conexion_dispatch_memoria);
+    log_debug(cpu_log_debug, "el pid es %i",pid);
+    log_debug(cpu_log_debug, "el pid es %i",pc);
     log_debug(cpu_log_debug, "por recibir instru");
     recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(char*),0);
     log_debug(cpu_log_debug, "instruccion recibida %s", instruccion_recibida);

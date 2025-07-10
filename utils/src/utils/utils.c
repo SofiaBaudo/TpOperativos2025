@@ -394,7 +394,7 @@ t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, void* con
 	// el contendio tiene que entrar en tampag entonces podemos ponerlo como tampag para sacar el size?
 }
 
-t_buffer * crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
+t_buffer *crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
 	t_buffer *buffer_aux = crear_buffer();
 	buffer_aux->size = 2*sizeof(int);
 	buffer_aux->offset = 0;

@@ -1,6 +1,5 @@
 #include "servidor_memoria.h"
 
-
 void iniciar_servidor_memoria() {
     char puerto_escucha_str[10];
     snprintf(puerto_escucha_str, sizeof(puerto_escucha_str), "%d", memoria_config.PUERTO_ESCUCHA);
@@ -38,6 +37,7 @@ void* manejar_cliente(void *socketCliente)
             log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", cliente); // Log obligatorio
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
             manejar_cliente_kernel(cliente);
+            log_debug(logger_memoria,"Ya volvi de la funcion");
             break;
         case HANDSHAKE_CPU:
             log_debug(logger_memoria, "Se conecto CPU");
@@ -137,25 +137,31 @@ void manejar_cliente_kernel(int cliente) {
         }
     log_debug(logger_memoria,"Ya sali del switch y estoy por cerrar la conexion");
     close(cliente);
+    return;
 }
 
-void manejar_cliente_cpu(int cliente) {
+void manejar_cliente_cpu(int cliente){
     while (1) {
         op_code peticion = recibir_op_code(cliente);
         log_debug(logger_memoria, "Peticion recibida de CPU: %s", instruccion_a_string(peticion));
         switch (peticion){
             case FETCH_INSTRUCCION: {
                 // Recibir struct pedido de instrucción
+               // enviar_op_code(cliente,MANDAR_PID_Y_PC_FETCH);
                 t_paquete *pedido = recibir_paquete(cliente);
-                int pid = deserializar_pid_memoria(pedido);
-                int pc = deserializar_pc_memoria(pedido);
+                int pid;
+                int pc;
+                deserializar_pid_y_pc(pedido,&pid,&pc);
                 log_debug(logger_memoria,"EL pid es %i", pid);
                 log_debug(logger_memoria, "El pc es %i", pc);
+                //int pid = deserializar_pid_memoria(pedido);
+               //int pc = deserializar_pc_memoria(pedido);
+                //log_debug(logger_memoria,"EL pid es %d", pid);
+                //log_debug(logger_memoria, "El pc es %d", pc);
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir pedido de instrucción");
                     break;
                 }
-
                 // Obtener la instrucción correspondiente
                 char* instruccion = obtener_instruccion_proceso(pid, pc);
 
@@ -175,7 +181,7 @@ void manejar_cliente_cpu(int cliente) {
                     enviar_instruccion(cliente, "");
                     log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }
-                free(pedido);
+                //free(pedido);
                 break;
             }
             case READ_MEMORIA: {

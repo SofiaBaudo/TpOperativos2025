@@ -1,7 +1,7 @@
 #include <comunicaciones_memoria.h>
 
 // Recibe un pedido de instrucción como paquete (buffer serializado)
-
+/*
 struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
     t_buffer *buffer = crear_buffer_vacio();
     if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
@@ -24,7 +24,7 @@ struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
     free(buffer);
     return pedido;
 }
-
+*/
 void enviar_instruccion(int socket_destino, const char* instruccion) {
     send(socket_destino, instruccion, strlen(instruccion) + 1, 0); // Enviar string con null terminator
     return;

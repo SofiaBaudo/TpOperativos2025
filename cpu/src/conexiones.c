@@ -87,11 +87,6 @@ void* inicializar_memoria(void* arg){
     pthread_join(hilo_cliente_mem, NULL); //esto hace que espere a que termine el hilo hijo para terminar el programa. 
     log_info(logger, "CPU %d: Conexión con Memoria establecida", id);
     while(1){
-        op_code terminar = recibir_op_code(fd_conexion_dispatch_memoria);
-        if(terminar == -1){
-            log_info(logger, "se cerro la conexion con memoria");
-            break;
-        }
     }
     log_info(logger, "Finalizando hilo de Memoria");
     log_destroy(logger);
