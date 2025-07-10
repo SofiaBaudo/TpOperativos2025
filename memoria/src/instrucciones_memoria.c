@@ -35,8 +35,10 @@ char* obtener_instruccion_proceso(int pid, int pc) {
     pthread_mutex_lock(&mutex_procesos_en_memoria);
     if (proc && proc->instrucciones && pc >= 0 && pc < list_size(proc->instrucciones)) {
         char* original = list_get(proc->instrucciones, pc);
-        if (original)
+        if (original){
             copia = strdup(original);
+            log_debug(logger_memoria,"Copia es: %s",copia);
+        }
     }
     pthread_mutex_unlock(&mutex_procesos_en_memoria);
     return copia;

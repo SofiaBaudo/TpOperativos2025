@@ -20,15 +20,22 @@ void usarCache(int pid, int numPag, char *instruccion, void* contenido){
         }
     }
     else{
+        log_debug(cpu_log_debug,"Entre al else");
+        usleep(2000000);
         agregarPagCache(numPag, pid, instruccion);
     }    
 }
 
-    void agregarPagCache(int nroPag, int pid, char* instruccion){
+void agregarPagCache(int nroPag, int pid, char* instruccion){
         NodosCache *aux = cache;
+        log_debug(cpu_log_debug, "por obtener contenido");
         void* contenido = obtenerContenido(nroPag, pid);
+        usleep(2000000);
+        log_debug(cpu_log_debug, "contenido obtenido");
         
         if(hayEspacioLibreCache()){
+            log_debug(cpu_log_debug, "adentro del if");
+            usleep(3000000);
             aux = retornarEspacioLibreCache();
             aux->info.numPag = nroPag;
             aux->info.contenido = contenido;
@@ -36,6 +43,8 @@ void usarCache(int pid, int numPag, char *instruccion, void* contenido){
             aux->info.bitModificado = bitModificado(instruccion);
         }
         else{
+            log_debug(cpu_log_debug, "adentro del if");
+            usleep(3000000);
             agregarConAlgoritmos(pid, instruccion, nroPag, contenido);
         }
     log_info(cpu_logger, "PID: <%d> - Cache Add - Pagina: <%d>", pid, nroPag);
@@ -52,10 +61,17 @@ void agregarConAlgoritmos(int pid, char *instruccion, int nroPag, void* contenid
 }
 
 void* obtenerContenido(int nroPag, int pid){
+    log_debug(cpu_log_debug, "por mandar el paquete de nroPag");
+    usleep(2000000);
     t_buffer *buffer = crear_buffer_pid_numPag(pid, nroPag);
+    usleep(2000000);
     crear_paquete(ENVIO_PID_NROPAG, buffer, fd_conexion_dispatch_memoria);
     void *contenido;
+    log_debug(cpu_log_debug, "por recibir el contenido");
+    usleep(2000000);
     recv(fd_conexion_dispatch_memoria, &contenido, sizeof(void*),0);
+    log_debug(cpu_log_debug,"recibi el contenido");
+    usleep(2000000);
     return contenido;
 }
 

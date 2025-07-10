@@ -7,6 +7,8 @@
 
 
 int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te tendria que devolver la dir fisica
+    log_debug(cpu_log_debug, "entre a la traduccion");
+    usleep(2000000);
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int marco;
@@ -16,9 +18,12 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
     }
     int tlbrespuesta;
     tlbrespuesta = buscarTlb(numPag, pid);
+    log_debug(cpu_log_debug, "Ya sali de buscar tlb");
+    usleep(2000000);
     //actualizarContadores(numPag);
     if(tlbrespuesta == -1){
         //osea que no se encontro
+        log_debug(cpu_log_debug, "tlb miss");
         marco = navegarNiveles(numPag, pid);
         agregarEntradaATLB(numPag, marco);
     }
@@ -57,6 +62,8 @@ int conseguirMarco(int pid){
     return numMarco;
 }
 int buscarTlb(int numPag, int pid){
+    log_debug(cpu_log_debug,"Estoy en TLB");
+    usleep(2000000);
     NodoEntradasTLB *aux = listaTlb;
    for(int i = 0; i < ENTRADAS_TLB; i++){  
         if(aux->info.numPag == numPag ){

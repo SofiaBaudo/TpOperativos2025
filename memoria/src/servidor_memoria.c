@@ -142,18 +142,22 @@ void manejar_cliente_kernel(int cliente) {
 
 void manejar_cliente_cpu(int cliente){
     while (1) {
-        op_code peticion = recibir_op_code(cliente);
+        //op_code peticion = recibir_op_code(cliente);
+        t_paquete *pedido = recibir_paquete(cliente);
+        op_code peticion = obtener_codigo_de_operacion(pedido);
         log_debug(logger_memoria, "Peticion recibida de CPU: %s", instruccion_a_string(peticion));
         switch (peticion){
             case FETCH_INSTRUCCION: {
-                // Recibir struct pedido de instrucción
+                log_debug(logger_memoria,"Ya entre al fecth");                // Recibir struct pedido de instrucción
                // enviar_op_code(cliente,MANDAR_PID_Y_PC_FETCH);
-                t_paquete *pedido = recibir_paquete(cliente);
+                //t_paquete *pedido = recibir_paquete(cliente);
+                usleep(2000000);
                 int pid;
                 int pc;
                 deserializar_pid_y_pc(pedido,&pid,&pc);
                 log_debug(logger_memoria,"EL pid es %i", pid);
                 log_debug(logger_memoria, "El pc es %i", pc);
+                usleep(2000000);
                 //int pid = deserializar_pid_memoria(pedido);
                //int pc = deserializar_pc_memoria(pedido);
                 //log_debug(logger_memoria,"EL pid es %d", pid);
@@ -168,6 +172,7 @@ void manejar_cliente_cpu(int cliente){
                 // Log obligatorio de obtención de instrucción
                 if (instruccion != NULL) {
                     log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
+                    usleep(3000000);
                 } else {
                     log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: ", pid, pc);
                 }
@@ -177,7 +182,7 @@ void manejar_cliente_cpu(int cliente){
                     enviar_instruccion(cliente, instruccion);
                     log_debug(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: %s", pid, pc, instruccion);
                     free(instruccion);
-                } else {
+                }else{
                     enviar_instruccion(cliente, "");
                     log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }

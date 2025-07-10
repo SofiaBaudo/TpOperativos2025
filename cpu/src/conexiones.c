@@ -65,6 +65,8 @@ void* iniciar_conexion_memoria_dispatch(void* arg){
         log_error(cpu_logger, "Error en la conexion con memoria");
         exit(EXIT_FAILURE);
     }
+    while(1){
+    }
     return NULL;
 }
 void* inicializar_memoria(void* arg){
@@ -86,8 +88,6 @@ void* inicializar_memoria(void* arg){
     pthread_create(&hilo_cliente_mem, NULL, iniciar_conexion_memoria_dispatch,valor_id);
     pthread_join(hilo_cliente_mem, NULL); //esto hace que espere a que termine el hilo hijo para terminar el programa. 
     log_info(logger, "CPU %d: Conexión con Memoria establecida", id);
-    while(1){
-    }
     log_info(logger, "Finalizando hilo de Memoria");
     log_destroy(logger);
     free(valor_id);
@@ -114,6 +114,7 @@ void* inicializar_kernel(void* arg){
     pthread_join(hilo_cliente_kernel, NULL);
     log_debug(cpu_log_debug,"Despues de crear el hilo");
     while(1){
+       
         ejecutar_instrucciones(NULL);
     }
     log_info(logger, "Finalizando hilo de Kernel");

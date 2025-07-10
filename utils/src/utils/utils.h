@@ -53,7 +53,6 @@ typedef enum op_code
 	SOLICITAR_ESPACIO_MEMORIA,
 	HAY_ESPACIO_EN_MEMORIA,
 	NO_HAY_ESPACIO_EN_MEMORIA,
-
 	//enums memoria con cpu
 	SOLICITAR_INSTRUCCION,
 	RESPUESTA_INSTRUCCION,
@@ -70,7 +69,7 @@ typedef enum op_code
 	INIT_PROC,
 	DUMP_MEMORY,
 	EXIT,
-
+	
 	//RESPUESTAS
 	DUMP_ACEPTADO,
 	DUMP_RECHAZADO,
@@ -78,8 +77,9 @@ typedef enum op_code
 	//INTERACCION ENTRE KERNEL E IO
 	RAFAGA_DE_IO,
 	FIN_DE_IO,
-
+	
 	//memoria
+	MANDAR_INSTRUCCION,
 	FETCH_INSTRUCCION,
 	READ_MEMORIA,
 	WRITE_MEMORIA,
@@ -230,7 +230,7 @@ t_buffer *crear_buffer_leer_pagina_completa(int pid, int marco);
 t_buffer *crear_buffer_respuesta_leer_pagina_completa(void* contenido, int tam_pagina);
 t_buffer *crear_buffer_actualizar_pagina_completa(int pid, int marco, void* contenido, int tam_pagina);
 t_buffer *crear_buffer_respuesta_actualizar_pagina_completa(bool exito);
-
+t_buffer *buffer_nombre_de_instruccion(char *nombre);
 //DESERIALIZACIONES
 char *deserializar_nombre_syscall_io(t_paquete *paquete);
 char *deserializar_nombre_io(t_paquete *paquete);
@@ -257,6 +257,8 @@ bool deserializar_respuesta_actualizar_pagina_completa(t_paquete *paquete);
 int deserializar_pid_memoria(t_paquete *paquete);
 int deserializar_tamanio_memoria(t_paquete *paquete);
 char *deserializar_nombre_archivo_memoria(t_paquete *paquete);
+char *deserializar_nombre_instruccion(t_paquete *paquete);
+
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);

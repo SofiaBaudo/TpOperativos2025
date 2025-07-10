@@ -944,64 +944,6 @@ op_code obtener_codigo_de_operacion (t_paquete * paquete){
 
 // A PARTIR DE ACA HACEMOS FUNCIONES PARA LOS PAQUETES DE PROCESOS
 
-
-/*t_paquete_proceso* recibir_paquete_proceso(int socket){
-	t_paquete_proceso* paquete = malloc(sizeof(t_paquete_proceso));
-	paquete->buffer = malloc(sizeof(t_buffer));
-	
-	// Primero recibimos el codigo de operacion
-	recv(socket, &paquete->codigo_operacion, sizeof(paquete->codigo_operacion), 0);
-	
-	// Después ya podemos recibir el buffer. Primero su tamaño seguido del contenido
-	recv(socket, &(paquete->buffer->size), sizeof(int), 0);
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	recv(socket, paquete->buffer->stream, paquete->buffer->size, 0);
-	return paquete;
-}*/
-/*
-void crear_paquete_proceso(op_code codigo, t_buffer *buffer, int socket){
-	
-	//llenamos el paquete con el buffer
-	t_paquete* paquete = malloc(sizeof(t_paquete_proceso));
-	paquete->codigo_operacion = codigo; // Podemos usar una constante por operación
-	paquete->buffer = buffer; // Nuestro buffer de antes.
-	//armamos el stream a enviar
-	void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code)+sizeof(int)); // el tamanio que hay que reservar segun el buffer + el tamanio del op_code + el tamanio del buffer
-	paquete->buffer->offset = 0;
-	
-	memcpy((char *)a_enviar + paquete->buffer->offset, &(paquete->codigo_operacion), sizeof(op_code));
-	paquete->buffer->offset += sizeof(op_code);
-	memcpy((char *)a_enviar + paquete->buffer->offset, &(paquete->buffer->size), sizeof(int)); // el tamanio del buffer
-	paquete->buffer->offset += sizeof(int);
-	memcpy((char *)a_enviar + paquete->buffer->offset, paquete->buffer->stream, paquete->buffer->size);
-	//enviamos con send()
-	send(socket,(char*)a_enviar, buffer-> size + sizeof(op_code) + sizeof(int),0);
-	
-	//liberamos la memoria
-	free(a_enviar);
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
-	free(paquete);
-}*/
-//
-/*t_buffer * crear_buffer_de_envio_de_proceso(int pid ,char *ruta_del_archivo, int tamanio){
-	t_buffer * buffer_aux = crear_buffer();
-	int longitud = strlen(ruta_del_archivo);
-	buffer_aux->size = 3*sizeof(int) + longitud;
-	buffer_aux->offset = 0;
-	buffer_aux->stream = malloc(buffer_aux->size);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); 
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &tamanio, sizeof(int)); 
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, ruta_del_archivo,longitud);
-	buffer_aux->offset += sizeof(int);
-	buffer_aux -> stream = buffer_aux->stream;
-	return buffer_aux;
-}*/
-
 int deserializar_pid_memoria(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	int pid;
@@ -1040,4 +982,30 @@ char *deserializar_nombre_archivo_memoria(t_paquete *paquete){
     free(paquete->buffer);
     free(paquete);
 	return nombre_archivo;
+}
+
+t_buffer *buffer_nombre_de_instruccion(char *nombre){
+	t_buffer *buffer_aux = crear_buffer();
+	int longitud = strlen(nombre);
+	buffer_aux->size = sizeof(int) + longitud;
+	buffer_aux->offset = 0;
+	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
+	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int)); //como un fwrite.
+	buffer_aux->offset += sizeof(int);
+	memcpy(buffer_aux->stream + buffer_aux->offset, nombre,longitud);
+	buffer_aux -> stream = buffer_aux->stream;
+	return buffer_aux;
+}
+
+char *deserializar_nombre_instruccion(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+    int longitud;
+    memcpy(&longitud,stream,sizeof(int));
+    stream+=sizeof(int);
+    char *nombre = malloc(longitud+1);
+    memcpy(nombre,stream,longitud);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	return nombre;
 }

@@ -9,7 +9,6 @@
 
 //Declaracion Variables Globales
 
-char* instruccion_recibida;
 char** obtenerInsPartes;
 char* parametros;
 char* nombre_instruccion;
@@ -36,8 +35,8 @@ void* ejecutar_instrucciones(void* arg){
 }
 
 void obtenerDelKernelPcPid(){
-    t_paquete *paquete = malloc(sizeof(t_paquete)); 
-    paquete = recibir_paquete(fd_conexion_kernel_dispatch);
+    //t_paquete *paquete = malloc(sizeof(t_paquete)); 
+    t_paquete *paquete = recibir_paquete(fd_conexion_kernel_dispatch);
     deserializar_pid_y_pc(paquete,&pid,&pc);
     log_debug(cpu_log_debug,"EL pid es %i", pid);
     log_debug(cpu_log_debug, "El pc es %i", pc);
@@ -50,14 +49,15 @@ void obtenerDelKernelPcPid(){
 
 char* fetch(int pid,int pc){
     log_info(cpu_logger,"## PID: <%d> - FETCH - Program Counter: <%d>",pid, pc);
-    enviar_op_code(FETCH_INSTRUCCION,fd_conexion_dispatch_memoria);
+    //enviar_op_code(FETCH_INSTRUCCION,fd_conexion_dispatch_memoria);
     //recibir_op_code(fd_conexion_dispatch_memoria);
     t_buffer *buffer = crear_buffer_cpu(pid, pc);
-    crear_paquete(ENVIO_PID_Y_PC, buffer, fd_conexion_dispatch_memoria);
+    crear_paquete(FETCH_INSTRUCCION, buffer, fd_conexion_dispatch_memoria);
     log_debug(cpu_log_debug, "el pid es %i",pid);
     log_debug(cpu_log_debug, "el pid es %i",pc);
     log_debug(cpu_log_debug, "por recibir instru");
-    recv(fd_conexion_dispatch_memoria,&instruccion_recibida,sizeof(char*),0);
+    t_paquete *paquete = recibir_paquete(fd_conexion_dispatch_memoria);
+    char *instruccion_recibida = deserializar_nombre_instruccion(paquete);
     log_debug(cpu_log_debug, "instruccion recibida %s", instruccion_recibida);
     return instruccion_recibida;
 }
@@ -129,13 +129,20 @@ void instruccion_write(int direccion, char* param2, int pid){
 //Ejecucion Read.
 
 void instruccion_read(int direccion, char* param2, int pid){
+    
     int direccionFisica = traduccion(direccion, pid, "READ", param2);
+    log_debug(cpu_log_debug,"Termine la traduccion");
+    usleep(2000000);
+    log_debug(cpu_log_debug,"Direccion Fisica : %i",direccionFisica);
+    usleep(2000000);
     if(direccionFisica == -1){
+        log_debug(cpu_log_debug,"dentro del IF");
+        usleep(2000000);
         //entro por cache
     }
     else{
-    t_buffer *buffer = crear_buffer_pid_dirFis_datos(pid, direccion,param2);
-    crear_paquete(ENVIO_PID_DIRFIS_DAT, buffer, fd_conexion_dispatch_memoria);
+        t_buffer *buffer = crear_buffer_pid_dirFis_datos(pid, direccion,param2);
+        crear_paquete(ENVIO_PID_DIRFIS_DAT, buffer, fd_conexion_dispatch_memoria);
     }
     log_info(cpu_logger,"## PID: %d - Ejecutando: <READ>",pid);
     log_info(cpu_logger,"PID: <%d> - Acción: <LEER> - Dirección Física: <%d> - Valor: <%s>",pid,direccion,param2);

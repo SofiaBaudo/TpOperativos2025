@@ -11,6 +11,8 @@
 void inicializar_CPU(int id){
     inicializar_logs();
     inicializar_configs();
+    inicializarTLB();
+    inicializarCache();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
     //ejecutar_instrucciones(NULL);

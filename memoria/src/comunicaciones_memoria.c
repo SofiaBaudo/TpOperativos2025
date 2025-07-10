@@ -25,8 +25,12 @@ struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente) {
     return pedido;
 }
 */
-void enviar_instruccion(int socket_destino, const char* instruccion) {
-    send(socket_destino, instruccion, strlen(instruccion) + 1, 0); // Enviar string con null terminator
+void enviar_instruccion(int socket_destino, char* instruccion) {
+    log_debug(logger_memoria, "se esta por enviar la instruccion");
+    t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
+    crear_paquete(MANDAR_INSTRUCCION,buffer,socket_destino);
+    usleep(2000000);
+    log_debug(logger_memoria, "por salir");
     return;
 }
 
