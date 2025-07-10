@@ -148,16 +148,14 @@ void manejar_cliente_cpu(int cliente){
         log_debug(logger_memoria, "Peticion recibida de CPU: %s", instruccion_a_string(peticion));
         switch (peticion){
             case FETCH_INSTRUCCION: {
-                log_debug(logger_memoria,"Ya entre al fecth");                // Recibir struct pedido de instrucción
+             // Recibir struct pedido de instrucción
                // enviar_op_code(cliente,MANDAR_PID_Y_PC_FETCH);
                 //t_paquete *pedido = recibir_paquete(cliente);
-                usleep(2000000);
                 int pid;
                 int pc;
                 deserializar_pid_y_pc(pedido,&pid,&pc);
                 log_debug(logger_memoria,"EL pid es %i", pid);
                 log_debug(logger_memoria, "El pc es %i", pc);
-                usleep(2000000);
                 //int pid = deserializar_pid_memoria(pedido);
                //int pc = deserializar_pc_memoria(pedido);
                 //log_debug(logger_memoria,"EL pid es %d", pid);
@@ -295,25 +293,10 @@ void manejar_cliente_cpu(int cliente){
             }
             case ENVIO_PID_Y_ENTRADANIVEL: {//hablar de cambiar el nombre
                 // Recibir pedido con PID y entrada de nivel para navegación de tabla de páginas
-                t_buffer *buffer = crear_buffer_vacio();
-                if (recv(cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
-                    free(buffer);
-                    break;
-                }
-                buffer->stream = malloc(buffer->size);
-                if (recv(cliente, buffer->stream, buffer->size, MSG_WAITALL) != buffer->size) {
-                    free(buffer->stream);
-                    free(buffer);
-                    break;
-                }
-                
                 // Deserializar PID y entrada de nivel
                 int offset = 0;
                 int pid;
-                memcpy(&pid, buffer->stream + offset, sizeof(int));
-                offset += sizeof(int);
-                int entradaNivel;
-                memcpy(&entradaNivel, buffer->stream + offset, sizeof(int));
+                
                 
                 // NOTA: CPU está enviando entrada de nivel, pero necesitamos página lógica
                 // Por compatibilidad, interpretamos entradaNivel como número de página lógica
@@ -330,32 +313,24 @@ void manejar_cliente_cpu(int cliente){
             }
             case ENVIO_PID_NROPAG: { //hablar de cambiar el nombre
                 // Recibir pedido con PID y número de página para obtener contenido
-                t_buffer *buffer = crear_buffer_vacio();
-                if (recv(cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
-                    free(buffer);
-                    break;
-                }
-                buffer->stream = malloc(buffer->size);
-                if (recv(cliente, buffer->stream, buffer->size, MSG_WAITALL) != buffer->size) {
-                    free(buffer->stream);
-                    free(buffer);
-                    break;
-                }
-                
-                // Deserializar PID y número de página
-                int offset = 0;
-                int pid;
-                memcpy(&pid, buffer->stream + offset, sizeof(int));
-                offset += sizeof(int);
-                int nroPag;
-                memcpy(&nroPag, buffer->stream + offset, sizeof(int));
+                log_debug(logger_memoria,"Entre a envio pid y nropag");
+                usleep(2000000);
+                int pid = deserializar_pid_memoria(pedido);
+                log_debug(logger_memoria, "el numero de pid es %i", pid);
+                int nroPag = deserializar_nroPag(pedido);
+                log_debug(logger_memoria, "el numero de pagina es %i", nroPag);
             
                 int marco = obtener_marco_de_pagina_logica(pid, nroPag);
+                log_debug(logger_memoria, "el marco es: %i", marco);
                 if (marco != -1) {
+                    log_debug(logger_memoria, "entre al if del marco");
+                    usleep(2000000);
                     // Obtener el contenido completo de la página
                     void* contenido = obtener_contenido_pagina_completa(marco, memoria_config.TAM_PAGINA);
-                    
+                    log_debug(logger_memoria, "contenido obtenido");
                     if (contenido != NULL) {
+                        log_debug(logger_memoria, "entre al if del if porque el contenido no es NULL");
+                        usleep(2000000);
                         // NOTA: CPU espera un puntero, pero esto no funciona entre procesos
                         // Por compatibilidad, enviamos el puntero local pero esto necesita ser corregido en CPU
                         send(cliente, &contenido, sizeof(void*), 0);
@@ -365,20 +340,19 @@ void manejar_cliente_cpu(int cliente){
                         // Liberar el contenido que obtuvimos
                         free(contenido);
                     } else {
+                        log_debug(logger_memoria, "entre al else del if");
                         // Enviar puntero nulo en caso de error
                         void* contenido_nulo = NULL;
                         send(cliente, &contenido_nulo, sizeof(void*), 0);
                         log_error(logger_memoria, "Error al obtener contenido - PID: %d, Página: %d", pid, nroPag);
                     }
                 } else {
+                    log_debug(logger_memoria, "entre al else del if grande");
                     // Enviar puntero nulo si no se encuentra el marco
                     void* contenido_nulo = NULL;
                     send(cliente, &contenido_nulo, sizeof(void*), 0);
                     log_error(logger_memoria, "Marco no encontrado - PID: %d, Página: %d", pid, nroPag);
                 }
-                
-                free(buffer->stream);
-                free(buffer);
                 break;
             } 
             default:
