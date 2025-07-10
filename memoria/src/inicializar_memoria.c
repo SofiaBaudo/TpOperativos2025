@@ -36,7 +36,9 @@ bool inicializar_memoria(void) {
         log_error(logger_memoria, "Error: Memoria física");
         return false;
     }
-
+    //inicializo swap
+    inicializar_swap(); //ver el bool q devuelve swap
+    
     mostrar_resumen_sistema();
     log_debug(logger_memoria, "Sistema inicializado correctamente");
 
@@ -47,6 +49,7 @@ bool inicializar_memoria(void) {
 // Inicializa todas las listas globales del sistema de memoria
 bool inicializar_listas_globales(void) {
     procesos_en_memoria = list_create();
+    inicializar_metricas_procesos();
     if (!procesos_en_memoria) {
         return false;
     }

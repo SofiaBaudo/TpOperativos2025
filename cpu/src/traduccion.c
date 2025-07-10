@@ -8,30 +8,33 @@
 
 int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te tendria que devolver la dir fisica
     log_debug(cpu_log_debug, "entre a la traduccion");
-    usleep(2000000);
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int marco;
     if(estaHabilitadaCache()){
-        usarCache(pid, numPag, instruccion,contenido);
-        return -1; //no hace falta delvoler algo porque se hizo en cache
-    }
-    int tlbrespuesta;
-    tlbrespuesta = buscarTlb(numPag, pid);
-    log_debug(cpu_log_debug, "Ya sali de buscar tlb");
-    usleep(2000000);
-    //actualizarContadores(numPag);
-    if(tlbrespuesta == -1){
-        //osea que no se encontro
-        log_debug(cpu_log_debug, "tlb miss");
-        marco = navegarNiveles(numPag, pid);
-        agregarEntradaATLB(numPag, marco);
-    }
-    else{
-        marco = tlbrespuesta;
-        //aca no actualizas la referencia porque ya llamas modificarRefenrecia en buscarEnTLB
-        //aca solo actualizo --> si en el config esta lru
-    }
+        if(estaEnCache(numPag, pid)){
+            usarCache(pid, numPag, instruccion,contenido);
+            return -1; //no hace falta devolver porque se hizo en cache
+        }
+        else{
+            agregarPagCache(numPag, pid, instruccion);
+            int tlbrespuesta;
+            tlbrespuesta = buscarTlb(numPag, pid);
+               if(tlbrespuesta == -1){
+                //osea que no se encontro
+                log_debug(cpu_log_debug, "tlb miss");
+                marco = navegarNiveles(numPag, pid);
+                log_debug(cpu_log_debug, "navegue los niveles");
+                agregarEntradaATLB(numPag, marco);
+        }
+        else{
+            marco = tlbrespuesta;
+            //aca no actualizas la referencia porque ya llamas modificarRefenrecia en buscarEnTLB
+            //aca solo actualizo --> si en el config esta lru
+             }
+            }
+        }    
+ 
     int direccionFisica = marco*tamPag + desplazamiento;
     return direccionFisica; 
 }
@@ -46,6 +49,7 @@ int navegarNiveles(int numPag, int pid){
     for(int i = 1; i < cantNiveles+1; i++){
         int elevado = pow(entradasTabla, cantNiveles-i);
         int entradaNivel = floor((numPag/elevado) % entradasTabla);
+        log_debug(cpu_log_debug, "por enviar valores mem");
         enviarValoresMem(entradaNivel, pid);
         numMarco = conseguirMarco(pid);
     }
@@ -56,7 +60,7 @@ int navegarNiveles(int numPag, int pid){
 
 int conseguirMarco(int pid){
     int numMarco;
-    recv(fd_conexion_dispatch_memoria, &numMarco, sizeof(int), 0);
+    numMarco = recibir_entero(fd_conexion_dispatch_memoria);
     log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <NUMERO_PAGINA> - Marco: <%d>", pid, numMarco);
     //se envia el paquete con la entradaNivel y el pid, memoria lo deseerializa y me envia el numero de marco unicamente, entonces no hace falta hacer un paquete. 
     return numMarco;

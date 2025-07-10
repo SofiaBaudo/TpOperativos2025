@@ -547,6 +547,7 @@ int deserializar_entradaNivel(t_paquete *paquete){
 int deserializar_nroPag(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	int nroPag;
+	stream += sizeof(int);
 	memcpy(&nroPag,stream,sizeof(int));
 	free(paquete->buffer->stream);
 	free(paquete->buffer);

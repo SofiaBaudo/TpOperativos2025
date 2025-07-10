@@ -31,6 +31,7 @@ void* ejecutar_instrucciones(void* arg){
     execute(instru, pid);
     log_debug(cpu_log_debug, "mande la syscall?");
     check_interrupt(); //ponerlo en hilo.    
+    pc++;
     return NULL;
 }
 
@@ -129,15 +130,10 @@ void instruccion_write(int direccion, char* param2, int pid){
 //Ejecucion Read.
 
 void instruccion_read(int direccion, char* param2, int pid){
-    
     int direccionFisica = traduccion(direccion, pid, "READ", param2);
     log_debug(cpu_log_debug,"Termine la traduccion");
-    usleep(2000000);
     log_debug(cpu_log_debug,"Direccion Fisica : %i",direccionFisica);
-    usleep(2000000);
     if(direccionFisica == -1){
-        log_debug(cpu_log_debug,"dentro del IF");
-        usleep(2000000);
         //entro por cache
     }
     else{

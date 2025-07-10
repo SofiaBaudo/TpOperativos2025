@@ -43,8 +43,6 @@ void agregarPagCache(int nroPag, int pid, char* instruccion){
             aux->info.bitModificado = bitModificado(instruccion);
         }
         else{
-            log_debug(cpu_log_debug, "adentro del if");
-            usleep(3000000);
             agregarConAlgoritmos(pid, instruccion, nroPag, contenido);
         }
     log_info(cpu_logger, "PID: <%d> - Cache Add - Pagina: <%d>", pid, nroPag);

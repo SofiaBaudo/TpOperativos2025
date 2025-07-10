@@ -39,20 +39,27 @@ t_metricas* buscar_metricas_proceso(int pid) {
 
 // Función para incrementar una métrica específica de un proceso
 void incrementar_metrica_proceso(int pid, tipo_metrica metrica) {
-    pthread_mutex_lock(&mutex_lista_metricas_procesos);
+    log_debug(logger_memoria, "hola");
     t_metricas* metricas_proceso = NULL;
-    
+    log_debug(logger_memoria, "chau");
+    log_debug(logger_memoria, "el size de lista_metricas_proceso es: %i ", list_size(lista_metricas_procesos));
     // Buscar métricas dentro del mutex
     for (int i = 0; i < list_size(lista_metricas_procesos); i++) {
+        log_debug(logger_memoria, "entre al for de metrica proceso");
+        usleep(2000000);
+        pthread_mutex_lock(&mutex_lista_metricas_procesos);
+        log_debug(logger_memoria, "despues del lock");
+        usleep(2000000);
         t_metricas* metricas = list_get(lista_metricas_procesos, i);
+        pthread_mutex_unlock(&mutex_lista_metricas_procesos);
         if (metricas->pid == pid) {
             metricas_proceso = metricas;
             break;
         }
     }
-    
+    log_debug(logger_memoria, "Pase el for de lista metricas proceso");
+
     if (metricas_proceso == NULL) {
-        pthread_mutex_unlock(&mutex_lista_metricas_procesos);
         log_error(logger_memoria, "No se encontraron métricas para el proceso PID: %d", pid);
         return;
     }
@@ -80,7 +87,7 @@ void incrementar_metrica_proceso(int pid, tipo_metrica metrica) {
             log_warning(logger_memoria, "Tipo de métrica desconocido: %d", metrica);
             break;
     }
-    pthread_mutex_unlock(&mutex_lista_metricas_procesos);
+    //pthread_mutex_unlock(&mutex_lista_metricas_procesos);
 }
 
 // Función para mostrar las métricas de un proceso (log obligatorio)
@@ -134,5 +141,6 @@ void destruir_metricas_proceso(int pid) {
 
 // Función auxiliar para actualizar métricas de acceso a tabla de páginas
 void actualizar_metricas_acceso_tabla_paginas(int pid) {
+    log_debug(logger_memoria,"EStoy por entrar a incrementar metrica proceso");
     incrementar_metrica_proceso(pid, ACCESO_TABLA);
 }

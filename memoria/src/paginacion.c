@@ -171,15 +171,17 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
     int entradas = memoria_config.ENTRADAS_POR_TABLA;
     t_tabla_paginas* actual = tabla_raiz;
     
-    log_info(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d", pid, nro_pagina_logica);
+    log_debug(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d", pid, nro_pagina_logica);
     
     for (int nivel = 1; nivel < niveles; nivel++) {
         // Aplicar retardo por acceso a tabla
+        log_debug(logger_memoria,"Adentro del for");
         usleep(memoria_config.RETARDO_MEMORIA * 1000);
         
         // Actualizar métricas
         actualizar_metricas_acceso_tabla_paginas(pid);
-        
+        log_debug(logger_memoria, "termine de actualizar metricas");
+        usleep(2000000);
         // Calcular índice para este nivel
         int idx = (nro_pagina_logica / (int)pow(entradas, niveles-nivel)) % entradas;
         
@@ -203,7 +205,7 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
     
     int marco = actual->entradas[idx_final].nro_marco;
     
-    log_info(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d - Marco: %d", pid, nro_pagina_logica, marco);
+    log_debug(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d - Marco: %d", pid, nro_pagina_logica, marco);
     
     return marco;
 }

@@ -295,19 +295,16 @@ void manejar_cliente_cpu(int cliente){
                 // Recibir pedido con PID y entrada de nivel para navegación de tabla de páginas
                 // Deserializar PID y entrada de nivel
                 int offset = 0;
-                int pid = 
+                int pid = deserializar_pid_memoria(pedido);
+                int entradaNIvel = deserializar_entradaNivel(pedido);
                 
                 // NOTA: CPU está enviando entrada de nivel, pero necesitamos página lógica
                 // Por compatibilidad, interpretamos entradaNivel como número de página lógica
                 int marco = obtener_marco_de_pagina_logica(pid, entradaNivel);
                 
                 // Enviar el marco de vuelta a CPU
-                send(cliente, &marco, sizeof(int), 0);
-                
+                enviar_entero(cliente);
                 log_debug(logger_memoria, "PID: %d - Enviado marco: %d para página: %d", pid, marco, entradaNivel);
-                
-                free(buffer->stream);
-                free(buffer);
                 break;
             }
             case ENVIO_PID_NROPAG: { //hablar de cambiar el nombre
@@ -330,8 +327,6 @@ void manejar_cliente_cpu(int cliente){
                     if (contenido != NULL) {
                         log_debug(logger_memoria, "entre al if del if porque el contenido no es NULL");
                         usleep(2000000);
-                        // NOTA: CPU espera un puntero, pero esto no funciona entre procesos
-                        // Por compatibilidad, enviamos el puntero local pero esto necesita ser corregido en CPU
                         send(cliente, &contenido, sizeof(void*), 0);
                         
                         log_debug(logger_memoria, "PID: %d - Enviado puntero contenido para página: %d, marco: %d", pid, nroPag, marco);
