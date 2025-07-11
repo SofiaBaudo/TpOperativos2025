@@ -1,2 +1,0 @@
-INIT_PROC 4 "fede.txt"
-EXIT 

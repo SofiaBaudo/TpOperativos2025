@@ -5,6 +5,7 @@ void inicializar_kernel(char *archivo, int tamanio){
   printf("Kernel inicializado");
     printf("\n");
     inicializar_logs();
+    log_info(kernel_logger,"El tamanio es:%i",tamanio);
     inicializar_configs();
     inicializar_colas_de_estados();
     inicializar_listas_de_ios_y_cpus();

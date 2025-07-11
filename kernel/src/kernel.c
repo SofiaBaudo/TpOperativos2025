@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]){
    char* archivo = argv[1];
-   int tamanio = argv[2];
+   int tamanio = atoi(argv[2]);
    
  //argc es la cantidad de argumentos y argv que contiene cada argumento
   
@@ -19,7 +19,7 @@ int main(int argc, char* argv[]){
    //atender_kernel_dispatch();
   
  
-   crear_proceso(3,"/home/utnso/tp-2025-1c-Sinergia-SO-13/memoria/src/Pseudocodigo/fede.txt");
+   //crear_proceso(3,"/home/utnso/tp-2025-1c-Sinergia-SO-13/memoria/src/Pseudocodigo/fede.txt");
    //crear_proceso(2,"f1");
    //atender_kernel_io();
    //crear_proceso(5,"f3");
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
    pthread_create(&hilo_dispatch,NULL,atender_kernel_dispatch,NULL); //Creamos el hilo
    //pthread_detach(hilo_dispatch);
    //pthread_create(&hilo_funcion_que_duerme,NULL,funcion_que_duerme,NULL);
-   pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_proceso_mas_chico_primero,NULL); //Creamos el hilo
+   pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
 
    //hilos para cpus e ios. Ios se pueden agregar durante la ejecucion y las cpus son fijas
    pthread_t hilo_plani_corto_plazo;
