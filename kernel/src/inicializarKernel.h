@@ -4,10 +4,10 @@
 #include <semaforos.h>
 
 //INICIALIZACION
-void inicializar_kernel();
 void inicializar_logs();
 void inicializar_configs();
 void inicializar_colas_de_estados();
 void inicializar_listas_de_ios_y_cpus();
+void inicializar_kernel(char *archivo, int tamanio);
 
 void imprimir_configs();

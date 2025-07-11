@@ -75,3 +75,4 @@ float calcular_proxima_estimacion(struct pcb *proceso);
 void finalizar_proceso(struct pcb*aux, Estado estadoInicial);
 void transicionar_a_susp_ready(struct pcb *pcb);
 struct pcb* buscar_proceso_bloqueado_por_io(t_list *lista, char *nombre);
+void crear_proceso(int tamanio, char *ruta_archivo);

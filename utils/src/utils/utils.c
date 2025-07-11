@@ -588,6 +588,9 @@ int deserializar_tamanio(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	stream+=2*sizeof(int);
     int tamanio;
+	int longitud;
+    memcpy(&longitud,stream,sizeof(int));
+    stream+=sizeof(int)+longitud;
     memcpy(&tamanio,stream,sizeof(int));
 	free(paquete->buffer->stream);
     free(paquete->buffer);
@@ -613,9 +616,6 @@ char *deserializar_nombre_archivo(t_paquete *paquete){
     stream+=sizeof(int);
     char *nombre = malloc(longitud+1);
     memcpy(nombre,stream,longitud);
-	free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
 	return nombre;
 }
 //para lo de deserializar init proc viene primero el tamanio en memoria
@@ -1034,7 +1034,7 @@ char *deserializar_char_asterisco(t_paquete *paquete){
 
 char *deserializar_nombre_archivo_init_proc(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
-	stream+=3*sizeof(int);
+	stream+=2*sizeof(int);
     int longitud;
     memcpy(&longitud,stream,sizeof(int));
     stream+=sizeof(int);
@@ -1064,3 +1064,4 @@ char *deserializar_datos_escritura_memoria(t_paquete *paquete){
     free(paquete);
 	return nombre;
 }
+

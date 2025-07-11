@@ -72,6 +72,7 @@ bool inicializar_configuracion() {
     memoria_config.PATH_SWAPFILE = strdup(config_get_string_value(config, "PATH_SWAPFILE"));
     memoria_config.RETARDO_SWAP = config_get_int_value(config, "RETARDO_SWAP");
     memoria_config.DUMP_PATH = strdup(config_get_string_value(config, "DUMP_PATH"));
+    memoria_config.PATH_INSTRUCCIONES = strdup(config_get_string_value(config, "PATH_INSTRUCCIONES"));
     
     config_destroy(config);
     printf("Configuración cargada correctamente\n");

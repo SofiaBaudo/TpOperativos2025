@@ -14,7 +14,6 @@ void *planificador_corto_plazo_sjf_sin_desalojo();
 void *planificador_corto_plazo_sjf_con_desalojo();
 
 //CREACION, INICIALIZACION Y FINALIZACION DE PROCESOS
-void crear_proceso(int tamanio, char *ruta_archivo);
 struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo);
 void incrementar_var_global_id_proceso();
 void esperar_enter_por_pantalla();

@@ -1,7 +1,7 @@
 #include <inicializarKernel.h>
 
 
-void inicializar_kernel(){
+void inicializar_kernel(char *archivo, int tamanio){
   printf("Kernel inicializado");
     printf("\n");
     inicializar_logs();
@@ -9,6 +9,7 @@ void inicializar_kernel(){
     inicializar_colas_de_estados();
     inicializar_listas_de_ios_y_cpus();
     inicializar_sincronizacion();
+    crear_proceso(tamanio,archivo);
 }
 
 void inicializar_logs(){

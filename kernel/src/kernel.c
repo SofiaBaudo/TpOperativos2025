@@ -2,10 +2,12 @@
 #include <conexiones.h>
 
 int main(int argc, char* argv[]){
-
+   char* archivo = argv[1];
+   int tamanio = argv[2];
+   
  //argc es la cantidad de argumentos y argv que contiene cada argumento
   
-   inicializar_kernel();
+   inicializar_kernel(archivo, tamanio);
    //PRUEBA PARA PLANI TMCP
 
  
