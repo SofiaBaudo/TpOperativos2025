@@ -1,6 +1,6 @@
 #include <instrucciones_memoria.h>
 
-t_list* generar_instrucciones_proceso(int pid, const char* path_pseudocodigo) {
+t_list* generar_instrucciones_proceso(int pid, char* path_pseudocodigo) {
     FILE* archivo = fopen(path_pseudocodigo, "r");
     if (!archivo) {
         log_debug(logger_memoria, "el archivo es nulo");

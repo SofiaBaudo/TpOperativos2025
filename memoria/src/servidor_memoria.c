@@ -72,8 +72,9 @@ void manejar_cliente_kernel(int cliente) {
                     int pid = deserializar_pid_memoria(proceso_paquete);
                     int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
                     char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
-                    log_debug(logger_memoria, "el pseudocodigo es: %s", path_pseudocodigo);
-                    if(inicializar_proceso(pid,tam_proceso,path_pseudocodigo)){
+                    char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);
+                    log_debug(logger_memoria, "el pseudocodigo es: %s", path_absoluto);
+                    if(inicializar_proceso(pid,tam_proceso,path_absoluto)){
                         log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
                         enviar_op_code(cliente, ACEPTAR_PROCESO);
                         break;
@@ -165,22 +166,23 @@ void manejar_cliente_cpu(int cliente){
                 // Log obligatorio de obtención de instrucción
                 if (instruccion != NULL) {
                     log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
-                    usleep(1000000);
                 } else {
                     log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: ", pid, pc);
                 }
 
                 // Enviar solo la instrucción a la CPU
                 if (instruccion != NULL) {
-                    enviar_instruccion(cliente, instruccion);
+                    t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
+                    crear_paquete(MANDAR_INSTRUCCION,buffer,cliente);
+                    //enviar_instruccion(cliente, instruccion);
                     log_debug(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: %s", pid, pc, instruccion);
+                    usleep(10000000);
                     free(instruccion);
                 }else{
                     enviar_instruccion(cliente, "");
                     log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }
                 log_debug(logger_memoria,"YA MANDE LA INSTRUCCION Y ESTOY POR SALIR DEL FETCH");
-                usleep(2000000);
                 //free(pedido);
                 break;
             }

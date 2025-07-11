@@ -22,9 +22,9 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
     // 4. Si hay espacio, crear estructuras administrativas de paginación
     t_tabla_paginas* tabla_raiz = iniciar_proceso_paginacion(pid, tam_proceso);
 
-    char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);
+   
     // 5. Generar instrucciones segun path para proceso
-    t_list* instrucciones = generar_instrucciones_proceso(pid, path_absoluto);
+    t_list* instrucciones = generar_instrucciones_proceso(pid, path_pseudocodigo);
 
     // 6. Si todo fue exitoso, armar y agregar el proceso a la lista global
     if (tabla_raiz != NULL && instrucciones != NULL) {

@@ -15,7 +15,7 @@ typedef struct {
     char* PATH_SWAPFILE;
     int RETARDO_SWAP;
     char* DUMP_PATH;
-    char * PATH_INSTRUCCIONES;
+    char* PATH_INSTRUCCIONES;
 } t_memoria_config;
 
 // Estructura de log

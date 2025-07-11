@@ -30,8 +30,10 @@ void* ejecutar_instrucciones(void* arg){
     } 
     log_debug(cpu_log_debug, "el pc es: %i", pc);
     instruccionEntera = fetch(pid,pc);
+    log_debug(cpu_log_debug,"La instruccion que llego es: %s",instruccionEntera);
     log_debug(cpu_log_debug, "finalizo el fetch");    
     instru = decode(instruccionEntera);
+    log_debug(cpu_log_debug,"La instruccion que devolvio: %s",instru.opcode);
     log_debug(cpu_log_debug,"terminado el split de decode");
     execute(instru, pid);
     log_debug(cpu_log_debug, "mande la syscall?");
@@ -66,8 +68,10 @@ char* fetch(int pid,int pc){
     t_paquete *paquete = recibir_paquete(fd_conexion_dispatch_memoria);
     char *instruccion_recibida = deserializar_nombre_instruccion(paquete);
     log_debug(cpu_log_debug, "instruccion recibida %s", instruccion_recibida);
+    usleep(10000000);
     return instruccion_recibida;
 }
+
 
 //Fase Decode (Interpretar proxima ejecucion a ejecutar)(Segunda Fase del Ciclo de Instruccion)
 
@@ -88,7 +92,6 @@ t_instruccion decode(char* instruccion_recibida){
     
     return instruccion;  
 } 
-
 //Fase Execute (Ejecutar la instruccion)(Tercera Fase del Ciclo de Instruccion).
 
 void execute(t_instruccion instruccion, int pid){
