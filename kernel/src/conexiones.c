@@ -185,6 +185,7 @@ void* manejar_kernel_io(void *socket_io){
 void *esperar_io_proceso(void *instancia_de_io) { //el aux
     struct instancia_de_io *io_aux = instancia_de_io;
     while (true){
+        log_debug(kernel_debug_log,"Estoy esperando que un proceso quiera ejecutarme");
         sem_wait(io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
         struct pcb *proceso = buscar_proceso_a_realizar_io(io_aux);
         enviar_op_code(io_aux->socket_io_para_comunicarse,EJECUTAR_RAFAGA_IO);
@@ -269,6 +270,7 @@ void solicitar_rafaga_de_io(int duracion,struct instancia_de_io *io_a_usar){
 bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacion){
     op_code respuesta;
     t_buffer *buffer = crear_buffer_de_envio_de_proceso(proceso->pid,proceso->ruta_del_archivo_de_pseudocodigo,proceso->tamanio);//tiene que tener el tamanio, el pid, el archivo de pseudocodigo
+    log_debug(kernel_debug_log,"EL nombre del archivo que estoy por mandar es: %s",proceso->ruta_del_archivo_de_pseudocodigo);
     crear_paquete(operacion,buffer,socket);
     respuesta = recibir_op_code(socket);
     if(respuesta == ACEPTAR_PROCESO){

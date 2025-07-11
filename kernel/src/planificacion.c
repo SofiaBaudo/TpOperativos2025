@@ -89,6 +89,7 @@ void *planificador_corto_plazo_fifo(){
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas); 
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu);
+        log_debug(kernel_debug_log,"La cpu libre es: %i",cpu_aux->id_cpu);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         struct pcb* proceso = sacar_primero_de_la_lista(READY);
         cambiarEstado(proceso,READY,EXEC);

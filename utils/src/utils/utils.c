@@ -964,7 +964,7 @@ int deserializar_tamanio_memoria(t_paquete *paquete){
 	return tamanio;
 }
 
-char *deserializar_nombre_archivo_memoria(t_paquete *paquete){
+/*char *deserializar_nombre_archivo_memoria(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	stream+=2*sizeof(int);
     int longitud;
@@ -976,6 +976,20 @@ char *deserializar_nombre_archivo_memoria(t_paquete *paquete){
     free(paquete->buffer);
     free(paquete);
 	return nombre_archivo;
+}*/
+char *deserializar_nombre_archivo_memoria(t_paquete *paquete){
+    void *stream = paquete->buffer->stream;
+    stream += 2 * sizeof(int);
+    int longitud;
+    memcpy(&longitud, stream, sizeof(int));
+    stream += sizeof(int);
+    char *nombre_archivo = malloc(longitud + 1);
+    memcpy(nombre_archivo, stream, longitud);
+    nombre_archivo[longitud] = '\0'; 
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+    return nombre_archivo;
 }
 
 t_buffer *buffer_nombre_de_instruccion(char *nombre){
@@ -1039,6 +1053,7 @@ char *deserializar_nombre_archivo_init_proc(t_paquete *paquete){
     stream+=sizeof(int);
     char *nombre = malloc(longitud+1);
     memcpy(nombre,stream,longitud);
+	nombre[longitud] = '\0'; // <- esto es fundamental
 	return nombre;
 }
 

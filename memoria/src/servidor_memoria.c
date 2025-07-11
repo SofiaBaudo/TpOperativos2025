@@ -72,6 +72,7 @@ void manejar_cliente_kernel(int cliente) {
                     int pid = deserializar_pid_memoria(proceso_paquete);
                     int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
                     char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
+                    log_warning(logger_memoria,"ANtes de armar la ruta el nombre es: %s",path_pseudocodigo);
                     char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);
                     log_debug(logger_memoria, "el pseudocodigo es: %s", path_absoluto);
                     if(inicializar_proceso(pid,tam_proceso,path_absoluto)){
