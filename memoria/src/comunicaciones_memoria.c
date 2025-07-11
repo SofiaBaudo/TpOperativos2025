@@ -1,6 +1,5 @@
 #include <comunicaciones_memoria.h>
 
-
 void enviar_instruccion(int socket_destino, char* instruccion) {
     log_debug(logger_memoria, "se esta por enviar la instruccion");
     t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
@@ -9,67 +8,11 @@ void enviar_instruccion(int socket_destino, char* instruccion) {
     return;
 }
 
-struct t_pedido_lectura_memoria* recibir_pedido_lectura_memoria(int socket_cliente) {
-    t_buffer *buffer = crear_buffer_vacio();
-    // Recibir el tamaño del buffer
-    if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
-        free(buffer);
-        return NULL;
-    }
-    buffer->stream = malloc(buffer->size);
-    if (recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL) != buffer->size) {
-        free(buffer->stream);
-        free(buffer);
-        return NULL;
-    }
-    t_pedido_lectura_memoria* pedido = malloc(sizeof(t_pedido_lectura_memoria));
-    int offset = 0;
-    memcpy(&(pedido->pid), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
-    memcpy(&(pedido->direccion_fisica), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
-    memcpy(&(pedido->tamanio), buffer->stream + offset, sizeof(int));
-    // Liberar buffer
-    free(buffer->stream);
-    free(buffer);
-    return pedido;
-}
-
 // Envía un buffer de memoria leído a la CPU como un solo paquete (tamaño + datos juntos)
 
 void enviar_valor_leido(int socket_destino, void* buffer, size_t tamanio) {
     enviar_entero(socket_destino,555);
     return;
-}
-
-// Recibe un pedido de escritura de memoria como paquete (buffer serializado)
-struct t_pedido_escritura_memoria* recibir_pedido_escritura_memoria(int socket_cliente) {
-    t_buffer *buffer = crear_buffer_vacio();
-    // Recibir el tamaño del buffer
-    if (recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) != sizeof(int)) {
-        free(buffer);
-        return NULL;
-    }
-    buffer->stream = malloc(buffer->size);
-    if (recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL) != buffer->size) {
-        free(buffer->stream);
-        free(buffer);
-        return NULL;
-    }
-    t_pedido_escritura_memoria* pedido = malloc(sizeof(t_pedido_escritura_memoria));
-    int offset = 0;
-    memcpy(&(pedido->pid), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
-    memcpy(&(pedido->direccion_logica), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
-    // El resto del buffer es el string/datos a escribir
-    pedido->tamanio = buffer->size - offset;
-    pedido->buffer = malloc(pedido->tamanio);
-    memcpy(pedido->buffer, buffer->stream + offset, pedido->tamanio);
-    // Liberar buffer
-    free(buffer->stream);
-    free(buffer);
-    return pedido;
 }
 
 void destruir_pedido_escritura_memoria(t_pedido_escritura_memoria* pedido) {

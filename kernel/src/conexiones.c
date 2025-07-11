@@ -283,6 +283,7 @@ bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacio
     log_debug(kernel_debug_log,"EL nombre del archivo que estoy por mandar es: %s",proceso->ruta_del_archivo_de_pseudocodigo);
     crear_paquete(operacion,buffer,socket);
     respuesta = recibir_op_code(socket);
+    log_error(kernel_debug_log,"La respuesta de memoria es: %i",respuesta);
     if(respuesta == ACEPTAR_PROCESO){
         return true;
     }

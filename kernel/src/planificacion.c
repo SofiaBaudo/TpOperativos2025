@@ -84,7 +84,6 @@ void *planificador_corto_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]); //espero a que llegue un proceso a ready.
         sem_wait(&CPUS_LIBRES); //espero a que haya cpus libres.
-        //usleep(3000000); 
         log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas); 
@@ -160,17 +159,16 @@ void *planificador_mediano_plazo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
         log_warning(kernel_debug_log,"SE SUSPENDIO UN PROCESO");
-        usleep(2000000);
+        intentar_iniciar();
         //agregar semaforo de uno a la vez como vector
         struct pcb *proceso = obtener_copia_primer_proceso_de(SUSP_BLOCKED);
         int socket = iniciar_conexion_kernel_memoria();
+        enviar_op_code(socket,SUSPENDER_PROCESO);
         t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
         crear_paquete(SUSPENDER_PROCESO,buffer,socket);
         log_warning(kernel_debug_log,"PAQUETE ENVIADO A MEMORIA");
-        usleep(2000000);
         recibir_op_code(socket);
         cerrar_conexion(socket);
-        intentar_iniciar();
     }
 }
 
@@ -179,6 +177,7 @@ void *planificador_mediano_plazo_fifo(){
     sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
     sem_wait(&INTENTAR_INICIAR_SUSP_READY);
     sem_wait(&UNO_A_LA_VEZ[SUSP_READY]);
+    log_debug(kernel_debug_log,"ESTOY EN EL PLANI DE MEDIANO PLAZO FIFO");
     struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
         bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO); //Darle una vuelta de tuerca para que memoria sepa que es un proceso suspendido 
         log_debug(kernel_debug_log,"Conexion con memoria cerrada");
@@ -237,7 +236,6 @@ void* funcion_para_bloqueados(void* arg){
     struct pcb* proceso = (struct pcb*) arg; //lo hacemos para que pasen los argumentos al hilo.
     usleep(atoi(TIEMPO_SUSPENSION)); //preguntar
     log_warning(kernel_debug_log,"TERMINO EL TIEMPO DE SUSPENSION");
-    usleep(2000000);
     pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
     int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
     pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
@@ -802,6 +800,7 @@ void liberar_proceso(struct pcb *proceso){
 
 void intentar_iniciar(){
     if(!list_is_empty(colaEstados[SUSP_READY])){
+        log_debug(kernel_debug_log,"ENTRE AL IF QUE NO DEBERIA HABER ENTRADO");
         sem_post(&INTENTAR_INICIAR_SUSP_READY);
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
             actualizar_proximo_a_consultar(SUSP_READY);

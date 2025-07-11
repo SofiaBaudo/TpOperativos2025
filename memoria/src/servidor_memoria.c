@@ -86,7 +86,9 @@ void manejar_cliente_kernel(int cliente) {
                     }
                 }
                 case INICIALIZAR_PROCESO_SUSPENDIDO: {
+                    log_debug(logger_memoria,"ESTOY EN CASO DESUSUSPENCION_PROCESO");
                     t_paquete *proceso_paquete = recibir_paquete(cliente);
+                    log_debug(logger_memoria, "recibi el paquete");
                     int pid = deserializar_pid_memoria(proceso_paquete);
                     int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
                     //char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
@@ -97,9 +99,6 @@ void manejar_cliente_kernel(int cliente) {
                     }
                     // Intentar reanudar el proceso desde SWAP
                     reanudar_proceso_desde_kernel(pid, tam_proceso,cliente);
-                    // Liberar memoria del paquete
-                    //free(path_pseudocodigo);
-                    free(proceso_paquete);
                     break;
                 }
                 case FINALIZAR_PROCESO: {
@@ -112,11 +111,14 @@ void manejar_cliente_kernel(int cliente) {
                 }
                 case SUSPENDER_PROCESO: {
                     // Recibir el PID del proceso a suspender
+                    log_debug(logger_memoria,"ESTOY EN CASO SUSPENCION_PROCESO");
                     t_paquete *proceso_paquete = recibir_paquete(cliente);
+                    log_debug(logger_memoria, "recibi el paquete");
+                    usleep(2000000);
                     int pid = deserializar_pid_memoria(proceso_paquete);
                     log_warning(logger_memoria,"PROCESO SUSPENDIDO EN MEMORIA");
-                    usleep(5000000);
-                    if (pid <= 0) {
+                    usleep(2000000);
+                    if (pid < 0) {
                         log_error(logger_memoria, "PID inválido recibido para suspensión: %d", pid);
                         enviar_op_code(cliente, RECHAZO_PROCESO);
                         break;

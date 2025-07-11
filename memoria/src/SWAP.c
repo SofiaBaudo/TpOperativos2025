@@ -316,7 +316,7 @@ void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
             break;
         }
     }
-    
+    log_debug(logger_memoria,"Tiene paginas en swap: %i",tiene_paginas_en_swap);
     if (!tiene_paginas_en_swap) {
         log_warning(logger_memoria, "No se encontraron páginas en SWAP para el proceso PID %d", pid);
         enviar_op_code(cliente, RECHAZO_PROCESO);
@@ -328,9 +328,10 @@ void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
     
     // Verificar si hay espacio suficiente en memoria principal
     int marcos_libres = contar_marcos_libres();
+    log_debug(logger_memoria,"Los marcos libres son: %i",marcos_libres);
+    log_debug(logger_memoria,"Las paginas necesarias son: %i",paginas_necesarias);
     if (marcos_libres < paginas_necesarias) {
-        log_warning(logger_memoria, "No hay espacio suficiente en memoria para reanudar PID %d (necesita %d marcos, hay %d libres)", 
-                    pid, paginas_necesarias, marcos_libres);
+        log_warning(logger_memoria, "No hay espacio suficiente en memoria para reanudar PID %d (necesita %d marcos, hay %d libres)", pid, paginas_necesarias, marcos_libres);
         enviar_op_code(cliente, RECHAZO_PROCESO);
         return;
     }

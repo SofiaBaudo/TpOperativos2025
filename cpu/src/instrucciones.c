@@ -21,6 +21,7 @@ void* ejecutar_instrucciones(void* arg){
     //hacer un semaforo donde se verifica que llega un proceso. espera que llegue un proceso --> (pensar bien donde)
     //int cpu_id = *(int *)arg;
     log_debug(cpu_log_debug,"INICIANDO CICLO");
+    char *instruccionAnterior = "";
     t_instruccion instru;
     char *instruccionEntera;
     if(tengo_que_solicitar_pid_y_pc){

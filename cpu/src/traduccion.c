@@ -73,7 +73,6 @@ int conseguirMarco(int pid){
 }
 int buscarTlb(int numPag, int pid){
     log_debug(cpu_log_debug,"Estoy en TLB");
-    usleep(2000000);
     NodoEntradasTLB *aux = listaTlb;
    for(int i = 0; i < ENTRADAS_TLB; i++){  
         if(aux->info.numPag == numPag ){
