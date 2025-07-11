@@ -12,6 +12,9 @@ void *planificador_largo_plazo_proceso_mas_chico_primero();
 void *planificador_corto_plazo_fifo();
 void *planificador_corto_plazo_sjf_sin_desalojo();
 void *planificador_corto_plazo_sjf_con_desalojo();
+void *planificador_mediano_plazo();
+void *planificador_mediano_plazo_fifo();
+void *planificador_mediano_plazo_proceso_mas_chico_primero();
 
 //CREACION, INICIALIZACION Y FINALIZACION DE PROCESOS
 struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo);

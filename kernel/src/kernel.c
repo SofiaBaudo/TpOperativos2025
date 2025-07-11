@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
    pthread_t hilo_plani_corto_plazo;
    pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_fifo,NULL); //Creamos el hilo
    pthread_create(&hilo_mediano_plazo,NULL,planificador_mediano_plazo,NULL);
-   pthread_create(&hilo_plani_mediano_plazo_fifo,NULL,planificador_mediano_plazo_fifo,NULL);
+   pthread_create(&hilo_mediano_plazo_fifo,NULL,planificador_mediano_plazo_fifo,NULL);
    //pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_con_desalojo,NULL); //Creamos el hilo
    
    pthread_join(hilo_dispatch,NULL);
