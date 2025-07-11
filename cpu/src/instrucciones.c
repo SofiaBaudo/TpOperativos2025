@@ -30,6 +30,9 @@ void* ejecutar_instrucciones(void* arg){
     } 
     log_debug(cpu_log_debug, "el pc es: %i", pc);
     instruccionEntera = fetch(pid,pc);
+    if(strcmp(instruccionEntera,"NOOP")==0){
+        log_debug(cpu_log_debug,"Hasta aca todo bien");
+    }
     log_debug(cpu_log_debug,"La instruccion que llego es: %s",instruccionEntera);
     log_debug(cpu_log_debug, "finalizo el fetch");    
     instru = decode(instruccionEntera);
@@ -68,7 +71,6 @@ char* fetch(int pid,int pc){
     t_paquete *paquete = recibir_paquete(fd_conexion_dispatch_memoria);
     char *instruccion_recibida = deserializar_nombre_instruccion(paquete);
     log_debug(cpu_log_debug, "instruccion recibida %s", instruccion_recibida);
-    usleep(10000000);
     return instruccion_recibida;
 }
 
@@ -77,6 +79,7 @@ char* fetch(int pid,int pc){
 
 t_instruccion decode(char* instruccion_recibida){  
     t_instruccion instruccion;
+    log_debug(cpu_log_debug,"Antes del split el opcode es: %s",instruccion_recibida);
     obtenerInsPartes = string_split(instruccion_recibida, " "); //te recibe el string tal como es si no lo encuentra
     instruccion.opcode = obtenerInsPartes[0];
     instruccion.param1 = obtenerInsPartes[1];
@@ -99,13 +102,17 @@ void execute(t_instruccion instruccion, int pid){
     char *param1Char = instruccion.param1;
     int param1 = -5; 
     log_debug(cpu_log_debug, "el primer parametro es %s", param1Char);
-    if(strcmp(param1Char," ")!=0){
+    if(param1Char){ // que sea distinto de NULL
+    
     param1 = atoi(param1Char);
     }
+    log_debug(cpu_log_debug, "no entre al if");
     char *param2 = instruccion.param2;
     log_debug(cpu_log_debug,"el segundo parametro es %s", param2);
     if(strcmp(nombre_instruccion, "NOOP") == 0){
+        log_debug(cpu_log_debug,"ENTRE AL IF");
         instruccion_noop();
+        log_debug(cpu_log_debug,"Termine el noop");
         pc++;
     }
     else if(strcmp(nombre_instruccion, "WRITE") == 0){
@@ -134,7 +141,7 @@ void execute(t_instruccion instruccion, int pid){
 //Ejecucion Noop.
 
 void instruccion_noop(void){
-    log_info(logger,"## PID: %d - Ejecutando: <NOOP>",pid);
+    log_info(cpu_logger,"## PID: %d - Ejecutando: <NOOP>",pid);
 }
 
 //Ejecucion Write.

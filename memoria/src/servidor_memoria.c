@@ -176,7 +176,6 @@ void manejar_cliente_cpu(int cliente){
                     crear_paquete(MANDAR_INSTRUCCION,buffer,cliente);
                     //enviar_instruccion(cliente, instruccion);
                     log_debug(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: %s", pid, pc, instruccion);
-                    usleep(10000000);
                     free(instruccion);
                 }else{
                     enviar_instruccion(cliente, "");

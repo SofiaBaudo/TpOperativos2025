@@ -995,14 +995,15 @@ t_buffer *buffer_nombre_de_instruccion(char *nombre){
 
 char *deserializar_nombre_instruccion(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
-    int longitud;
-    memcpy(&longitud,stream,sizeof(int));
-    stream+=sizeof(int);
-    char *nombre = malloc(longitud+1);
-    memcpy(nombre,stream,longitud);
+	int longitud;
+	memcpy(&longitud, stream, sizeof(int));
+	stream += sizeof(int);
+	char *nombre = malloc(longitud + 1);
+	memcpy(nombre, stream, longitud);
+	nombre[longitud] = '\0';
 	free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
+	free(paquete->buffer);
+	free(paquete);
 	return nombre;
 }
 
@@ -1060,8 +1061,8 @@ char *deserializar_datos_escritura_memoria(t_paquete *paquete){
     char *nombre = malloc(data+1);
     memcpy(nombre,stream,data);
 	free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
+	free(paquete->buffer);
+	free(paquete);
 	return nombre;
 }
 
