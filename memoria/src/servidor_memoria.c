@@ -112,7 +112,10 @@ void manejar_cliente_kernel(int cliente) {
                 }
                 case SUSPENDER_PROCESO: {
                     // Recibir el PID del proceso a suspender
-                    int pid = recibir_entero(cliente);
+                    t_paquete *proceso_paquete = recibir_paquete(cliente);
+                    int pid = deserializar_pid_memoria(proceso_paquete);
+                    log_warning(logger_memoria,"PROCESO SUSPENDIDO EN MEMORIA");
+                    usleep(5000000);
                     if (pid <= 0) {
                         log_error(logger_memoria, "PID inválido recibido para suspensión: %d", pid);
                         enviar_op_code(cliente, RECHAZO_PROCESO);

@@ -159,11 +159,15 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
 void *planificador_mediano_plazo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
+        log_warning(kernel_debug_log,"SE SUSPENDIO UN PROCESO");
+        usleep(2000000);
         //agregar semaforo de uno a la vez como vector
         struct pcb *proceso = obtener_copia_primer_proceso_de(SUSP_BLOCKED);
         int socket = iniciar_conexion_kernel_memoria();
         t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
         crear_paquete(SUSPENDER_PROCESO,buffer,socket);
+        log_warning(kernel_debug_log,"PAQUETE ENVIADO A MEMORIA");
+        usleep(2000000);
         recibir_op_code(socket);
         cerrar_conexion(socket);
         intentar_iniciar();
@@ -231,17 +235,20 @@ void *planificador_mediano_plazo_proceso_mas_chico_primero(){
 
 void* funcion_para_bloqueados(void* arg){
     struct pcb* proceso = (struct pcb*) arg; //lo hacemos para que pasen los argumentos al hilo.
-    usleep(atoi(TIEMPO_SUSPENSION)); //preguntar 
+    usleep(atoi(TIEMPO_SUSPENSION)); //preguntar
+    log_warning(kernel_debug_log,"TERMINO EL TIEMPO DE SUSPENSION");
+    usleep(2000000);
     pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
     int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
     pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
-    if(pos!=-1){
+    if(pos!=-1){ //ESTA EN BLOQUEADO
+        log_warning(kernel_debug_log,"ADENTRO DEL IF DE FUNCION PARA BLOQUEADOS");
         sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
         cambiarEstado(proceso,BLOCKED,SUSP_BLOCKED); //A chequear
         sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
+        log_warning(kernel_debug_log,"Sem post hecho");
     }
     return NULL;
-  
 }
 
 //FUNCIONES AUXILIARES PARA EL SJF CON DESALOJO
@@ -306,7 +313,6 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
     }
     pcb->metricas_de_estado[NEW]++;
     pcb->metricas_de_tiempo[NEW] = temporal_create();
-    pcb->nombre_io_que_lo_bloqueo = NULL;
     return pcb;
 }
 
@@ -513,8 +519,8 @@ char *cambiar_a_string(Estado estado) {
         "BLOCKED",
         "EXEC",
         "EXIT_ESTADO",
-        "READY_SUSPEND",
-        "BLOCKED_SUSPEND"
+        "SUSP_READY",
+        "SUSP_BLOCKED"
     };
 
     if (estado < 0 || estado > SUSP_BLOCKED) {
@@ -701,6 +707,7 @@ void *poner_a_ejecutar(void *argumentos){
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     sem_post(io_aux->hay_procesos_esperando);
+                    log_warning(kernel_debug_log,"Hice el post del semaforo de la IO");
                 }
                 bloqueante = true;
                 break;
@@ -722,8 +729,8 @@ struct pcb* buscar_proceso_bloqueado_por_io(t_list *lista, char *nombre){
     t_list_iterator *iterador = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
     while (list_iterator_has_next(iterador)) { //es true mientras haya un siguiente al cual avanzar.
         struct pcb *proceso = list_iterator_next(iterador);
-        if (proceso->nombre_io_que_lo_bloqueo == nombre) { // comparo al pid que estoy apuntando con el pid que busco.
-            proceso->nombre_io_que_lo_bloqueo = NULL; //esto se hace para que si algun otro proceso llama a la funcion este deje de estar disponible
+        if (strcmp(proceso->nombre_io_que_lo_bloqueo,nombre)==0) { // comparo al pid que estoy apuntando con el pid que busco.
+            proceso->nombre_io_que_lo_bloqueo = ""; //esto se hace para que si algun otro proceso llama a la funcion este deje de estar disponible
             list_iterator_destroy(iterador); //delete del iterador.
             return proceso;
         }

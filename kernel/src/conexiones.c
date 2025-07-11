@@ -187,12 +187,16 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
     while (true){
         log_debug(kernel_debug_log,"Estoy esperando que un proceso quiera ejecutarme");
         sem_wait(io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
+        log_warning(kernel_debug_log,"INICIALIZARON MI SEMAFORO");
         struct pcb *proceso = buscar_proceso_a_realizar_io(io_aux);
-        enviar_op_code(io_aux->socket_io_para_comunicarse,EJECUTAR_RAFAGA_IO);
-        op_code operacion = recibir_op_code(io_aux->socket_io_para_comunicarse);
-        enviar_entero(io_aux->socket_io_para_comunicarse,proceso->proxima_rafaga_io);
+        log_warning(kernel_debug_log,"proceso %i encontrado",proceso->pid);
+        t_buffer * buffer = crear_buffer_rafaga_de_io(proceso->pid,proceso->proxima_rafaga_io);
+        crear_paquete(EJECUTAR_RAFAGA_IO,buffer,io_aux->socket_io_para_comunicarse);
+        log_warning(kernel_debug_log,"RAFAGA SOLICITADA");
         op_code respuesta = recibir_op_code(io_aux->socket_io_para_comunicarse);
+        log_warning(kernel_debug_log,"RESPUESTA RECIBIDA");
         int posicion = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
+        log_warning(kernel_debug_log,"POSICION ENCONTRADA: %i",posicion);
         switch(respuesta){
             case FIN_DE_IO: //Corresponde al enum de fin de IO
                 if(posicion!=-1){
@@ -227,17 +231,23 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 
                 liberar_io(io_aux);
                 break;  
-            default:
+                default:
                 log_debug(kernel_debug_log,"Entre al default de IO");
+            }
         }
-    }
 }
 
+int ver_si_esta_bloqueado_y_devolver_posicion(struct pcb *proceso){
+    pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
+    int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
+    pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
+    return pos;
+}
 
 int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso con el atributo del tamaño ya agarrado de cpu
-   int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
-   enviar_op_code(fd_kernel_memoria, HANDSHAKE_KERNEL); //avisa que es Kernel.
-   op_code respuesta = recibir_op_code(fd_kernel_memoria); //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
+    int fd_kernel_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
+    enviar_op_code(fd_kernel_memoria, HANDSHAKE_KERNEL); //avisa que es Kernel.
+    op_code respuesta = recibir_op_code(fd_kernel_memoria); //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
    if (respuesta == HANDSHAKE_ACCEPTED){
        log_info(kernel_logger, "Conexion con memoria establecida correctamente");
        op_code esperar_a_memoria = recibir_op_code(fd_kernel_memoria);
@@ -365,20 +375,15 @@ int cantidad_de_instancias_conectadas(t_list *lista,char*nombre){
 }
 
 struct pcb* buscar_proceso_a_realizar_io(struct instancia_de_io *io_aux){
+    log_debug(kernel_debug_log,"BUSCANDO PROCESO BLOQUEADO POR IO");
     pthread_mutex_lock(&mx_usar_cola_estado[SUSP_BLOCKED]);
     struct pcb *proceso = buscar_proceso_bloqueado_por_io(colaEstados[SUSP_BLOCKED],io_aux->nombre);
     pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_BLOCKED]);
+    log_debug(kernel_debug_log,"YA SALI DE BUSCAR EL PROCESO");
     if(!proceso){
         pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
         proceso = buscar_proceso_bloqueado_por_io(colaEstados[BLOCKED],io_aux->nombre);
         pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
         }
         return proceso;
-}
-
-int ver_si_esta_bloqueado_y_devolver_posicion(struct pcb *proceso){
-    pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
-    int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
-    pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
-    return pos;
 }

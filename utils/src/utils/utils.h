@@ -277,4 +277,7 @@ char *deserializar_nombre_archivo_init_proc(t_paquete *paquete);
 
 int deserializar_tamanio_escritura_memoria(t_paquete *paquete);
 char *deserializar_datos_escritura_memoria(t_paquete *paquete);
+
+t_buffer *crear_buffer_rafaga_de_io(int pid, int milisegundos);
+int deserializar_milisegundos(t_paquete *paquete);
 #endif

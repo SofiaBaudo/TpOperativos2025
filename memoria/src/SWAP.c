@@ -271,7 +271,7 @@ void escribir_pagina_a_swap_callback(int nro_pagina, int nro_marco, void* contex
 
 // Función para suspender un proceso (llamada desde el servidor)
 void suspender_proceso_desde_kernel(int pid, int cliente) {
-    log_info(logger_memoria, "## PID: <%d> - Iniciando suspensión del proceso", pid);
+    log_debug(logger_memoria, "## PID: <%d> - Iniciando suspensión del proceso", pid);
     
     // Obtener la tabla de páginas del proceso
     t_tabla_proceso* proceso = obtener_tabla_proceso(pid);
@@ -299,7 +299,7 @@ void suspender_proceso_desde_kernel(int pid, int cliente) {
     // Eliminar las tablas de páginas del proceso (liberando memoria)
     eliminar_tabla_proceso(pid);
     
-    log_info(logger_memoria, "## PID: <%d> - Proceso suspendido exitosamente", pid);
+    log_debug(logger_memoria, "## PID: <%d> - Proceso suspendido exitosamente", pid);
     enviar_op_code(cliente, SUSPENSION_CONFIRMADA);
 }
 

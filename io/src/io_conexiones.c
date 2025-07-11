@@ -6,19 +6,20 @@ int tiempo_de_suspension = 0;
 
 void esperar_peticion(){
     while (1){
-        printf("Entre al while y estoy esperando \n");
-        op_code operacion = recibir_op_code(fd_kernel);
-        printf("\n");
+        log_info(io_logger,"Entre al while y estoy esperando");
+        t_paquete* paquete = recibir_paquete(fd_kernel);
+        log_info(io_logger,"RECIBI EL PAQUETE");
+        op_code operacion = obtener_codigo_de_operacion(paquete);
+        int pid = deserializar_pid_memoria(paquete);
+        int tiempo_de_suspension = deserializar_milisegundos(paquete);
+        log_info(io_logger, "recibi la operacion: %i", operacion); //tendria que ser 16
         if(operacion == EJECUTAR_RAFAGA_IO){
-        log_debug(io_debug_log,"estoy en el if dentro de operacion = ejecutar_rafaga");
-        enviar_op_code(fd_kernel,RAFAGA_ACEPTADA); //falta implementar que no se este ejecutando ninguna rafaga
-        tiempo_de_suspension = recibir_entero(fd_kernel);
-        if(tiempo_de_suspension>0){
-        log_debug(io_debug_log,"estoy en el if de tiempo de suspension");
-        
-        ejecutarPeticion(tiempo_de_suspension);
-        tiempo_de_suspension  = 0;
-        }
+            if(tiempo_de_suspension>0){
+                log_info(io_logger,"## PID: <%i> - Inicio de IO - Tiempo: <%i>", pid,tiempo_de_suspension);
+                ejecutarPeticion(tiempo_de_suspension);
+                tiempo_de_suspension  = 0;
+                log_info(io_logger,"## PID: <%i> - Fin de IO",pid);
+            }
        }
        operacion = -1; //valor para que deje de estar en "RAFAGA_ACEPTADA"
     }
@@ -28,7 +29,7 @@ void esperar_peticion(){
 void ejecutarPeticion(int tiempo){
     printf("En proceso y recibi: %i ", tiempo);
     printf("\n");
-    usleep(tiempo*1000000); //es como que procesa el tiempo que dura la peticion
-    enviar_op_code(fd_kernel,FIN_DE_IO);
+    usleep(tiempo*1000); //es como que procesa el tiempo que dura la peticion
+    enviar_op_code(fd_kernel,FIN_DE_IO);    
     //avisar_que_finalice();
 }
