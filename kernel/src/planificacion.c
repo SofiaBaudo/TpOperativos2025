@@ -639,6 +639,9 @@ void *poner_a_ejecutar(void *argumentos){
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo_init_proc(paquete);
                 int tamanio = deserializar_tamanio (paquete);
+                log_debug(kernel_debug_log,"El nombre del archivo es: %s",nombre_archivo);
+                log_debug(kernel_debug_log,"El tamanio del archivo es: %i",tamanio);
+                usleep(3000000);
                 crear_proceso(tamanio,nombre_archivo);
                 log_debug(kernel_debug_log,"Proceso creado");
                 proceso->pc++;

@@ -1035,7 +1035,7 @@ char *deserializar_char_asterisco(t_paquete *paquete){
 
 char *deserializar_nombre_archivo_init_proc(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
-	stream+=2*sizeof(int);
+	stream+=3*sizeof(int);
     int longitud;
     memcpy(&longitud,stream,sizeof(int));
     stream+=sizeof(int);

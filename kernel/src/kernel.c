@@ -26,9 +26,11 @@ int main(int argc, char* argv[]){
    //crear_proceso(1,"f4");
 
    pthread_t hilo_dispatch;
+   pthread_t hilo_io;
    //pthread_t hilo_funcion_que_duerme;
    pthread_t hilo_plani_largo_plazo;
    pthread_create(&hilo_dispatch,NULL,atender_kernel_dispatch,NULL); //Creamos el hilo
+   pthread_create(&hilo_io,NULL,atender_kernel_io,NULL); //Creamos el hilo
    //pthread_detach(hilo_dispatch);
    //pthread_create(&hilo_funcion_que_duerme,NULL,funcion_que_duerme,NULL);
    pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
@@ -39,6 +41,7 @@ int main(int argc, char* argv[]){
    //pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_con_desalojo,NULL); //Creamos el hilo
    pthread_join(hilo_dispatch,NULL);
    pthread_join(hilo_plani_largo_plazo,NULL);
+   pthread_join(hilo_io,NULL);
    //pthread_join(hilo_funcion_que_duerme,NULL);
    pthread_join(hilo_plani_corto_plazo,NULL);
    
