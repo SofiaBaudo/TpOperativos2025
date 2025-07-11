@@ -283,6 +283,7 @@ bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacio
 }
 
 int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
+    log_debug(kernel_debug_log,"EL nombre a buscar es: %s",nombre_io);
     if (list_is_empty(lista)) {
         log_debug(kernel_debug_log, "La lista no tiene ninguna instancia de IO\n");
         return -1;
@@ -292,6 +293,7 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
     int pos = 0;
 
     while (list_iterator_has_next(iterador)) {
+        log_error(kernel_debug_log, "entre al while de iterar");
         struct instancia_de_io *io_aux = list_iterator_next(iterador);
         if (strcmp(io_aux->nombre, nombre_io) == 0) {
             list_iterator_destroy(iterador);

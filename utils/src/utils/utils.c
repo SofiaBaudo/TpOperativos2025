@@ -465,6 +465,7 @@ char *deserializar_nombre_io(t_paquete *paquete){
     stream+=sizeof(int);
     char *nombre = malloc(longitud+1);
     memcpy(nombre,stream,longitud);
+	nombre[longitud] = '\0';
 	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
@@ -479,6 +480,7 @@ char *deserializar_nombre_syscall_io(t_paquete *paquete){
     stream+=sizeof(int);
     char *nombre = malloc(longitud+1);
     memcpy(nombre,stream,longitud);
+	nombre[longitud] = '\0'; // Muy importante
 	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
@@ -600,9 +602,9 @@ int deserializar_cant_segundos(t_paquete *paquete){
 	stream+=2*sizeof(int);
     int tamanio;
     memcpy(&tamanio,stream,sizeof(int));
-	free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
+	//free(paquete->buffer->stream);
+    //free(paquete->buffer);
+    //free(paquete);
 	return tamanio;
 }
 

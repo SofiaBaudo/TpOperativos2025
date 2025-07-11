@@ -671,11 +671,18 @@ void *poner_a_ejecutar(void *argumentos){
                 bloqueante = true; 
                 break;   
             case IO:
+                log_warning(kernel_debug_log,"Estoy en la syscall IO");
                 int milisegundos = deserializar_cant_segundos(paquete);
+                log_debug(kernel_debug_log,"La cantidad de milisegundos es: %i",milisegundos);
                 proceso->proxima_rafaga_io = milisegundos;
                 proceso->nombre_io_que_lo_bloqueo = deserializar_nombre_syscall_io(paquete);
+                log_debug(kernel_debug_log,"EL nombre de la io a usar es: %s",proceso->nombre_io_que_lo_bloqueo);
+                pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                 int pos = buscar_IO_solicitada(ios_conectados,proceso->nombre_io_que_lo_bloqueo);
+                pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
+                log_warning(kernel_debug_log,"DEspues de retornal la posicion");
                 if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
+                    log_warning(kernel_debug_log,"adentro del IF de io");
                     finalizar_proceso(proceso,EXEC);
                     liberar_cpu(cpu_en_la_que_ejecuta);
                 }
@@ -690,7 +697,7 @@ void *poner_a_ejecutar(void *argumentos){
                     //Inicializamos el cronometro de bloqueado
                     proceso->tiempo_bloqueado = temporal_create();
                     liberar_cpu(cpu_en_la_que_ejecuta);
-                    pthread_mutex_lock(&mx_usar_recurso[IO]);
+                    pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     sem_post(io_aux->hay_procesos_esperando);
