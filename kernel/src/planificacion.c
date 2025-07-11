@@ -641,7 +641,6 @@ void *poner_a_ejecutar(void *argumentos){
                 int tamanio = deserializar_tamanio (paquete);
                 log_debug(kernel_debug_log,"El nombre del archivo es: %s",nombre_archivo);
                 log_debug(kernel_debug_log,"El tamanio del archivo es: %i",tamanio);
-                usleep(3000000);
                 crear_proceso(tamanio,nombre_archivo);
                 log_debug(kernel_debug_log,"Proceso creado");
                 proceso->pc++;
@@ -656,7 +655,6 @@ void *poner_a_ejecutar(void *argumentos){
                 //tener en cuenta lo del mediano plazo
                 enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
                 log_debug(kernel_debug_log,"Se envio el opcode: %i",SYSCALL_EJECUTADA);
-                usleep(1000000);
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:

@@ -187,8 +187,10 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
     while (true){
         sem_wait(io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
         struct pcb *proceso = buscar_proceso_a_realizar_io(io_aux);
+        enviar_op_code(io_aux->socket_io_para_comunicarse,EJECUTAR_RAFAGA_IO);
+        op_code operacion = recibir_op_code(io_aux->socket_io_para_comunicarse);
         enviar_entero(io_aux->socket_io_para_comunicarse,proceso->proxima_rafaga_io);
-        int respuesta = recibir_entero(io_aux->socket_io_para_comunicarse);
+        op_code respuesta = recibir_op_code(io_aux->socket_io_para_comunicarse);
         int posicion = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
         switch(respuesta){
             case FIN_DE_IO: //Corresponde al enum de fin de IO
@@ -224,6 +226,8 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 
                 liberar_io(io_aux);
                 break;  
+            default:
+                log_debug(kernel_debug_log,"Entre al default de IO");
         }
     }
 }

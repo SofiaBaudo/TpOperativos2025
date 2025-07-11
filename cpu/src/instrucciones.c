@@ -216,6 +216,7 @@ void mandar_syscall(t_instruccion instruccion){
         return;
     }
     else if(strcmp(instruccion.opcode, "IO") == 0){
+        log_debug(cpu_log_debug,"ESTOY EN EL IF DE IO");
         int milisegundos = atoi(instruccion.param2);
         t_buffer *buffer = crear_buffer_instruccion_io(instruccion.param1,milisegundos,&pid,&pc);
         crear_paquete(IO, buffer, fd_conexion_kernel_dispatch);

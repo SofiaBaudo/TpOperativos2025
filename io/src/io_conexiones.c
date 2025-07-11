@@ -29,5 +29,6 @@ void ejecutarPeticion(int tiempo){
     printf("En proceso y recibi: %i ", tiempo);
     printf("\n");
     usleep(tiempo*1000000); //es como que procesa el tiempo que dura la peticion
+    enviar_op_code(fd_kernel,FIN_DE_IO);
     //avisar_que_finalice();
 }

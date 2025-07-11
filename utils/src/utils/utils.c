@@ -588,15 +588,13 @@ int deserializar_tamanio(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	stream+=2*sizeof(int);
     int tamanio;
-	int longitud;
-    memcpy(&longitud,stream,sizeof(int));
-    stream+=sizeof(int)+longitud;
     memcpy(&tamanio,stream,sizeof(int));
 	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
 	return tamanio;
 }
+
 int deserializar_cant_segundos(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	stream+=2*sizeof(int);
