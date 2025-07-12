@@ -254,7 +254,7 @@ void actualizarContadores(int numPag){
         aux = aux->sgte;
     }
 }
-void desalojarProcesoTLB(int pid){
+void desalojarProcesoTLB(){
     NodoEntradasTLB *aux = listaTlb;
     int contador = 0;
     while(contador < ENTRADAS_TLB){
@@ -263,6 +263,7 @@ void desalojarProcesoTLB(int pid){
         aux->info.numPag = -1;
         aux->info.tiempoSinReferencia = -1;
         aux = aux->sgte;
+        contador++;
     }
 }
 

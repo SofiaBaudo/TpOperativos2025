@@ -646,8 +646,8 @@ void *poner_a_ejecutar(void *argumentos){
                 int tamanio = deserializar_tamanio (paquete);
                 log_debug(kernel_debug_log,"El nombre del archivo es: %s",nombre_archivo);
                 log_debug(kernel_debug_log,"El tamanio del archivo es: %i",tamanio);
-                crear_proceso(tamanio,nombre_archivo);
                 log_debug(kernel_debug_log,"Proceso creado");
+                crear_proceso(tamanio,nombre_archivo);
                 proceso->pc++;
                 enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
                 //avisar que termine
@@ -657,9 +657,8 @@ void *poner_a_ejecutar(void *argumentos){
                 //Hay que sacarlo de la lista de exit
                 finalizar_proceso(proceso,EXEC);
                 liberar_cpu(cpu_en_la_que_ejecuta);
-                //tener en cuenta lo del mediano plazo
                 enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
-                log_debug(kernel_debug_log,"Se envio el opcode: %i",SYSCALL_EJECUTADA);
+                //tener en cuenta lo del mediano plazo
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
@@ -686,9 +685,9 @@ void *poner_a_ejecutar(void *argumentos){
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 log_warning(kernel_debug_log,"DEspues de retornal la posicion");
                 if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
+                    liberar_cpu(cpu_en_la_que_ejecuta);
                     log_warning(kernel_debug_log,"adentro del IF de io");
                     finalizar_proceso(proceso,EXEC);
-                    liberar_cpu(cpu_en_la_que_ejecuta);
                 }
                 else{
                     log_info(kernel_logger,"## (<PID: %i>) - Bloqueado por IO: <%s>",proceso->pid,proceso->nombre_io_que_lo_bloqueo);
@@ -753,6 +752,7 @@ void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_d
 }
 
 void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
+    intentar_iniciar();
     sacar_proceso_de_cola_de_estado(proceso,estadoInicial);
     cambiarEstado(proceso,estadoInicial,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
@@ -766,7 +766,6 @@ void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
     listar_metricas_de_tiempo_y_estado(proceso); 
     log_info(kernel_logger,"## (<PID: %i>) - Finaliza el proceso",proceso->pid);
     liberar_proceso(proceso); //free de todos los punteros, lo demas se va con el free (proceso) 
-    intentar_iniciar();
 }
 
 void listar_metricas_de_tiempo_y_estado(struct pcb *proceso){

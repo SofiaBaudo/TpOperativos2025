@@ -211,9 +211,12 @@ void mandar_syscall(t_instruccion instruccion){
         crear_paquete(EXIT, buffer, fd_conexion_kernel_dispatch);
         pc++;
         log_debug(cpu_log_debug,"LE ENVIE EL EXIT A KERNEL");
-        recibir_op_code(fd_conexion_kernel_dispatch); //este opcode avisa que memoria ya autorizó que el proceso termine
-        desalojarProcesoTLB(pid);
+        desalojarProcesoTLB();
+        log_debug(cpu_log_debug, "termine de desalojar tlb");
         desalojarProcesoCache(pid);
+        log_debug(cpu_log_debug, "termine de desalojar todo");
+        recibir_op_code(fd_conexion_kernel_dispatch); //este opcode avisa que memoria ya autorizó que el proceso termine
+        log_debug(cpu_log_debug, "recibi el opcode");
         return;
     }
     else if(strcmp(instruccion.opcode, "IO") == 0){
