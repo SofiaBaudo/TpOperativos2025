@@ -321,9 +321,9 @@ t_buffer * crear_buffer_instruccion_io (char* nombre, int milisegundos, int *pid
 	buffer_aux->offset = 0;
 	buffer_aux->stream = malloc(buffer_aux->size); //guarda el tamaño del buffer en stream.
 	
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int)); //como un fwrite.
+	memcpy(buffer_aux->stream + buffer_aux->offset, pid, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pc, sizeof(int)); //como un fwrite.
+	memcpy(buffer_aux->stream + buffer_aux->offset, pc, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);
 	memcpy(buffer_aux->stream + buffer_aux->offset, &milisegundos, sizeof(int)); //como un fwrite.
 	buffer_aux->offset += sizeof(int);

@@ -31,16 +31,13 @@ void* ejecutar_instrucciones(void* arg){
     } 
     log_debug(cpu_log_debug, "el pc es: %i", pc);
     instruccionEntera = fetch(pid,pc);
-    if(strcmp(instruccionEntera,"NOOP")==0){
-        log_debug(cpu_log_debug,"Hasta aca todo bien");
-    }
     log_debug(cpu_log_debug,"La instruccion que llego es: %s",instruccionEntera);
     log_debug(cpu_log_debug, "finalizo el fetch");    
     instru = decode(instruccionEntera);
     log_debug(cpu_log_debug,"La instruccion que devolvio: %s",instru.opcode);
     log_debug(cpu_log_debug,"terminado el split de decode");
     execute(instru, pid);
-    log_debug(cpu_log_debug, "mande la syscall?");
+    log_debug(cpu_log_debug, "mande la syscall");
     check_interrupt(); //ponerlo en hilo.    
     return NULL;
 }
@@ -62,8 +59,6 @@ void obtenerDelKernelPcPid(){
 
 char* fetch(int pid,int pc){
     log_info(cpu_logger,"## PID: <%d> - FETCH - Program Counter: <%d>",pid, pc);
-    //enviar_op_code(FETCH_INSTRUCCION,fd_conexion_dispatch_memoria);
-    //recibir_op_code(fd_conexion_dispatch_memoria);
     t_buffer *buffer = crear_buffer_cpu(pid, pc);
     crear_paquete(FETCH_INSTRUCCION, buffer, fd_conexion_dispatch_memoria);
     log_debug(cpu_log_debug, "el pid es %i",pid);
@@ -101,6 +96,7 @@ t_instruccion decode(char* instruccion_recibida){
 void execute(t_instruccion instruccion, int pid){
     char *nombre_instruccion = instruccion.opcode;
     char *param1Char = instruccion.param1;
+    int param1;
     log_debug(cpu_log_debug, "el primer parametro es %s", param1Char);
     if(param1Char){ // que sea distinto de NULL
     param1 = atoi(param1Char);
