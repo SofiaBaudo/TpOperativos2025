@@ -184,7 +184,8 @@ void* manejar_kernel_io(void *socket_io){
 
 void *esperar_io_proceso(void *instancia_de_io) { //el aux
     struct instancia_de_io *io_aux = instancia_de_io;
-    while (true){
+    bool io_conectada = true;
+    while (io_conectada){
         log_debug(kernel_debug_log,"Estoy esperando que un proceso quiera ejecutarme");
         sem_wait(io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
         struct pcb *proceso = buscar_proceso_a_realizar_io(io_aux);
@@ -209,7 +210,10 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 }
                 break;
             case DESCONEXION_IO: //desconexion de la instancia con la que estamos trabajando
-                log_debug(kernel_debug_log,"entre al case DESCONEXION IO");
+                io_conectada = false;
+                log_debug(kernel_debug_log,"ENTRE AL CASE DESCONEXION IO");
+                posicion = buscar_io_especifica(ios_conectados,io_aux->socket_io_para_comunicarse);
+                list_remove(ios_conectados,posicion);
                 if(posicion ==-1){                   
                     finalizar_proceso(proceso,SUSP_BLOCKED);
                 }
@@ -217,8 +221,6 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                     finalizar_proceso(proceso,BLOCKED);
                 }
                 pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
-                posicion = buscar_io_especifica(ios_conectados,io_aux->socket_io_para_comunicarse);
-                list_remove(ios_conectados,posicion);
                 int cantidad_restante = cantidad_de_instancias_conectadas(ios_conectados,io_aux->nombre);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 if(cantidad_restante==0){
@@ -233,6 +235,7 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 log_debug(kernel_debug_log,"Entre al default de IO");
             }
         }
+    log_debug(kernel_debug_log,"SALI DEL WHILE TRUE EN IO");
 }
 
 int ver_si_esta_bloqueado_y_devolver_posicion(struct pcb *proceso){

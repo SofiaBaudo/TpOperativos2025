@@ -1,7 +1,20 @@
 #include <inicializarIO.h>
 
+
+void manejar_sigint(int signum) {
+    log_info(io_logger, "SIGINT capturado. Avisando al Kernel que el IO se desconecta...");
+
+    if (fd_kernel > 0) {
+        enviar_op_code(fd_kernel, DESCONEXION_IO);
+        close(fd_kernel);
+    }
+
+    log_info(io_logger, "IO desconectado correctamente");
+    exit(0);
+}
 void inicializar_IO(char *nombre){
     printf("IO inicializado");
+    signal(SIGINT, manejar_sigint);
     inicializar_logs();
     inicializar_configs();
     fd_kernel = crear_conexion(IP_KERNEL, PUERTO_KERNEL);
@@ -16,7 +29,6 @@ void inicializar_IO(char *nombre){
     t_buffer *buffer_aux = crear_buffer_io_nombre(nombre);
     crear_paquete(IO_NOMBRE,buffer_aux,fd_kernel);
     esperar_peticion();
-    enviar_op_code(fd_kernel,DESCONEXION_IO);
     }
 }
 

@@ -3,3 +3,4 @@
 void inicializar_IO(char *nombre);
 void inicializar_logs();
 void inicializar_configs();
+void manejar_sigint(int signum);

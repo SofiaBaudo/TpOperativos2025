@@ -1,5 +1,8 @@
 #include <utils/utils.h>
 #include <stdio.h>
+#include <signal.h> 
+#include <unistd.h>   // Para close(), write(), etc.
+#include <stdlib.h>   // Para exit()
 #include <pthread.h>
 //VARIABLES GLOBALES
 extern t_log *io_logger;
