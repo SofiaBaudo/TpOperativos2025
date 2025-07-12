@@ -16,6 +16,7 @@ void inicializar_IO(char *nombre){
     t_buffer *buffer_aux = crear_buffer_io_nombre(nombre);
     crear_paquete(IO_NOMBRE,buffer_aux,fd_kernel);
     esperar_peticion();
+    enviar_op_code(fd_kernel,DESCONEXION_IO);
     }
 }
 

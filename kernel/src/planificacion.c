@@ -791,11 +791,10 @@ void liberar_proceso(struct pcb *proceso){
         }
     }
     //free(proceso->ruta_del_archivo_de_pseudocodigo);
-    log_debug(kernel_debug_log,"Antes de lo del nombre de IO");
-    if(proceso->nombre_io_que_lo_bloqueo){
-    free(proceso->nombre_io_que_lo_bloqueo);
-    }
-    log_debug(kernel_debug_log,"DESPUES de lo del nombre de IO");
+    /*if(proceso->nombre_io_que_lo_bloqueo){
+        free(proceso->nombre_io_que_lo_bloqueo);
+        ARREGLAR MEMORY LEAK
+    }*/
     free(proceso);
 }
 

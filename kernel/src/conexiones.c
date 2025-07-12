@@ -187,16 +187,11 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
     while (true){
         log_debug(kernel_debug_log,"Estoy esperando que un proceso quiera ejecutarme");
         sem_wait(io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
-        log_warning(kernel_debug_log,"INICIALIZARON MI SEMAFORO");
         struct pcb *proceso = buscar_proceso_a_realizar_io(io_aux);
-        log_warning(kernel_debug_log,"proceso %i encontrado",proceso->pid);
         t_buffer * buffer = crear_buffer_rafaga_de_io(proceso->pid,proceso->proxima_rafaga_io);
         crear_paquete(EJECUTAR_RAFAGA_IO,buffer,io_aux->socket_io_para_comunicarse);
-        log_warning(kernel_debug_log,"RAFAGA SOLICITADA");
         op_code respuesta = recibir_op_code(io_aux->socket_io_para_comunicarse);
-        log_warning(kernel_debug_log,"RESPUESTA RECIBIDA");
         int posicion = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
-        log_warning(kernel_debug_log,"POSICION ENCONTRADA: %i",posicion);
         switch(respuesta){
             case FIN_DE_IO: //Corresponde al enum de fin de IO
                 if(posicion!=-1){
@@ -213,8 +208,9 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                     transicionar_a_susp_ready(proceso);
                 }
                 break;
-            case -1: //desconexion de la instancia con la que estamos trabajando
-                if(posicion ==-1){
+            case DESCONEXION_IO: //desconexion de la instancia con la que estamos trabajando
+                log_debug(kernel_debug_log,"entre al case DESCONEXION IO");
+                if(posicion ==-1){                   
                     finalizar_proceso(proceso,SUSP_BLOCKED);
                 }
                 else{

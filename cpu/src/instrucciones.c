@@ -182,8 +182,6 @@ void instruccion_goto(int parametro){
    //Accedo a Memoria y Kernel para actualizar el PC
     pc = parametro;
     log_info(cpu_logger,"## PID: %d - Ejecutando: <GOTO> - <%d>",pid, parametro);
-    send(fd_conexion_dispatch_memoria, &pc, sizeof(int), 0);
-    send(fd_conexion_kernel_dispatch, &pc,sizeof(int),0);
 }
 
 void mandar_syscall(t_instruccion instruccion){
