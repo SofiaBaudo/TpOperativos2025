@@ -121,7 +121,7 @@ void eliminar_paginas_de_proceso(int pid){
     if (paginas_eliminadas > 0) {
         log_info(logger_memoria, "## PID: <%d> - Se eliminaron <%d> páginas de SWAP", pid, paginas_eliminadas);
     } else {
-        log_debug(logger_memoria, "No se encontraron páginas en SWAP para el proceso PID %d", pid);
+        log_debug(logger_memoria, "ELIMINAR PROCESO -> No se encontraron páginas en SWAP para el proceso PID %d", pid);
     }
 }
 
@@ -154,16 +154,20 @@ void agregar_proceso_a_lista(int pid, int tamanio, t_tabla_paginas* tabla_raiz) 
     proceso->tabla_raiz = tabla_raiz;
     list_add(lista_procesos, proceso);
 }
+//LA LISTA DE PROCESOS ES LA GLOBAL -> cada vez que se inicializa un proceso tendria que estar en lista_procesos
 
 // Función para obtener tabla de proceso
 t_tabla_proceso* obtener_tabla_proceso(int pid) {
-    if (lista_procesos == NULL) {
+    if (procesos_en_memoria == NULL) {
+        log_error(logger_memoria, "LA LISTA ES NULA");
         return NULL;
     }
     
-    for (int i = 0; i < list_size(lista_procesos); i++) {
-        t_tabla_proceso* proceso = list_get(lista_procesos, i);
+    for (int i = 0; i < list_size(procesos_en_memoria); i++) {
+        t_tabla_proceso* proceso = list_get(procesos_en_memoria, i);
+        log_error(logger_memoria,"ENTRE AL FOR, ESTOY RECORRIENDO EN OBTENER TABLA PROCESO");
         if (proceso->pid == pid) {
+            log_error(logger_memoria, "SE ENCONTRO EL PROCESO");
             return proceso;
         }
     }
@@ -182,6 +186,7 @@ void eliminar_tabla_proceso(int pid) {
             // Liberar tabla de páginas
             if (proceso->tabla_raiz) {
                 destruir_tabla_paginas_rec(proceso->tabla_raiz, 1);
+                proceso->tabla_raiz = NULL;
             }
             // Remover de la lista y liberar memoria
             list_remove(lista_procesos, i);
@@ -220,35 +225,58 @@ int obtener_marco_de_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina) {
 }
 
 // Función para recorrer todas las páginas de un proceso
+int contador = 0;
 void recorrer_paginas_proceso(t_tabla_paginas* tabla_raiz, int nivel, int offset_pagina, void (*callback)(int, int, void*), void* contexto) {
+    contador++;
+    log_debug(logger_memoria, "el contador es %i", contador);
+    log_debug(logger_memoria, "Nivel %d - tabla: %p | entradas: %p", nivel, tabla_raiz, tabla_raiz->entradas);
     if (!tabla_raiz) {
+        log_error(logger_memoria, "ERROR: tabla_raiz es NULL en nivel %d", nivel);
         return;
     }
+
+    if (!tabla_raiz->entradas) {
+        log_error(logger_memoria, "ERROR: tabla->entradas es NULL en nivel %d", nivel);
+        return;
+    }
+
+    log_debug(logger_memoria, "el numero de nivel es: %i", nivel);
     
     if (nivel == memoria_config.CANTIDAD_NIVELES) {
-        // Estamos en el último nivel, procesar las páginas
+        log_debug(logger_memoria, "la cantidad de entradas es: %i", tabla_raiz->cantidad_entradas);
+        if (tabla_raiz->cantidad_entradas <= 0 || tabla_raiz->cantidad_entradas > 10000) {
+        log_error(logger_memoria, "Valor inválido en cantidad_entradas: %d en nivel %d", tabla_raiz->cantidad_entradas, nivel);
+        return;
+        }
         for (int i = 0; i < tabla_raiz->cantidad_entradas; i++) {
             int nro_pagina = offset_pagina + i;
             int nro_marco = tabla_raiz->entradas[i].nro_marco;
+            log_warning(logger_memoria, "el numero de marco es: %i", nro_marco);
             if (nro_marco != -1) {
+                log_warning(logger_memoria, "ENTRE AL IF DEL NUMERO DE MARCO != -1");
                 callback(nro_pagina, nro_marco, contexto);
             }
         }
         return;
     }
-    
+    if (tabla_raiz->cantidad_entradas <= 0 || tabla_raiz->cantidad_entradas > 1000) {
+    log_error(logger_memoria, "❌ Valor inválido en cantidad_entradas: %d en nivel %d", tabla_raiz->cantidad_entradas, nivel);
+    return;
+}
+
     // Recursivamente procesar los subárboles
     int entradas = memoria_config.ENTRADAS_POR_TABLA;
     int paginas_por_subarbol = pow(entradas, memoria_config.CANTIDAD_NIVELES - nivel);
-    
+
     for (int i = 0; i < tabla_raiz->cantidad_entradas; i++) {
+        log_debug(logger_memoria, "entre al for para ciclar");
         if (tabla_raiz->entradas[i].tabla_nivel_inferior) {
             int nuevo_offset = offset_pagina + (i * paginas_por_subarbol);
-            recorrer_paginas_proceso(tabla_raiz->entradas[i].tabla_nivel_inferior, 
-                                   nivel + 1, nuevo_offset, callback, contexto);
+            recorrer_paginas_proceso(tabla_raiz->entradas[i].tabla_nivel_inferior, nivel + 1, nuevo_offset, callback, contexto);                   
         }
     }
 }
+
 
 // Callback para escribir páginas a SWAP durante suspensión
 void escribir_pagina_a_swap_callback(int nro_pagina, int nro_marco, void* contexto) {
@@ -271,25 +299,26 @@ void escribir_pagina_a_swap_callback(int nro_pagina, int nro_marco, void* contex
 
 // Función para suspender un proceso (llamada desde el servidor)
 void suspender_proceso_desde_kernel(int pid, int cliente) {
-    log_debug(logger_memoria, "## PID: <%d> - Iniciando suspensión del proceso", pid);
+    log_info(logger_memoria, "## PID: <%d> - Iniciando suspensión del proceso", pid);
     
     // Obtener la tabla de páginas del proceso
     t_tabla_proceso* proceso = obtener_tabla_proceso(pid);
+    log_debug(logger_memoria,"despues de intentar obtener la tabla del proceso");
     if (!proceso) {
-        log_warning(logger_memoria, "No se encontró el proceso PID %d para suspender", pid);
+        log_warning(logger_memoria, "ENTRE AL IF Y No se encontró el proceso PID %d para suspender", pid);
         enviar_op_code(cliente, RECHAZO_PROCESO);
         return;
     }
-    
     // Configurar contexto para escribir páginas a SWAP
     t_contexto_suspension contexto;
     contexto.pid = pid;
     contexto.cliente = cliente;
     contexto.error_encontrado = false;
     
+    log_warning(logger_memoria, "POR RECORRER LAS PAGINAS");
     // Recorrer todas las páginas del proceso y escribirlas a SWAP
     recorrer_paginas_proceso(proceso->tabla_raiz, 1, 0, escribir_pagina_a_swap_callback, &contexto);
-    
+    log_error(logger_memoria,"SE RECORRIO LAS PAGINAS DEL PROCESO");
     if (contexto.error_encontrado) {
         log_error(logger_memoria, "Error durante la suspensión del proceso PID %d", pid);
         enviar_op_code(cliente, RECHAZO_PROCESO);
@@ -309,16 +338,20 @@ void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
     
     // Verificar si el proceso tiene páginas en SWAP
     bool tiene_paginas_en_swap = false;
+    log_warning(logger_memoria, "POR ENTRAR AL FOR el valor de si hay paginas en swap es: %i", tiene_paginas_en_swap);
     for (int i = 0; i < list_size(paginas_en_swap); i++) {
+        log_error(logger_memoria,"ESTOY RECORRIENDO LAS ENTRADAS DE SWAP");
         t_pagina_en_swap* entrada = list_get(paginas_en_swap, i);
         if (entrada->pid == pid) {
+            log_error(logger_memoria,"ENCONTRE LA ENTRADA DEL PROCESO");
             tiene_paginas_en_swap = true;
             break;
         }
     }
     log_debug(logger_memoria,"Tiene paginas en swap: %i",tiene_paginas_en_swap);
     if (!tiene_paginas_en_swap) {
-        log_warning(logger_memoria, "No se encontraron páginas en SWAP para el proceso PID %d", pid);
+        log_warning(logger_memoria, "NO TE LO REINICIO PORQUE No se encontraron páginas en SWAP para el proceso PID %d", pid);
+        usleep(10000000);
         enviar_op_code(cliente, RECHAZO_PROCESO);
         return;
     }
@@ -332,6 +365,7 @@ void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
     log_debug(logger_memoria,"Las paginas necesarias son: %i",paginas_necesarias);
     if (marcos_libres < paginas_necesarias) {
         log_warning(logger_memoria, "No hay espacio suficiente en memoria para reanudar PID %d (necesita %d marcos, hay %d libres)", pid, paginas_necesarias, marcos_libres);
+        usleep(10000000);
         enviar_op_code(cliente, RECHAZO_PROCESO);
         return;
     }
@@ -340,6 +374,7 @@ void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
     t_tabla_paginas* tabla_raiz = iniciar_proceso_paginacion(pid, tamanio);
     if (!tabla_raiz) {
         log_error(logger_memoria, "Error al recrear tablas de páginas para PID %d", pid);
+        usleep(10000000);
         enviar_op_code(cliente, RECHAZO_PROCESO);
         return;
     }

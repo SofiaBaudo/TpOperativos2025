@@ -234,7 +234,7 @@ void *planificador_mediano_plazo_proceso_mas_chico_primero(){
 
 void* funcion_para_bloqueados(void* arg){
     struct pcb* proceso = (struct pcb*) arg; //lo hacemos para que pasen los argumentos al hilo.
-    usleep(atoi(TIEMPO_SUSPENSION)); //preguntar
+    usleep(atoi(TIEMPO_SUSPENSION)*1000); //preguntar
     log_warning(kernel_debug_log,"TERMINO EL TIEMPO DE SUSPENSION");
     pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
     int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
@@ -655,13 +655,14 @@ void *poner_a_ejecutar(void *argumentos){
             case EXIT:
                 log_debug(kernel_debug_log, "estoy en exit");
                 //Hay que sacarlo de la lista de exit
-                finalizar_proceso(proceso,EXEC);
                 liberar_cpu(cpu_en_la_que_ejecuta);
+                finalizar_proceso(proceso,EXEC);
                 enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
                 //tener en cuenta lo del mediano plazo
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
+                proceso->pc++;
                 sacar_proceso_de_cola_de_estado(proceso,EXEC);
                 int respuesta = manejar_dump(proceso,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
@@ -674,6 +675,7 @@ void *poner_a_ejecutar(void *argumentos){
                 bloqueante = true; 
                 break;   
             case IO:
+                proceso->pc++;
                 log_warning(kernel_debug_log,"Estoy en la syscall IO");
                 int milisegundos = deserializar_cant_segundos(paquete);
                 log_debug(kernel_debug_log,"La cantidad de milisegundos es: %i",milisegundos);
@@ -693,13 +695,13 @@ void *poner_a_ejecutar(void *argumentos){
                     log_info(kernel_logger,"## (<PID: %i>) - Bloqueado por IO: <%s>",proceso->pid,proceso->nombre_io_que_lo_bloqueo);
                     temporal_stop(proceso->duracion_ultima_rafaga);
                     sacar_proceso_de_cola_de_estado(proceso,EXEC);
+                    liberar_cpu(cpu_en_la_que_ejecuta);
                     cambiarEstado(proceso,EXEC,BLOCKED);
                     //creamos el hilo para que bloquee el proceso
                     pthread_create(&proceso->hilo_al_bloquearse,NULL,funcion_para_bloqueados,proceso);
                     pthread_detach(proceso->hilo_al_bloquearse);
                     //Inicializamos el cronometro de bloqueado
                     proceso->tiempo_bloqueado = temporal_create();
-                    liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);

@@ -101,10 +101,8 @@ t_instruccion decode(char* instruccion_recibida){
 void execute(t_instruccion instruccion, int pid){
     char *nombre_instruccion = instruccion.opcode;
     char *param1Char = instruccion.param1;
-    int param1 = -5; 
     log_debug(cpu_log_debug, "el primer parametro es %s", param1Char);
     if(param1Char){ // que sea distinto de NULL
-    
     param1 = atoi(param1Char);
     }
     log_debug(cpu_log_debug, "no entre al if");

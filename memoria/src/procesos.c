@@ -21,7 +21,7 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
 
     // 4. Si hay espacio, crear estructuras administrativas de paginación
     t_tabla_paginas* tabla_raiz = iniciar_proceso_paginacion(pid, tam_proceso);
-
+    log_warning(logger_memoria, "TERMINE DE HACER EL PROCESO PAGINACION");
    
     // 5. Generar instrucciones segun path para proceso
     t_list* instrucciones = generar_instrucciones_proceso(pid, path_pseudocodigo);
@@ -41,8 +41,10 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
         log_info(logger_memoria, "Proceso %d inicializado correctamente con %d marcos. Path pseudocódigo: %s", pid, marcos_necesarios, path_pseudocodigo);
         return true;
     } else {
-        if (tabla_raiz)
+        if (tabla_raiz){
             destruir_tabla_paginas_rec(tabla_raiz, 1);
+            tabla_raiz = NULL;
+        }
         if (instrucciones)
             list_destroy_and_destroy_elements(instrucciones, free);
         log_error(logger_memoria, "Fallo la inicialización del proceso %d", pid);
@@ -74,6 +76,7 @@ bool finalizar_proceso(int pid) {
 
     // 4. Liberar la tabla de paginación
     destruir_tabla_paginas_rec(proc->tabla_paginacion_raiz, 1);
+    proc->tabla_paginacion_raiz = NULL;
 
     // 5. Liberar el struct del proceso
     free(proc);

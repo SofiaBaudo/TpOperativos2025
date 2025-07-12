@@ -18,6 +18,9 @@ typedef struct {
     char* PATH_INSTRUCCIONES;
 } t_memoria_config;
 
+//lista global procesos en memoria
+extern t_list* procesos_en_memoria; 
+
 // Estructura de log
 extern t_log* logger_memoria;
 extern t_memoria_config memoria_config;

@@ -13,7 +13,7 @@ typedef struct t_proceso_memoria {
     int pid;
     int tamanio;
     t_list* instrucciones; // Lista de instrucciones (cada elemento es un char)
-    void* tabla_paginacion_raiz;
+    t_tabla_paginas* tabla_paginacion_raiz;
 } t_proceso_memoria;
 
 // Inicializa las estructuras de paginación y marcos para un nuevo proceso. Devuelve true si tuvo éxito, false si hubo error
