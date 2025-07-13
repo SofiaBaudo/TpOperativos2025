@@ -228,7 +228,6 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                     recorrer_lista_y_finalizar_procesos(colaEstados[BLOCKED],io_aux->nombre,BLOCKED);
                     recorrer_lista_y_finalizar_procesos(colaEstados[SUSP_BLOCKED],io_aux->nombre,SUSP_BLOCKED);
                 }
-                
                 liberar_io(io_aux);
                 break;  
                 default:
@@ -318,12 +317,14 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
 }
 
 void liberar_io(struct instancia_de_io *io){
+    log_debug(kernel_debug_log,"POR LIBERAR LA IO");
     free(io->nombre);
-    //sem_destroy(io->hay_procesos_esperando);
     free(io);
+    log_debug(kernel_debug_log,"IO LIBERADA");
 }
 
-void recorrer_lista_y_finalizar_procesos(t_list * lista,char *nombre,Estado estado){
+/*void recorrer_lista_y_finalizar_procesos(t_list * lista,char *nombre,Estado estado){
+    log_debug(kernel_debug_log,"RECORRIENDO LISTA PARA FINALIZAR LOS BLOQUEADOS");
     if (lista == NULL) { //no deberia pasar nunca porque esta sincronizado pero por ahora lo dejamos
         printf("Lista nula\n");
     return;
@@ -337,6 +338,33 @@ void recorrer_lista_y_finalizar_procesos(t_list * lista,char *nombre,Estado esta
     }
     list_iterator_destroy(aux);
     return;
+}*/
+
+
+
+void recorrer_lista_y_finalizar_procesos(t_list *lista, char *nombre, Estado estado) { //ESTA FUNCION LA CAMBIAMOS PORQUE ES PELIGROSO IR ELIMINANDO PROCESOS MIENTRAS SE RECORRE UNA LISTA
+    log_debug(kernel_debug_log, "RECORRIENDO LISTA PARA FINALIZAR LOS BLOQUEADOS");
+
+    if (lista == NULL) {
+        printf("Lista nula\n");
+        return;
+    }
+
+    t_list *procesos_a_finalizar = list_create();
+
+    for (int i = 0; i < list_size(lista); i++) {
+        struct pcb *proceso = list_get(lista, i);
+        if (strcmp(proceso->nombre_io_que_lo_bloqueo, nombre) == 0) {
+            list_add(procesos_a_finalizar, proceso);  // ⚠️ sólo referencias, no copies
+        }
+    }
+
+    for (int i = 0; i < list_size(procesos_a_finalizar); i++) {
+        struct pcb *proceso = list_get(procesos_a_finalizar, i);
+        finalizar_proceso(proceso, estado);  // ⚠️ esta función ya hace el list_remove
+    }
+
+    list_destroy(procesos_a_finalizar);  // solo destruimos la lista, no los elementos
 }
 
 int buscar_io_especifica(t_list *lista,int socket){

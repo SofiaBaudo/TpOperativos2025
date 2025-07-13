@@ -159,7 +159,6 @@ void *planificador_mediano_plazo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
         log_warning(kernel_debug_log,"SE SUSPENDIO UN PROCESO");
-        intentar_iniciar();
         //agregar semaforo de uno a la vez como vector
         struct pcb *proceso = obtener_copia_primer_proceso_de(SUSP_BLOCKED);
         int socket = iniciar_conexion_kernel_memoria();
@@ -169,6 +168,7 @@ void *planificador_mediano_plazo(){
         log_warning(kernel_debug_log,"PAQUETE ENVIADO A MEMORIA");
         recibir_op_code(socket);
         cerrar_conexion(socket);
+        intentar_iniciar();
     }
 }
 
@@ -591,7 +591,7 @@ void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu){
 int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
     temporal_stop(aux->duracion_ultima_rafaga);
     cambiarEstado(aux,EXEC,BLOCKED);
-    sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
+    //sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
     aux->tiempo_bloqueado = temporal_create();
     int socket = iniciar_conexion_kernel_memoria();
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
@@ -782,9 +782,7 @@ void listar_metricas_de_tiempo_y_estado(struct pcb *proceso){
 }
 
 void liberar_proceso(struct pcb *proceso){
-    log_debug(kernel_debug_log,"Adentro de liberar proceso");
     temporal_destroy(proceso->duracion_ultima_rafaga);
-    log_debug(kernel_debug_log,"Ultima rafaga destruida");
     for (int i=0; i<7;i++){
         if(proceso->metricas_de_estado[i]!=0){
         temporal_destroy(proceso->metricas_de_tiempo[i]);
