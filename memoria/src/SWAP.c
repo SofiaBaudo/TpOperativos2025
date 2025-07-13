@@ -260,9 +260,9 @@ void recorrer_paginas_proceso(t_tabla_paginas* tabla_raiz, int nivel, int offset
         return;
     }
     if (tabla_raiz->cantidad_entradas <= 0 || tabla_raiz->cantidad_entradas > 1000) {
-    log_error(logger_memoria, "❌ Valor inválido en cantidad_entradas: %d en nivel %d", tabla_raiz->cantidad_entradas, nivel);
-    return;
-}
+        log_error(logger_memoria, "❌ Valor inválido en cantidad_entradas: %d en nivel %d", tabla_raiz->cantidad_entradas, nivel);
+        return;
+    }
 
     // Recursivamente procesar los subárboles
     int entradas = memoria_config.ENTRADAS_POR_TABLA;

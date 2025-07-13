@@ -152,7 +152,6 @@ void* manejar_kernel_io(void *socket_io){
             struct instancia_de_io *io_aux = malloc(sizeof(struct instancia_de_io)); 
             t_paquete *paquete = recibir_paquete(io);
             char *nombre = deserializar_nombre_io(paquete);
-            log_debug(kernel_debug_log,"EL nombre tiene la cantidad de : %i",(int)strlen(nombre));
             io_aux->socket_io_para_comunicarse = io;
             io_aux->nombre = nombre;
             io_aux->hay_procesos_esperando = malloc(sizeof(sem_t));
@@ -186,7 +185,6 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
     struct instancia_de_io *io_aux = instancia_de_io;
     bool io_conectada = true;
     while (io_conectada){
-        log_debug(kernel_debug_log,"Estoy esperando que un proceso quiera ejecutarme");
         sem_wait(io_aux->hay_procesos_esperando); //positivos = cant procesos esperando, negativo = cant ios disponibles
         struct pcb *proceso = buscar_proceso_a_realizar_io(io_aux);
         t_buffer * buffer = crear_buffer_rafaga_de_io(proceso->pid,proceso->proxima_rafaga_io);
@@ -197,11 +195,8 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
             case FIN_DE_IO: //Corresponde al enum de fin de IO
                 if(posicion!=-1){
                     sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
-                    if(strcmp(ALGORITMO_CORTO_PLAZO,"FIFO")!=0){
-                        proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
-                    }
-                    log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a READY",proceso->pid);
                     transicionar_a_ready(proceso,BLOCKED);
+                    log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a READY",proceso->pid);
                 }
                 else{
                     log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a SUSP_READY",proceso->pid);
@@ -211,7 +206,6 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 break;
             case DESCONEXION_IO: //desconexion de la instancia con la que estamos trabajando
                 io_conectada = false;
-                log_debug(kernel_debug_log,"ENTRE AL CASE DESCONEXION IO");
                 posicion = buscar_io_especifica(ios_conectados,io_aux->socket_io_para_comunicarse);
                 list_remove(ios_conectados,posicion);
                 if(posicion ==-1){                   
@@ -234,7 +228,7 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 log_debug(kernel_debug_log,"Entre al default de IO");
             }
         }
-    log_debug(kernel_debug_log,"SALI DEL WHILE TRUE EN IO");
+    return NULL;
 }
 
 int ver_si_esta_bloqueado_y_devolver_posicion(struct pcb *proceso){
@@ -302,7 +296,6 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
     int pos = 0;
 
     while (list_iterator_has_next(iterador)) {
-        log_error(kernel_debug_log, "entre al while de iterar");
         struct instancia_de_io *io_aux = list_iterator_next(iterador);
         if (strcmp(io_aux->nombre, nombre_io) == 0) {
             list_iterator_destroy(iterador);
@@ -317,10 +310,8 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
 }
 
 void liberar_io(struct instancia_de_io *io){
-    log_debug(kernel_debug_log,"POR LIBERAR LA IO");
     free(io->nombre);
     free(io);
-    log_debug(kernel_debug_log,"IO LIBERADA");
 }
 
 /*void recorrer_lista_y_finalizar_procesos(t_list * lista,char *nombre,Estado estado){
@@ -343,7 +334,6 @@ void liberar_io(struct instancia_de_io *io){
 
 
 void recorrer_lista_y_finalizar_procesos(t_list *lista, char *nombre, Estado estado) { //ESTA FUNCION LA CAMBIAMOS PORQUE ES PELIGROSO IR ELIMINANDO PROCESOS MIENTRAS SE RECORRE UNA LISTA
-    log_debug(kernel_debug_log, "RECORRIENDO LISTA PARA FINALIZAR LOS BLOQUEADOS");
 
     if (lista == NULL) {
         printf("Lista nula\n");
@@ -403,11 +393,9 @@ int cantidad_de_instancias_conectadas(t_list *lista,char*nombre){
 }
 
 struct pcb* buscar_proceso_a_realizar_io(struct instancia_de_io *io_aux){
-    log_debug(kernel_debug_log,"BUSCANDO PROCESO BLOQUEADO POR IO");
     pthread_mutex_lock(&mx_usar_cola_estado[SUSP_BLOCKED]);
     struct pcb *proceso = buscar_proceso_bloqueado_por_io(colaEstados[SUSP_BLOCKED],io_aux->nombre);
     pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_BLOCKED]);
-    log_debug(kernel_debug_log,"YA SALI DE BUSCAR EL PROCESO");
     if(!proceso){
         pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
         proceso = buscar_proceso_bloqueado_por_io(colaEstados[BLOCKED],io_aux->nombre);

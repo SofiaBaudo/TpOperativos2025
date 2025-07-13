@@ -26,6 +26,7 @@ t_tabla_paginas* iniciar_proceso_paginacion(int pid, int tam_proceso) {
 // Crea la estructura de tablas para un proceso dado su tamaño
 t_tabla_paginas* crear_tablas_para_proceso(int tam_proceso) {
     int tam_pagina = memoria_config.TAM_PAGINA;
+    log_debug(logger_memoria,"EL TAMAÑO DEL PROCESO ES: %i",tam_proceso);
     int paginas_necesarias = (tam_proceso + tam_pagina - 1) / tam_pagina;
     log_error(logger_memoria, "LAS PAGINAS NECESARIAS SON: %d", paginas_necesarias);
     return crear_nivel_tabla(1, paginas_necesarias);
@@ -38,7 +39,7 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes) {
     int cantidad_entradas = 0;
 
     // En el último nivel, no crees más entradas de las necesarias
-    if (nivel_actual == memoria_config.CANTIDAD_NIVELES - 1) {
+    if (nivel_actual == memoria_config.CANTIDAD_NIVELES -1 ) {
         log_warning(logger_memoria, "entre al primer if donde el nivel_actual es igaul a la cant niveles -1");
         if(paginas_restantes > entradas_por_tabla)
             cantidad_entradas = entradas_por_tabla;

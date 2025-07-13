@@ -9,14 +9,11 @@ bool tengo_que_solicitar_pid_y_pc;
 
 void* iniciar_conexion_kernel_dispatch(void *arg){
     int identificador_cpu = *((int*) arg);
-    log_debug(cpu_log_debug,"El id es: %i",identificador_cpu);
     free(arg);
     fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
     enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU_DISPATCH);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
-    log_debug(cpu_log_debug,"La respuesta recibida es: %i",respuesta);
     if (respuesta == HANDSHAKE_ACCEPTED){
-        log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
         enviar_id(fd_conexion_kernel_dispatch, identificador_cpu);
     }
     else{
@@ -53,15 +50,12 @@ void* iniciar_conexion_memoria_dispatch(void* arg){
     enviar_op_code(fd_conexion_dispatch_memoria, HANDSHAKE_CPU);                  //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_dispatch_memoria);            //recibe un entero que devuelve el kernel cuando la conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
-        log_debug(cpu_log_debug ,"Conexion con la memoria establecida correctamente");
         t_paquete* paquete = recibir_paquete(fd_conexion_dispatch_memoria);
-        log_debug(cpu_log_debug,"paquete recibido");
     if (!paquete || !paquete->buffer || !paquete->buffer->stream) {
         log_error(cpu_log_debug, "Error: paquete recibido inválido o buffer vacío");
         exit(1);
     }
     deserializar_config_memoria(paquete, &tamPag, &entradasTabla, &cantNiveles);
-    log_debug(cpu_log_debug, "recibi como cantNiveles %d, entradclas %d, tamPag %d ", cantNiveles, entradasTabla, tamPag);
     }
     else{
         log_error(cpu_logger, "Error en la conexion con memoria");
@@ -100,7 +94,6 @@ void* inicializar_memoria(void* arg){
 void* inicializar_kernel(void* arg){   
     int id = *(int *)arg;
     tengo_que_solicitar_pid_y_pc = true;
-    log_debug(cpu_log_debug, "entre a kernel");
     t_log* logger;
     char archivo_log_cpu[50];
     sprintf(archivo_log_cpu, "cpu_%d.log", id);
@@ -116,7 +109,6 @@ void* inicializar_kernel(void* arg){
     *valor_id = id;
     pthread_create(&hilo_cliente_kernel, NULL, iniciar_conexion_kernel_dispatch, valor_id);
     pthread_join(hilo_cliente_kernel, NULL);
-    log_debug(cpu_log_debug,"Despues de crear el hilo");
     while(1){
        
         ejecutar_instrucciones(NULL);

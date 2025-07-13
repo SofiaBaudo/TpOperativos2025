@@ -29,14 +29,12 @@ void *planificador_largo_plazo_fifo(){
         }
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); //no lo sacamos de la lista todavia pero obtenemos una referencia
         bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_DESDE_NEW);
-        log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if(respuesta){
             primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la cola de NEW
             transicionar_a_ready(primer_proceso,NEW);
             sem_post(&INTENTAR_INICIAR_NEW); //incremento el semaforo para que pueda iniciar el planificador.
         }   
         else{
-            log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //si no hay espacio en memoria, aviso que el proceso sigue estando en new.
         }
         sem_post(&UNO_A_LA_VEZ[NEW]);//me aseguro que se siga tratando de a un proceso.
@@ -58,7 +56,6 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); 
         if(primer_proceso->pid == proximo_a_consultar->pid){ 
             bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_DESDE_NEW);
-            log_debug(kernel_debug_log,"Conexion con memoria cerrada");
             if(respuesta){
                 primer_proceso = sacar_primero_de_la_lista(NEW); //saco el primer proceso de la lista de NEW
                 transicionar_a_ready(primer_proceso,NEW); // lo transiciono a READY
@@ -68,7 +65,6 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
                 }
             }
             else{
-                log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
                 sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //aviso que el proceso sigue en new
             }
         }
@@ -180,7 +176,6 @@ void *planificador_mediano_plazo_fifo(){
     log_debug(kernel_debug_log,"ESTOY EN EL PLANI DE MEDIANO PLAZO FIFO");
     struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
         bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO); //Darle una vuelta de tuerca para que memoria sepa que es un proceso suspendido 
-        log_debug(kernel_debug_log,"Conexion con memoria cerrada");
         if (respuesta == true){
             primer_proceso = sacar_primero_de_la_lista(SUSP_READY); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
             transicionar_a_ready(primer_proceso,SUSP_READY);
@@ -190,7 +185,6 @@ void *planificador_mediano_plazo_fifo(){
             }
         }   
         else{
-            log_debug(kernel_debug_log,"NO HAY ESPACIO SUFICIENTE EN MEMORIA");
             sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
         }
         sem_post(&UNO_A_LA_VEZ[SUSP_READY]);
@@ -205,7 +199,6 @@ void *planificador_mediano_plazo_proceso_mas_chico_primero(){
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY);
         if(primer_proceso->pid == proximo_a_consultar->pid){
             bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO);
-            log_debug(kernel_debug_log,"Conexion con memoria cerrada");
             if(respuesta == true){
                 primer_proceso = sacar_primero_de_la_lista(SUSP_READY);
                 transicionar_a_ready(primer_proceso,SUSP_READY);
@@ -451,10 +444,10 @@ void transicionar_a_new(struct pcb *pcb){
 
 void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial){
     pthread_mutex_lock(&mx_usar_cola_estado[READY]); 
-    if(strcmp(ALGORITMO_INGRESO_A_READY,"FIFO")==0){
+    if(strcmp(ALGORITMO_CORTO_PLAZO,"FIFO")==0){
         cambiarEstado(pcb,estadoInicial,READY);
     }else{
-        sem_post(&REPLANIFICAR);
+        //sem_post(&REPLANIFICAR);
         cambiarEstadoOrdenado(pcb,estadoInicial,READY,menor_por_estimacion);
      }
     pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
@@ -489,6 +482,7 @@ void cambiarEstado (struct pcb* proceso,Estado estadoAnterior, Estado estadoNuev
 }
 
 void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *)){
+    log_debug(kernel_debug_log,"CAMBIANDO ESTADO ORDENADAMENTE");
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
     char *string_estado_anterior = cambiar_a_string(estadoAnterior);
     log_info(kernel_logger,"## (<PID: %i>) Pasa del estado <%s> al estado <%s>", proceso->pid,string_estado_anterior,string_estado_nuevo);
@@ -555,6 +549,8 @@ float calcular_proxima_estimacion(struct pcb *proceso){
     prox_estimacion = alfa * ultima_rafaga + (1-alfa)*proceso->ultima_estimacion;
     proceso->ultima_estimacion = prox_estimacion;
     log_info(kernel_logger,"La proxima estimacion del proceso (< PID: %i>) es: %f", proceso ->pid,proceso->ultima_estimacion);
+    temporal_destroy(proceso->duracion_ultima_rafaga);
+    proceso->duracion_ultima_rafaga = NULL;
     return prox_estimacion;
 }
 
@@ -622,13 +618,9 @@ void *poner_a_ejecutar(void *argumentos){
     while(!bloqueante){ //mientras el bloqueante sea falso.
         recibir_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse);
         mandar_paquete_a_cpu(proceso,cpu_en_la_que_ejecuta); //mando paquete a cpu, le mando pid y pc del proceso
-        log_debug(kernel_debug_log,"Esperando syscall");
-        t_paquete *paquete = recibir_paquete(cpu_en_la_que_ejecuta->socket_para_comunicarse); //cpu ejecuta una instruccion y nos devuelve el pid con una syscall
-        log_debug(kernel_debug_log,"Paquete recibido");
+        t_paquete *paquete = recibir_paquete(cpu_en_la_que_ejecuta->socket_para_comunicarse); //cpu ejecuta una instruccion y nos devuelve el pid con una syscalL
         proceso->pc = deserializar_pc(paquete);
-        log_debug(kernel_debug_log,"El PC ES: %i",proceso->pc);
         op_code motivo_de_devolucion = obtener_codigo_de_operacion(paquete); //deserializa el opcode del paquete
-        log_debug(kernel_debug_log,"Antes del if");
         if(motivo_de_devolucion!=DESALOJO_ACEPTADO){
             char *syscall = cambiar_syscall_a_string(motivo_de_devolucion);
             log_info(kernel_logger,"## (<PID: %i>) - Solicitó syscall: <%s>",proceso->pid,syscall);
@@ -644,16 +636,12 @@ void *poner_a_ejecutar(void *argumentos){
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo_init_proc(paquete);
                 int tamanio = deserializar_tamanio (paquete);
-                log_debug(kernel_debug_log,"El nombre del archivo es: %s",nombre_archivo);
-                log_debug(kernel_debug_log,"El tamanio del archivo es: %i",tamanio);
-                log_debug(kernel_debug_log,"Proceso creado");
                 crear_proceso(tamanio,nombre_archivo);
                 proceso->pc++;
                 enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
                 //avisar que termine
                 break;
             case EXIT:
-                log_debug(kernel_debug_log, "estoy en exit");
                 //Hay que sacarlo de la lista de exit
                 liberar_cpu(cpu_en_la_que_ejecuta);
                 finalizar_proceso(proceso,EXEC);
@@ -676,16 +664,13 @@ void *poner_a_ejecutar(void *argumentos){
                 break;   
             case IO:
                 proceso->pc++;
-                log_warning(kernel_debug_log,"Estoy en la syscall IO");
+                //liberar_cpu(cpu_en_la_que_ejecuta);
                 int milisegundos = deserializar_cant_segundos(paquete);
-                log_debug(kernel_debug_log,"La cantidad de milisegundos es: %i",milisegundos);
                 proceso->proxima_rafaga_io = milisegundos;
                 proceso->nombre_io_que_lo_bloqueo = deserializar_nombre_syscall_io(paquete);
-                log_debug(kernel_debug_log,"EL nombre de la io a usar es: %s",proceso->nombre_io_que_lo_bloqueo);
                 pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                 int pos = buscar_IO_solicitada(ios_conectados,proceso->nombre_io_que_lo_bloqueo);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                log_warning(kernel_debug_log,"DEspues de retornal la posicion");
                 if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
                     liberar_cpu(cpu_en_la_que_ejecuta);
                     log_warning(kernel_debug_log,"adentro del IF de io");
@@ -694,19 +679,18 @@ void *poner_a_ejecutar(void *argumentos){
                 else{
                     log_info(kernel_logger,"## (<PID: %i>) - Bloqueado por IO: <%s>",proceso->pid,proceso->nombre_io_que_lo_bloqueo);
                     temporal_stop(proceso->duracion_ultima_rafaga);
+                    proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
                     sacar_proceso_de_cola_de_estado(proceso,EXEC);
-                    liberar_cpu(cpu_en_la_que_ejecuta);
                     cambiarEstado(proceso,EXEC,BLOCKED);
                     //creamos el hilo para que bloquee el proceso
                     pthread_create(&proceso->hilo_al_bloquearse,NULL,funcion_para_bloqueados,proceso);
                     pthread_detach(proceso->hilo_al_bloquearse);
                     //Inicializamos el cronometro de bloqueado
-                    proceso->tiempo_bloqueado = temporal_create();
                     pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     sem_post(io_aux->hay_procesos_esperando);
-                    log_warning(kernel_debug_log,"Hice el post del semaforo de la IO");
+                    liberar_cpu(cpu_en_la_que_ejecuta);
                 }
                 bloqueante = true;
                 break;
@@ -763,7 +747,6 @@ void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
     crear_paquete(FINALIZAR_PROCESO,buffer,socket);
     op_code confirmacion = recibir_op_code(socket);
     cerrar_conexion(socket);
-    log_debug(kernel_debug_log,"Llego la finalizacion %i",confirmacion);
     sacar_proceso_de_cola_de_estado(proceso,EXIT_ESTADO);   
     listar_metricas_de_tiempo_y_estado(proceso); 
     log_info(kernel_logger,"## (<PID: %i>) - Finaliza el proceso",proceso->pid);
@@ -798,11 +781,10 @@ void liberar_proceso(struct pcb *proceso){
 
 void intentar_iniciar(){
     if(!list_is_empty(colaEstados[SUSP_READY])){
-        log_debug(kernel_debug_log,"ENTRE AL IF QUE NO DEBERIA HABER ENTRADO");
-        sem_post(&INTENTAR_INICIAR_SUSP_READY);
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
             actualizar_proximo_a_consultar(SUSP_READY);
         }
+        sem_post(&INTENTAR_INICIAR_SUSP_READY);
     }
     else{
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){

@@ -7,7 +7,6 @@
 
 
 int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te tendria que devolver la dir fisica
-    log_debug(cpu_log_debug, "entre a la traduccion");
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int marco;
@@ -25,11 +24,8 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
             tlbrespuesta = buscarTlb(numPag, pid);
                if(tlbrespuesta == -1){
                 //osea que no se encontro
-                log_debug(cpu_log_debug, "tlb miss");
                 marco = navegarNiveles(numPag, pid);
-                log_debug(cpu_log_debug, "navegue los niveles");
                 agregarEntradaATLB(numPag, marco);
-                log_debug(cpu_log_debug, "agregue entradas a la tlb");
         }
         else{
             marco = tlbrespuesta;
@@ -46,7 +42,6 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
 void enviarValoresMem(int entradaNivel, int pid){
     t_buffer *buffer = crear_buffer_MarcoMem(pid,entradaNivel);
     crear_paquete(ENVIO_PID_Y_ENTRADANIVEL, buffer,fd_conexion_dispatch_memoria);
-    log_debug(cpu_log_debug, "envie el paquete");
 }
 
 int navegarNiveles(int numPag, int pid){
@@ -54,10 +49,8 @@ int navegarNiveles(int numPag, int pid){
     for(int i = 1; i < cantNiveles+1; i++){
         int elevado = pow(entradasTabla, cantNiveles-i);
         int entradaNivel = floor((numPag/elevado) % entradasTabla);
-        log_debug(cpu_log_debug, "por enviar valores mem");
         enviarValoresMem(entradaNivel, pid);
         numMarco = conseguirMarco(pid);
-        log_debug(cpu_log_debug, "el marco es %i", numMarco);
     }
     //el numero de marco que tenemos despues del if es el num de marco final(el ultimo de todos --> es el marco fisico)
     int marcoFinal = numMarco;
@@ -72,7 +65,6 @@ int conseguirMarco(int pid){
     return numMarco;
 }
 int buscarTlb(int numPag, int pid){
-    log_debug(cpu_log_debug,"Estoy en TLB");
     NodoEntradasTLB *aux = listaTlb;
    for(int i = 0; i < ENTRADAS_TLB; i++){  
         if(aux->info.numPag == numPag ){
@@ -178,13 +170,11 @@ void inicializarTLB(){
 void imprimirTLB(){
     NodoEntradasTLB *aux = listaTlb;
     if (aux == NULL) {
-        log_debug(cpu_log_debug, "TLB vacía.\n");
         return;
     }
 
     NodoEntradasTLB* actual = aux;
     for(int i = 0; i < ENTRADAS_TLB; i++){
-        log_debug(cpu_log_debug, "Entrada %d: Pagina = %d, Marco = %d, Rerencia = %d\n", i, actual->info.numPag, actual->info.numMarco, actual->info.tiempoSinReferencia);
         actual = actual->sgte;
     }
 }

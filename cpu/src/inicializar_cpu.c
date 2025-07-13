@@ -15,60 +15,13 @@ void inicializar_CPU(int id){
     inicializarCache();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
-    //ejecutar_instrucciones(NULL);
 
-
-    // Paso 1: Inicializar TLB vacía (todas las entradas con numPag = -1)
-    //inicializarTLB();
-
-// Paso 2: Agregar entradas hasta llenar la TLB
-    /*agregarEntradaATLB(1, 101); // entra al índice 0
-    agregarEntradaATLB(2, 102); // entra al índice 1
-    agregarEntradaATLB(3, 103); // entra al índice 2
-
-// Paso 3: Agregar una nueva entrada que debería reemplazar la más vieja (FIFO)
-    agregarEntradaATLB(4, 104); // reemplaza la página 1
-
-// Paso 4: Agregar otra que debería reemplazar la que estaba en índice 1 (página 2)
-    agregarEntradaATLB(5, 105);
-    agregarEntradaATLB(6, 106); // reemplaza página 2
-
-// Paso 5: Imprimir el estado final de la TLB para verificar
-    imprimirTLB();
-
-    log_debug(cpu_log_debug, "------------------------------");
-
-    inicializarCache();
-    char* contenido = "pipipi";
-
-   
-    usarCache(1, 1, "READ", contenido);
-    imprimirCache();
-    usarCache(1, 2, "WRITE", contenido);
-    imprimirCache();
-    usarCache(1, 3, "WRITE", contenido);
-    imprimirCache();
-    usarCache(1, 4, "READ", contenido);
-    imprimirCache();
- //Accedés de nuevo a algunas
-    usarCache(1, 3, "WRITE", contenido);
-    imprimirCache();
-    usarCache(1, 4, "READ", contenido);
-    imprimirCache();
-//Forzás reemplazo (debería eliminar 1 o 2)
-    usarCache(1, 5, "READ", contenido);
-
-    imprimirCache();
-    */
-
-    //inicializar_kernel(valor_id);
     pthread_t hiloKernel;
     pthread_t hiloMemoria;
     pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
     pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
     pthread_join(hiloKernel, NULL);
-    pthread_join(hiloMemoria, NULL);
-    
+    pthread_join(hiloMemoria, NULL);  
 }
 
 //Funcion de Inicializacion de Logs
@@ -107,5 +60,4 @@ void inicializar_configs(){
     RETARDO_CACHE = config_get_int_value(cpu_config, "RETARDO_CACHE");
     LOG_LEVEL = config_get_string_value(cpu_config, "LOG_LEVEL");
 
-    log_debug(cpu_log_debug, "llegue");
 }
