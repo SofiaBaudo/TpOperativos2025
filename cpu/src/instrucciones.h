@@ -17,4 +17,5 @@ void instruccion_read(int direccion, char* param2, int pid);
 void instruccion_goto(int parametro);
 void mandar_syscall(t_instruccion instruccion);
 void check_interrupt(void);
+void* esperar_interrupcion();
 

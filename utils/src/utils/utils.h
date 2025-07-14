@@ -102,6 +102,7 @@ typedef enum op_code
 	ENVIO_VALOR_LEIDO,
 	CPU_LISTA,
 	PROCESO_EJECUTANDO,
+	SOLICITO_DESALOJO
 }op_code;
 
 //-------------ESTRUCTURAS ADMINISTRATIVAS--------

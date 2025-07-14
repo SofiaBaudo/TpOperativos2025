@@ -6,6 +6,7 @@
 // Funcion Iniciar Conexion Kernel
 
 bool tengo_que_solicitar_pid_y_pc;
+bool hayInterrupcion;
 
 void* iniciar_conexion_kernel_dispatch(void *arg){
     int identificador_cpu = *((int*) arg);
@@ -28,14 +29,18 @@ close(socket);
 }
 //Iniciar conexion Kernel
 
-void* iniciar_conexion_kernel_interrupt(void *arg){
+void *iniciar_conexion_kernel_interrupt(void *arg){
     int identificador_cpu = *(int *)arg;
     fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_INTERRUPT);
+    hayInterrupcion = false;
     enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU_INTERRUPT);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_interrupt);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
         log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
         enviar_id(fd_conexion_kernel_dispatch, identificador_cpu);
+        pthread_t hilo_interrupciones;
+        pthread_create(&hilo_interrupciones,NULL,esperar_interrupcion,NULL);
+        pthread_detach(hilo_interrupciones);
     }
    else{
         log_error(cpu_logger, "Error en la conexion con el kernel dispatch");
@@ -61,14 +66,13 @@ void* iniciar_conexion_memoria_dispatch(void* arg){
         log_error(cpu_logger, "Error en la conexion con memoria");
         exit(EXIT_FAILURE);
     }
-    while(1){
-        // tiene que estar esperando algo o se corta?
-    }
     return NULL;
 }
 void* inicializar_memoria(void* arg){
     int id = *(int *)arg;
-  
+    int* valor_id = malloc(sizeof(int));
+    *valor_id = id;
+    tengo_que_solicitar_pid_y_pc = true;
     t_log* logger;
     char archivo_log_cpu[50];
     sprintf(archivo_log_cpu, "cpu_%d.log", id);
@@ -79,15 +83,12 @@ void* inicializar_memoria(void* arg){
         printf("No se pudo crear el archivo de log para la CPU %d\n", id);
         exit(1);
     }
-    int* valor_id = malloc(sizeof(int));
-    *valor_id = id;
     pthread_t hilo_cliente_mem;
     pthread_create(&hilo_cliente_mem, NULL, iniciar_conexion_memoria_dispatch,valor_id);
     pthread_join(hilo_cliente_mem, NULL); //esto hace que espere a que termine el hilo hijo para terminar el programa. 
     log_info(logger, "CPU %d: Conexión con Memoria establecida", id);
     log_info(logger, "Finalizando hilo de Memoria");
     log_destroy(logger);
-    free(valor_id);
     return NULL;
 }
 
@@ -107,11 +108,13 @@ void* inicializar_kernel(void* arg){
     pthread_t hilo_cliente_kernel;
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
+    log_debug(cpu_log_debug,"ANTES DE LA CREACION DEL HILO");
     pthread_create(&hilo_cliente_kernel, NULL, iniciar_conexion_kernel_dispatch, valor_id);
+    iniciar_conexion_kernel_interrupt(valor_id);
     pthread_join(hilo_cliente_kernel, NULL);
+    log_debug(cpu_log_debug,"DESPUES DE LA CREACION DEL HILO");
     while(1){
-       
-        ejecutar_instrucciones(NULL);
+       ejecutar_instrucciones(NULL);
     }
     log_info(logger, "Finalizando hilo de Kernel");
     log_destroy(logger);

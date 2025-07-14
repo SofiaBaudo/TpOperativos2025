@@ -133,7 +133,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             if(desalojo){
                 //cambiar todo para que haya alguna funcion que te devuelva la cpu y no la posicion
                 struct instancia_de_cpu *cpu_aux = buscar_cpu_con_proceso_con_mayor_estimacion();
-                enviar_entero(cpu_aux->socket_interrupt,1);
+                enviar_op_code(cpu_aux->socket_interrupt,SOLICITO_DESALOJO);
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
                 reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)-1);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
@@ -443,19 +443,24 @@ void transicionar_a_new(struct pcb *pcb){
 }
 
 void transicionar_a_ready(struct pcb *pcb,Estado estadoInicial){
-    pthread_mutex_lock(&mx_usar_cola_estado[READY]); 
+    //pthread_mutex_lock(&mx_usar_cola_estado[READY]); 
     if(strcmp(ALGORITMO_CORTO_PLAZO,"FIFO")==0){
         cambiarEstado(pcb,estadoInicial,READY);
     }else{
-        //sem_post(&REPLANIFICAR);
+        if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_SIN_DESALOJO")==0){
+            cambiarEstadoOrdenado(pcb,estadoInicial,READY,menor_por_estimacion);
+        }
+        else{
         cambiarEstadoOrdenado(pcb,estadoInicial,READY,menor_por_estimacion);
+        sem_post(&REPLANIFICAR);
+        }
      }
-    pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
+    //pthread_mutex_unlock(&mx_usar_cola_estado[READY]);
     sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]);
 }
 
 void transicionar_a_susp_ready(struct pcb *pcb){
-    pthread_mutex_lock(&mx_usar_cola_estado[SUSP_READY]); 
+    //pthread_mutex_lock(&mx_usar_cola_estado[SUSP_READY]); 
     if(strcmp(ALGORITMO_INGRESO_A_READY,"FIFO")==0){
         cambiarEstado(pcb,SUSP_BLOCKED,SUSP_READY);
     }
@@ -466,7 +471,7 @@ void transicionar_a_susp_ready(struct pcb *pcb){
         cambiarEstadoOrdenado(pcb,SUSP_BLOCKED,SUSP_READY,menor_por_tamanio);
         sem_post(&INTENTAR_INICIAR_SUSP_READY);
      }
-    pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_READY]);
+    //pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_READY]);
     sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
 }
 
@@ -664,7 +669,6 @@ void *poner_a_ejecutar(void *argumentos){
                 break;   
             case IO:
                 proceso->pc++;
-                //liberar_cpu(cpu_en_la_que_ejecuta);
                 int milisegundos = deserializar_cant_segundos(paquete);
                 proceso->proxima_rafaga_io = milisegundos;
                 proceso->nombre_io_que_lo_bloqueo = deserializar_nombre_syscall_io(paquete);
@@ -672,9 +676,9 @@ void *poner_a_ejecutar(void *argumentos){
                 int pos = buscar_IO_solicitada(ios_conectados,proceso->nombre_io_que_lo_bloqueo);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
-                    liberar_cpu(cpu_en_la_que_ejecuta);
                     log_warning(kernel_debug_log,"adentro del IF de io");
                     finalizar_proceso(proceso,EXEC);
+                    liberar_cpu(cpu_en_la_que_ejecuta);
                 }
                 else{
                     log_info(kernel_logger,"## (<PID: %i>) - Bloqueado por IO: <%s>",proceso->pid,proceso->nombre_io_que_lo_bloqueo);
@@ -686,11 +690,11 @@ void *poner_a_ejecutar(void *argumentos){
                     pthread_create(&proceso->hilo_al_bloquearse,NULL,funcion_para_bloqueados,proceso);
                     pthread_detach(proceso->hilo_al_bloquearse);
                     //Inicializamos el cronometro de bloqueado
+                    liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     sem_post(io_aux->hay_procesos_esperando);
-                    liberar_cpu(cpu_en_la_que_ejecuta);
                 }
                 bloqueante = true;
                 break;
@@ -725,7 +729,7 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
     cpu->puede_usarse = true;
     cpu->proceso_ejecutando = NULL;
     sem_post(&CPUS_LIBRES);
-    if(strcmp(ALGORITMO_INGRESO_A_READY,"SJF_CON_DESALOJO")==0){
+    if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_CON_DESALOJO")==0){
         sem_post(&REPLANIFICAR);
     }
 }
@@ -759,7 +763,7 @@ void listar_metricas_de_tiempo_y_estado(struct pcb *proceso){
         estado_actual = i;
         char *estado_string = cambiar_a_string(estado_actual);
         if(proceso->metricas_de_estado[i]!=0){ //que haya estado alguna vez en ese estado
-        log_info(kernel_logger,"## (<PID: %i>) - Metricas de estado: %s %i %ld",proceso->pid,estado_string,proceso->metricas_de_estado[i],temporal_gettime(proceso->metricas_de_tiempo[i]));
+        log_warning(kernel_logger,"## (<PID: %i>) - Metricas de estado: %s <cantidad: %i> <tiempo: %ld>",proceso->pid,estado_string,proceso->metricas_de_estado[i],temporal_gettime(proceso->metricas_de_tiempo[i]));
         }
     }
 }

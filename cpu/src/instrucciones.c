@@ -14,6 +14,7 @@ char* parametros;
 char* nombre_instruccion;
 int pid;
 int pc;
+
 //bool mande_syscall;
 //Me comunico con el Kernel para obtener el PC/IP y el PID.
 
@@ -191,18 +192,22 @@ void mandar_syscall(t_instruccion instruccion){
 
 //Chequear Interrupcion
 void check_interrupt(void){
-    int interrupcion=0;
-    recv(fd_conexion_kernel_interrupt, &interrupcion,sizeof(int),0);
-    log_info(cpu_logger," ## Llega interrupción al puerto Interrupt <%d>", interrupcion);
-    if(interrupcion != 0){ //recibio una interrupcion
-        //Hay que Serializar
+    if(hayInterrupcion){ //recibio una interrupcion
         t_buffer *buffer = crear_buffer_cpu(pc, pid);
-        crear_paquete(ENVIO_PID_Y_PC,buffer, fd_conexion_kernel_dispatch); 
-        log_info(cpu_logger, "SI hay interrupcion");
-        //hay que desalojar el proceso => en el tlb y en cache. 
-        //tendria que mandarle a kernel una syscall que se llame desalojo aceptado.
+        crear_paquete(DESALOJO_ACEPTADO, buffer,fd_conexion_kernel_dispatch); 
+        hayInterrupcion = false;
     }
     else{
-        log_info(cpu_logger, "NO hay interrupcion");
+        log_info(cpu_logger, "No hay interrupcion");
     }
 }
+
+void* esperar_interrupcion(){
+    while(1){
+    op_code solicitud_de_desalojo = recibir_op_code(fd_conexion_kernel_interrupt);
+    hayInterrupcion = true;
+    log_info(cpu_logger," ## Llega interrupción al puerto Interrupt <por desalojo>");
+    }
+    return NULL;
+}
+

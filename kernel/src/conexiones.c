@@ -91,6 +91,7 @@ void *atender_kernel_interrupt(){
    }
 }
 
+
 void* manejar_kernel_interrupt(void *socket_interrupt){
    int interrupt = *((int *)socket_interrupt); // Desreferencio el puntero para obtener el socket del cliente
    free(socket_interrupt);
@@ -98,17 +99,22 @@ void* manejar_kernel_interrupt(void *socket_interrupt){
    log_info(kernel_logger,"el interrupt es %d" ,interrupt);
    switch (interrupt_id)
    {
-       case HANDSHAKE_CPU_INTERRUPT:
-           //LOG_INFO : ES EL LOG OBLIGATORIO
-           log_info(kernel_logger, "## CPU-INTERRUPT Conectado - FD del socket: %d", interrupt);
-           enviar_op_code(interrupt, HANDSHAKE_ACCEPTED);    
-            //buscar la cpu con el id
-            //aux->socket_interrupt = interrupt;
-           //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
-           break;        
-           default:
-           log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", interrupt); //AVISA Q FUCNIONA MAL
-           break;
+    case HANDSHAKE_CPU_INTERRUPT:
+        //LOG_INFO : ES EL LOG OBLIGATORIO
+        log_info(kernel_logger, "## CPU-INTERRUPT Conectado - FD del socket: %d", interrupt);
+        int id;
+        enviar_op_code(interrupt, HANDSHAKE_ACCEPTED);    
+        recv(interrupt, &id, sizeof(int), 0);
+        struct instancia_de_cpu *cpu_aux = buscar_ultima_cpu_conectada();
+        log_debug(kernel_debug_log,"INTERRUPT CONECTADO PARA LA CPU DE ID: %i",cpu_aux->id_cpu);
+        cpu_aux->socket_interrupt = interrupt;
+        //buscar la cpu con el id
+        //aux->socket_interrupt = interrupt;
+        //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
+        break;        
+    default:
+        log_warning(kernel_logger, "No se pudo identificar al cliente; op_code: %d", interrupt); //AVISA Q FUCNIONA MAL
+        break;
    }
    return NULL;
 }
@@ -402,4 +408,11 @@ struct pcb* buscar_proceso_a_realizar_io(struct instancia_de_io *io_aux){
         pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
         }
         return proceso;
+}
+
+struct instancia_de_cpu *buscar_ultima_cpu_conectada(){
+    pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
+    struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,list_size(cpus_conectadas)-1);
+    pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
+    return cpu_aux;
 }

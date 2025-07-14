@@ -45,6 +45,7 @@ void crear_hilo_de_ejecucion(struct pcb*proceso, struct instancia_de_cpu*cpu_aux
 int buscar_cpu_libre(t_list *lista);
 struct instancia_de_cpu *obtener_cpu(int posicion);
 
+
 //LISTAS
 void ordenar_lista_segun(t_list *lista,bool (*comparador)(void *, void *));
 //int buscar_en_lista(t_list *lista,int pid);

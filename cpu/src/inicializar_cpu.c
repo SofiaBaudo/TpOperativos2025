@@ -10,6 +10,7 @@
 
 void inicializar_CPU(int id){
     inicializar_logs();
+    log_debug(cpu_log_debug, "jsjfdslkfdslfds");
     inicializar_configs();
     inicializarTLB();
     inicializarCache();

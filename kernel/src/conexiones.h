@@ -22,6 +22,8 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io);
 int iniciar_conexion_kernel_memoria();
 void cerrar_conexion(int socket);
 void *esperar_io_proceso(void *instancia_de_io);
+struct instancia_de_cpu *buscar_ultima_cpu_conectada();
+
 //MANEJO DE IOS
 
 void recorrer_lista_y_finalizar_procesos(t_list * lista,char *nombre,Estado estado);
