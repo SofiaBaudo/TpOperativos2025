@@ -648,8 +648,8 @@ void *poner_a_ejecutar(void *argumentos){
                 break;
             case EXIT:
                 //Hay que sacarlo de la lista de exit
-                liberar_cpu(cpu_en_la_que_ejecuta);
                 finalizar_proceso(proceso,EXEC);
+                liberar_cpu(cpu_en_la_que_ejecuta);
                 enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
                 //tener en cuenta lo del mediano plazo
                 bloqueante = true;
