@@ -4,8 +4,10 @@
 //Inicializacion de las funciones.
 
 void cerrar_conexion(int socket);
-void iniciar_conexion_kernel_dispatch(int valor_id);
-void iniciar_conexion_kernel_interrupt(int identificador_cpu);
+void* iniciar_conexion_kernel_dispatch(void *arg);
+void* iniciar_conexion_kernel_interrupt(void *arg);
+void* inicializar_kernel(void *arg);
 void enviar_id(int fd_conexion, int identificador_cpu);
-void iniciar_conexion_memoria_dispatch(int id);
+void* iniciar_conexion_memoria_dispatch(void *arg);
+void* inicializar_memoria(void *arg);
 
