@@ -4,41 +4,37 @@
 #include <pthread.h>
 #include "traduccion.h"
 #include "cache.h"
-
-
 //Funcion de Inicializacion de CPU
 
 void inicializar_CPU(int id){
-    inicializar_logs();
+    inicializar_logs(id);
     inicializar_configs();
     inicializarTLB();
     inicializarCache();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
-
-    pthread_t hiloKernel;
-    pthread_t hiloMemoria;
-    pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
-    pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
-    pthread_join(hiloKernel, NULL);
-    pthread_join(hiloMemoria, NULL);  
+    // INICIAR CONEXIONES => las dos son continuas, no necesito mantenerlas abiertas.
+    // Estos hilos no se usan asi.
+    iniciar_conexion_memoria_dispatch(id);
+    iniciar_conexion_kernel_dispatch(id);
+    iniciar_conexion_kernel_interrupt(id);
+    while(1){
+        ejecutar_instrucciones(NULL);
+    }
 }
 
 //Funcion de Inicializacion de Logs
 
-void inicializar_logs(){
-    cpu_logger = log_create("cpu.log" , "CPU", 1 , LOG_LEVEL_INFO);
-    if(!cpu_logger)
-    {
-        perror("No se pudo crear el logger.");
-        exit(EXIT_FAILURE);
+void inicializar_logs(int id){
+    char archivo_log_cpu[50];
+    sprintf(archivo_log_cpu, "cpu_%d.log", id);
+    char nombre_cpu[200];
+    sprintf(nombre_cpu, "cpu_%d", id);
+    logger = log_create(archivo_log_cpu, nombre_cpu, true, LOG_LEVEL_INFO);
+    if (logger == NULL) {
+        printf("No se pudo crear el archivo de log para la CPU %d\n", id);
+        exit(1);
     }
-    cpu_log_debug = log_create("cpu.log" , "CPU", 1 , LOG_LEVEL_TRACE);
-    if(cpu_log_debug == NULL){
-        perror("No se pudo crear el logger.");
-        exit(EXIT_FAILURE);
-    }
-    log_info(cpu_logger, "Logger de CPU iniciado correctamente");
 }
 
 //Funcion de Inicializacion de Configs

@@ -59,88 +59,90 @@ void* manejar_cliente(void *socketCliente)
 }
 
 void manejar_cliente_kernel(int cliente) {
-        //nos mande un opcode
-        op_code peticion_kernel = -2;
-        enviar_op_code(cliente, MEMORIA_LISTA);
-        while (peticion_kernel != DESCONEXION_KERNEL){
-            peticion_kernel = recibir_op_code(cliente);
-            log_debug(logger_memoria, "Peticion recibida de KERNEL: %s", instruccion_a_string(peticion_kernel));
-            switch (peticion_kernel){
-                case INICIALIZAR_PROCESO_DESDE_NEW:{
-                    t_paquete *proceso_paquete = recibir_paquete(cliente);
-                    log_debug(logger_memoria, "Termine de recibir proceso");
-                    int pid = deserializar_pid_memoria(proceso_paquete);
-                    int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
-                    char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
-                    log_warning(logger_memoria,"ANtes de armar la ruta el nombre es: %s",path_pseudocodigo);
-                    char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);
-                    log_debug(logger_memoria, "el pseudocodigo es: %s", path_absoluto);
-                    if(inicializar_proceso(pid,tam_proceso,path_absoluto)){
-                        log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
-                        enviar_op_code(cliente, ACEPTAR_PROCESO);
-                        break;
-                    } 
-                    else {
-                        enviar_op_code(cliente, RECHAZO_PROCESO);
-                        break;
-                    }
-                }
-                case INICIALIZAR_PROCESO_SUSPENDIDO: {
-                    log_debug(logger_memoria,"ESTOY EN CASO DESUSUSPENCION_PROCESO");
-                    t_paquete *proceso_paquete = recibir_paquete(cliente);
-                    log_debug(logger_memoria, "recibi el paquete");
-                    int pid = deserializar_pid_memoria(proceso_paquete);
-                    int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
-                    //char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
-                    if (!proceso_paquete) {
-                        log_error(logger_memoria, "Error al recibir paquete de proceso suspendido");
-                        enviar_op_code(cliente, RECHAZO_PROCESO);
-                        break;
-                    }
-                    // Intentar reanudar el proceso desde SWAP
-                    reanudar_proceso_desde_kernel(pid, tam_proceso,cliente);
+    //nos mande un opcode
+    op_code peticion_kernel = -2;
+    enviar_op_code(cliente, MEMORIA_LISTA);
+    while (peticion_kernel != DESCONEXION_KERNEL){
+        peticion_kernel = recibir_op_code(cliente);
+        log_debug(logger_memoria, "Peticion recibida de KERNEL: %s", instruccion_a_string(peticion_kernel));
+        switch (peticion_kernel){
+            case INICIALIZAR_PROCESO_DESDE_NEW:{
+                t_paquete *proceso_paquete = recibir_paquete(cliente);
+                log_debug(logger_memoria, "Termine de recibir proceso");
+                int pid = deserializar_pid_memoria(proceso_paquete);
+                int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
+                char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
+                log_warning(logger_memoria,"ANtes de armar la ruta el nombre es: %s",path_pseudocodigo);
+                char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);
+                log_debug(logger_memoria, "el pseudocodigo es: %s", path_absoluto);
+                if(inicializar_proceso(pid,tam_proceso,path_absoluto)){
+                    log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
+                    enviar_op_code(cliente, ACEPTAR_PROCESO);
+                    break;
+                } 
+                else {
+                    enviar_op_code(cliente, RECHAZO_PROCESO);
                     break;
                 }
-                case FINALIZAR_PROCESO: {
-                    t_paquete *paquete = recibir_paquete(cliente);
-                    int pid = deserializar_pid_memoria(paquete);
-                    finalizar_proceso(pid);
-                    log_info(logger_memoria, "## PID: %d - Proceso Destruido ", pid); // Log obligatorio de destrucción de proceso (faltan: metricas y swaps)
-                    enviar_op_code(cliente, FINALIZACION_CONFIRMADA);
-                    break;
-                }
-                case SUSPENDER_PROCESO: {
-                    // Recibir el PID del proceso a suspender
-                    log_debug(logger_memoria,"ESTOY EN CASO SUSPENCION_PROCESO");
-                    t_paquete *proceso_paquete = recibir_paquete(cliente);
-                    log_debug(logger_memoria, "recibi el paquete");
-                    int pid = deserializar_pid_memoria(proceso_paquete);
-                    log_warning(logger_memoria,"PROCESO POR SER SUSPENDIDO EN MEMORIA");
-                    if (pid < 0) {
-                        log_error(logger_memoria, "PID inválido recibido para suspensión: %d", pid);
-                        enviar_op_code(cliente, RECHAZO_PROCESO);
-                        break;
-                    }
-                    // Suspender el proceso
-                    suspender_proceso_desde_kernel(pid, cliente);
-                    break;
-                }
-                case DUMP_MEMORY: {
-                    int pid = recibir_entero(cliente);
-                    bool dump_ok = dump_memoria_proceso(pid);
-                    if (dump_ok) {
-                        enviar_op_code(cliente, ACEPTAR_PROCESO); // o DUMP_OK
-                    } else {
-                        enviar_op_code(cliente, RECHAZO_PROCESO); // o DUMP_ERROR
-                    }
-                    break;
-                }
-                default:
-                    log_warning(logger_memoria, "Peticion desconocida: %d", peticion_kernel);
-                    log_debug(logger_memoria,"Se desconecto Kernel");
-                    break;
             }
+            case INICIALIZAR_PROCESO_SUSPENDIDO: {
+                log_debug(logger_memoria,"ESTOY EN CASO DESUSUSPENCION_PROCESO");
+                t_paquete *proceso_paquete = recibir_paquete(cliente);
+                int pid = deserializar_pid_memoria(proceso_paquete);
+                //int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
+                //char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
+                if (!proceso_paquete) {
+                    log_error(logger_memoria, "Error al recibir paquete de proceso suspendido");
+                    enviar_op_code(cliente, RECHAZO_PROCESO);
+                    break;
+                }
+                // Intentar reanudar el proceso desde SWAP
+                desuspender_proceso(pid);
+
+                //log_info(logger_memoria, "## PID: %d - Proceso Desuspendido - Tamaño: %d", pid, tam_proceso);
+                enviar_op_code(cliente, 1);
+                break;
+            }
+            case FINALIZAR_PROCESO: {
+                t_paquete *paquete = recibir_paquete(cliente);
+                int pid = deserializar_pid_memoria(paquete);
+                finalizar_proceso(pid);
+                log_info(logger_memoria, "## PID: %d - Proceso Destruido ", pid); // Log obligatorio de destrucción de proceso (faltan: metricas y swaps)
+                enviar_op_code(cliente, FINALIZACION_CONFIRMADA);
+                break;
+            }
+            case SUSPENDER_PROCESO: {
+                // Recibir el PID del proceso a suspender
+                log_debug(logger_memoria,"ESTOY EN CASO SUSPENCION_PROCESO");
+                t_paquete *proceso_paquete = recibir_paquete(cliente);
+                int pid = deserializar_pid_memoria(proceso_paquete);
+                log_warning(logger_memoria,"PROCESO POR SER SUSPENDIDO EN MEMORIA");
+                if (pid < 0) {
+                    log_error(logger_memoria, "PID inválido recibido para suspensión: %d", pid);
+                    enviar_op_code(cliente, RECHAZO_PROCESO);
+                    break;
+                }
+                // Suspender el proceso
+                suspender_proceso(pid);
+                enviar_op_code(cliente, 1); 
+                break;
+            }
+            case DUMP_MEMORY: {
+                int pid = recibir_entero(cliente);
+                bool dump_ok = dump_memoria_proceso(pid);
+                if (dump_ok) {
+                    enviar_op_code(cliente, ACEPTAR_PROCESO); // o DUMP_OK
+                } else {
+                    enviar_op_code(cliente, RECHAZO_PROCESO); // o DUMP_ERROR
+                }
+                break;
+            }
+            default:
+                log_warning(logger_memoria, "Peticion desconocida: %d", peticion_kernel);
+                log_debug(logger_memoria,"Se desconecto Kernel");
+                break;
         }
+    }
     log_debug(logger_memoria,"Ya sali del switch y estoy por cerrar la conexion");
     close(cliente);
     return;
@@ -178,7 +180,6 @@ void manejar_cliente_cpu(int cliente){
                 if (instruccion != NULL) {
                     t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
                     crear_paquete(MANDAR_INSTRUCCION,buffer,cliente);
-                    //enviar_instruccion(cliente, instruccion);
                     log_debug(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: %s", pid, pc, instruccion);
                     free(instruccion);
                 }else{
@@ -186,7 +187,6 @@ void manejar_cliente_cpu(int cliente){
                     log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }
                 log_debug(logger_memoria,"YA MANDE LA INSTRUCCION Y ESTOY POR SALIR DEL FETCH");
-                //free(pedido);
                 break;
             }
             case ENVIO_PID_DIRFIS_DAT: { //READ_MEMORIA

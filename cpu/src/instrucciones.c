@@ -191,10 +191,10 @@ void mandar_syscall(t_instruccion instruccion){
 
 //Chequear Interrupcion
 void check_interrupt(void){
-    int pid_interrupcion=0;
-    recv(fd_conexion_kernel_interrupt, &pid_interrupcion,sizeof(int),0);
-    log_info(cpu_logger," ## Llega interrupción al puerto Interrupt <%d>", pid_interrupcion);
-    if(pid_interrupcion != 0){ //recibio una interrupcion
+    int interrupcion=0;
+    recv(fd_conexion_kernel_interrupt, &interrupcion,sizeof(int),0);
+    log_info(cpu_logger," ## Llega interrupción al puerto Interrupt <%d>", interrupcion);
+    if(interrupcion != 0){ //recibio una interrupcion
         //Hay que Serializar
         t_buffer *buffer = crear_buffer_cpu(pc, pid);
         crear_paquete(ENVIO_PID_Y_PC,buffer, fd_conexion_kernel_dispatch); 

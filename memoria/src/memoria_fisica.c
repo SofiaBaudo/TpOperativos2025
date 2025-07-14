@@ -87,6 +87,16 @@ int leer_memoria_fisica(int direccion_fisica, char* valor_leido, size_t tamanio)
     return ret;
 }
 
+// Lee un marco de memoria física y devuelve un puntero al buffer con su contenido
+void* leer_marco_memoria(int nro_marco) {
+    void* buffer = malloc(memoria_config.TAM_PAGINA);
+    if (!buffer) return NULL;
+    int direccion_fisica = marcos[nro_marco].numero_marco * memoria_config.TAM_PAGINA;
+    leer_memoria_fisica(direccion_fisica, buffer, memoria_config.TAM_PAGINA);
+    return buffer;
+}
+
+
 // Escribe en memoria física desde un buffer. Devuelve 0 OK, -1 error.
 int escribir_memoria_fisica(int direccion_fisica, char* buffer, size_t tamanio) {
     int ret = 0;
@@ -98,4 +108,53 @@ int escribir_memoria_fisica(int direccion_fisica, char* buffer, size_t tamanio) 
     }
     pthread_mutex_unlock(&memoria_usuario_mutex);
     return ret;
+}
+
+// Escribe los datos de una página en el marco físico indicado
+int escribir_marco_memoria(int nro_marco, void* datos_pagina) {
+    if (nro_marco < 0 || nro_marco >= cantidad_marcos) {
+        log_error(logger_memoria, "escribir_marco_memoria: número de marco inválido %d", nro_marco);
+        return -1;
+    }
+    int direccion_fisica = marcos[nro_marco].numero_marco * memoria_config.TAM_PAGINA;
+    return escribir_memoria_fisica(direccion_fisica, datos_pagina, memoria_config.TAM_PAGINA);
+}
+
+// Devuelve una lista de números de marcos asignados al proceso con el PID dado
+t_list* obtener_marcos_proceso(int pid) {
+    t_list* lista_marcos = list_create();
+    if (lista_marcos == NULL) {
+        log_error(logger_memoria, "Error al crear lista de marcos para el proceso %d", pid);
+        return NULL;
+    }
+
+    // Buscar el proceso en memoria para acceder a su tabla de páginas
+    t_proceso_memoria* proc = buscar_proceso_en_memoria(pid); // Debe estar implementada
+    if (proc == NULL || proc->tabla_paginacion_raiz == NULL) {
+        log_error(logger_memoria, "No se encontró el proceso %d o su tabla de páginas", pid);
+        list_destroy(lista_marcos);
+        return NULL;
+    }
+
+    t_tabla_paginas* tabla = proc->tabla_paginacion_raiz;
+    int niveles = memoria_config.CANTIDAD_NIVELES;
+    for (int i = 0; i < tabla->cantidad_entradas; i++) {
+        t_entrada_tabla* entrada = &tabla->entradas[i];
+        t_entrada_tabla* actual = entrada;
+        t_tabla_paginas* tabla_actual = tabla;
+        // Bajar exactamente niveles-1 veces para llegar al último nivel
+        for (int nivel = 1; nivel < niveles; nivel++) {
+            if (actual->tabla_nivel_inferior == NULL) {
+                log_error(logger_memoria, "Error: tabla_nivel_inferior NULL antes de llegar al último nivel para página %d", i);
+                break;
+            }
+            tabla_actual = actual->tabla_nivel_inferior;
+            actual = &tabla_actual->entradas[actual->nro_pagina];
+        }
+        // Ahora actual apunta a la entrada del último nivel
+        int* nro_marco = malloc(sizeof(int));
+        *nro_marco = actual->nro_marco;
+        list_add(lista_marcos, nro_marco);
+    }
+    return lista_marcos;
 }

@@ -1,443 +1,225 @@
-#include <SWAP.h>
+#include "SWAP.h"
 
-FILE* swapfile = NULL;
-t_list* paginas_en_swap = NULL;
-t_list* lista_procesos = NULL;
+t_list* procesos_swap;
+t_list* huecos_swap;
 
+// Inicializa el archivo swapfile.bin y las estructuras administrativas necesarias
 void inicializar_swap(){
-    swapfile = fopen(memoria_config.PATH_SWAPFILE, "rb+");
-    if (!swapfile) {
-        swapfile = fopen(memoria_config.PATH_SWAPFILE, "wb+");
-    }
-    if (!swapfile) {
-        log_error(logger_memoria, "No se pudo abrir o crear el archivo swapfile.bin en: %s", memoria_config.PATH_SWAPFILE);
+    // Abrir el archivo swapfile.bin existente en modo lectura/escritura binario
+    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "r+b");
+    if (swapfile == NULL) {
+        perror("No se pudo abrir el archivo swapfile.bin");
         exit(EXIT_FAILURE);
     }
-    paginas_en_swap = list_create();
-    log_info(logger_memoria, "SWAP inicializado correctamente en: %s", memoria_config.PATH_SWAPFILE);
-}
+    fclose(swapfile);
 
-void inicializar_lista_procesos() {
-    if (lista_procesos == NULL) {
-        lista_procesos = list_create();
+    // Inicializar la lista global de procesos en swap
+    procesos_swap = list_create();
+    if (procesos_swap == NULL) {
+        perror("No se pudo crear la lista de procesos en swap");
+        exit(EXIT_FAILURE);
     }
-}
-void escribir_pagina_en_swap(int pid, int nro_pagina, void* contenido, int tamanio_proceso, int cliente){
-    // Aplicar retardo de SWAP
-    usleep(memoria_config.RETARDO_SWAP * 1000);
-    
-    // Obtener posición actual para el offset
-    fseek(swapfile, 0, SEEK_END);
-    int offset = ftell(swapfile);
-    
-    // Escribir el contenido de la página al archivo
-    size_t bytes_escritos = fwrite(contenido, 1, memoria_config.TAM_PAGINA, swapfile);
-    if (bytes_escritos != memoria_config.TAM_PAGINA) {
-        log_error(logger_memoria, "Error al escribir página en SWAP para PID %d", pid);
-        if (cliente != -1) {
-            enviar_op_code(cliente, RECHAZO_PROCESO);
-        }
-        return;
-    }
-    fflush(swapfile);
-    
-    // Crear entrada para seguimeitno de la página en SWAP
-    t_pagina_en_swap* entrada = malloc(sizeof(t_pagina_en_swap));
-    entrada->pid = pid;
-    entrada->nro_pagina = nro_pagina;
-    entrada->offset_en_archivo = offset;
-    list_add(paginas_en_swap, entrada);
-    
-    // Incrementar métrica de bajadas a SWAP
-    incrementar_metrica_proceso(pid, BAJADAS_SWAP);
-    
-    log_debug(logger_memoria, "## PID: <%d> - Página <%d> guardada en SWAP en offset <%d>", pid, nro_pagina, offset);
-}
-void* leer_pagina_de_swap(int pid, int nro_pagina, int tamanio_proceso, int cliente) {
-    // Aplicar retardo de SWAP
-    usleep(memoria_config.RETARDO_SWAP * 1000);
-    
-    // Buscar la página en la lista de páginas en SWAP
-    for (int i = 0; i < list_size(paginas_en_swap); i++) {
-        t_pagina_en_swap* entrada = list_get(paginas_en_swap, i);
-        if (entrada->pid == pid && entrada->nro_pagina == nro_pagina) {
-            // Asignar buffer para leer la página
-            void* buffer = malloc(memoria_config.TAM_PAGINA);
-            if (!buffer) {
-                log_error(logger_memoria, "Error al asignar memoria para leer página de SWAP");
-                if (cliente != -1) {
-                    enviar_op_code(cliente, RECHAZO_PROCESO);
-                }
-                return NULL;
-            }
-            
-            // Leer la página desde el archivo SWAP
-            fseek(swapfile, entrada->offset_en_archivo, SEEK_SET);
-            size_t bytes_leidos = fread(buffer, 1, memoria_config.TAM_PAGINA, swapfile);
-            
-            if (bytes_leidos != memoria_config.TAM_PAGINA) {
-                log_error(logger_memoria, "Error al leer página de SWAP para PID %d", pid);
-                free(buffer);
-                if (cliente != -1) {
-                    enviar_op_code(cliente, RECHAZO_PROCESO);
-                }
-                return NULL;
-            }
-            
-            // Incrementar métrica de subidas a memoria principal
-            incrementar_metrica_proceso(pid, SUBIDAS_MEMORIA);
-            
-            // Remover la entrada de la lista de SWAP (ya no está en SWAP)
-            list_remove(paginas_en_swap, i);
-            free(entrada);
-            
-            log_debug(logger_memoria, "## PID: <%d> - Página <%d> cargada desde SWAP", pid, nro_pagina);
-            return buffer;
-        }
-    }
-    
-    // No se encontró la página en SWAP
-    log_warning(logger_memoria, "Página %d del proceso PID %d no encontrada en SWAP", nro_pagina, pid);
-    if (cliente != -1) {
-        enviar_op_code(cliente, RECHAZO_PROCESO);
-    }
-    return NULL;
-}
-//Función para eliminar páginas de SWAP
-void eliminar_paginas_de_proceso(int pid){
-    int paginas_eliminadas = 0;
-    
-    // Recorrer la lista desde el final para evitar problemas con los índices
-    for (int i = list_size(paginas_en_swap) - 1; i >= 0; i--) {
-        t_pagina_en_swap* entrada = list_get(paginas_en_swap, i);
-        if (entrada->pid == pid) {
-            // Remover la entrada de la lista y liberar memoria
-            list_remove(paginas_en_swap, i);
-            free(entrada);
-            paginas_eliminadas++;
-        }
-    }
-    
-    if (paginas_eliminadas > 0) {
-        log_info(logger_memoria, "## PID: <%d> - Se eliminaron <%d> páginas de SWAP", pid, paginas_eliminadas);
-    } else {
-        log_debug(logger_memoria, "ELIMINAR PROCESO -> No se encontraron páginas en SWAP para el proceso PID %d", pid);
+    huecos_swap = list_create();
+    if (huecos_swap == NULL) {
+        perror("No se pudo crear la lista de huecos en swap");
+        exit(EXIT_FAILURE);
     }
 }
 
-//Función para cerrar SWAP
-void cerrar_swap(){
-    if (swapfile != NULL) {
-        fclose(swapfile);
-        swapfile = NULL;
-        log_debug(logger_memoria, "Archivo SWAP cerrado correctamente");
-    }
-    
-    if (paginas_en_swap != NULL) {
-        list_destroy_and_destroy_elements(paginas_en_swap, free);
-        paginas_en_swap = NULL;
-        log_debug(logger_memoria, "Lista de páginas en SWAP liberada");
-    }
-    
-    if (lista_procesos != NULL) {
-        list_destroy_and_destroy_elements(lista_procesos, free);
-        lista_procesos = NULL;
-        log_debug(logger_memoria, "Lista de procesos liberada");
-    }
-}
-
-// Función para agregar un proceso a la lista de seguimiento
-void agregar_proceso_a_lista(int pid, int tamanio, t_tabla_paginas* tabla_raiz) {
-    t_tabla_proceso* proceso = malloc(sizeof(t_tabla_proceso));
-    proceso->pid = pid;
-    proceso->tamanio = tamanio;
-    proceso->tabla_raiz = tabla_raiz;
-    list_add(lista_procesos, proceso);
-}
-//LA LISTA DE PROCESOS ES LA GLOBAL -> cada vez que se inicializa un proceso tendria que estar en lista_procesos
-
-// Función para obtener tabla de proceso
-t_tabla_proceso* obtener_tabla_proceso(int pid) {
-    if (procesos_en_memoria == NULL) {
-        log_error(logger_memoria, "LA LISTA ES NULA");
-        return NULL;
-    }
-    
-    for (int i = 0; i < list_size(procesos_en_memoria); i++) {
-        t_tabla_proceso* proceso = list_get(procesos_en_memoria, i);
-        log_error(logger_memoria,"ENTRE AL FOR, ESTOY RECORRIENDO EN OBTENER TABLA PROCESO");
-        if (proceso->pid == pid) {
-            log_error(logger_memoria, "SE ENCONTRO EL PROCESO");
-            return proceso;
-        }
-    }
-    return NULL;
-}
-
-// Función para eliminar tabla de proceso
-void eliminar_tabla_proceso(int pid) {
-    if (lista_procesos == NULL) {
-        return;
-    }
-    
-    for (int i = 0; i < list_size(lista_procesos); i++) {
-        t_tabla_proceso* proceso = list_get(lista_procesos, i);
-        if (proceso->pid == pid) {
-            // Liberar tabla de páginas
-            if (proceso->tabla_raiz) {
-                destruir_tabla_paginas_rec(proceso->tabla_raiz, 1);
-                proceso->tabla_raiz = NULL;
-            }
-            // Remover de la lista y liberar memoria
-            list_remove(lista_procesos, i);
-            free(proceso);
-            break;
-        }
-    }
-}
-
-// Función para obtener el número de marco de una página específica
-int obtener_marco_de_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina) {
-    if (!tabla_raiz) {
-        return -1;
-    }
-    
-    int niveles = memoria_config.CANTIDAD_NIVELES;
-    int entradas = memoria_config.ENTRADAS_POR_TABLA;
-    t_tabla_paginas* actual = tabla_raiz;
-    
-    // Navegar hasta el último nivel
-    for (int nivel = 1; nivel < niveles; nivel++) {
-        int idx = (nro_pagina / (int)pow(entradas, niveles - nivel)) % entradas;
-        if (idx >= actual->cantidad_entradas || !actual->entradas[idx].tabla_nivel_inferior) {
-            return -1;
-        }
-        actual = actual->entradas[idx].tabla_nivel_inferior;
-    }
-    
-    // Obtener el índice final y el marco
-    int idx_final = nro_pagina % entradas;
-    if (idx_final >= actual->cantidad_entradas) {
-        return -1;
-    }
-    
-    return actual->entradas[idx_final].nro_marco;
-}
-
-// Función para recorrer todas las páginas de un proceso
-int contador = 0;
-void recorrer_paginas_proceso(t_tabla_paginas* tabla_raiz, int nivel, int offset_pagina, void (*callback)(int, int, void*), void* contexto) {
-    contador++;
-    log_debug(logger_memoria, "el contador es %i", contador);
-    log_debug(logger_memoria, "Nivel %d - tabla: %p | entradas: %p", nivel, tabla_raiz, tabla_raiz->entradas);
-    if (!tabla_raiz) {
-        log_error(logger_memoria, "ERROR: tabla_raiz es NULL en nivel %d", nivel);
-        return;
-    }
-
-    if (!tabla_raiz->entradas) {
-        log_error(logger_memoria, "ERROR: tabla->entradas es NULL en nivel %d", nivel);
-        return;
-    }
-
-    log_debug(logger_memoria, "el numero de nivel es: %i", nivel);
-    
-    if (nivel == memoria_config.CANTIDAD_NIVELES) {
-        log_debug(logger_memoria, "la cantidad de entradas es: %i", tabla_raiz->cantidad_entradas);
-        if (tabla_raiz->cantidad_entradas <= 0 || tabla_raiz->cantidad_entradas > 10000) {
-        log_error(logger_memoria, "Valor inválido en cantidad_entradas: %d en nivel %d", tabla_raiz->cantidad_entradas, nivel);
-        return;
-        }
-        for (int i = 0; i < tabla_raiz->cantidad_entradas; i++) {
-            int nro_pagina = offset_pagina + i;
-            int nro_marco = tabla_raiz->entradas[i].nro_marco;
-            log_warning(logger_memoria, "el numero de marco es: %i", nro_marco);
-            if (nro_marco != -1) {
-                log_warning(logger_memoria, "ENTRE AL IF DEL NUMERO DE MARCO != -1");
-                callback(nro_pagina, nro_marco, contexto);
-            }
-        }
-        return;
-    }
-    if (tabla_raiz->cantidad_entradas <= 0 || tabla_raiz->cantidad_entradas > 1000) {
-        log_error(logger_memoria, "❌ Valor inválido en cantidad_entradas: %d en nivel %d", tabla_raiz->cantidad_entradas, nivel);
-        return;
-    }
-
-    // Recursivamente procesar los subárboles
-    int entradas = memoria_config.ENTRADAS_POR_TABLA;
-    int paginas_por_subarbol = pow(entradas, memoria_config.CANTIDAD_NIVELES - nivel);
-
-    for (int i = 0; i < tabla_raiz->cantidad_entradas; i++) {
-        log_debug(logger_memoria, "entre al for para ciclar");
-        if (tabla_raiz->entradas[i].tabla_nivel_inferior) {
-            int nuevo_offset = offset_pagina + (i * paginas_por_subarbol);
-            recorrer_paginas_proceso(tabla_raiz->entradas[i].tabla_nivel_inferior, nivel + 1, nuevo_offset, callback, contexto);                   
-        }
-    }
-}
-
-
-// Callback para escribir páginas a SWAP durante suspensión
-void escribir_pagina_a_swap_callback(int nro_pagina, int nro_marco, void* contexto) {
-    t_contexto_suspension* ctx = (t_contexto_suspension*)contexto;
-    
-    if (ctx->error_encontrado) {
-        return; // Ya hubo un error, no continuar
-    }
-    
-    // Obtener la dirección física de la página
-    void* contenido_pagina = marcos[nro_marco].direccion_fisica;
-    
-    // Escribir la página a SWAP
-    escribir_pagina_en_swap(ctx->pid, nro_pagina, contenido_pagina, 0, ctx->cliente);
-    
-    // Liberar el marco
-    marcos[nro_marco].ocupado = false;
-    marcos[nro_marco].pid_propietario = -1;
-}
-
-// Función para suspender un proceso (llamada desde el servidor)
-void suspender_proceso_desde_kernel(int pid, int cliente) {
+int suspender_proceso(int pid){
     log_info(logger_memoria, "## PID: <%d> - Iniciando suspensión del proceso", pid);
     
-    // Obtener la tabla de páginas del proceso
-    t_tabla_proceso* proceso = obtener_tabla_proceso(pid);
-    log_debug(logger_memoria,"despues de intentar obtener la tabla del proceso");
-    if (!proceso) {
-        log_warning(logger_memoria, "ENTRE AL IF Y No se encontró el proceso PID %d para suspender", pid);
-        enviar_op_code(cliente, RECHAZO_PROCESO);
-        return;
+    // 1. Obtener la lista de marcos ocupados por el proceso en memoria principal
+    t_list* marcos_proceso = obtener_marcos_proceso(pid);
+    if (marcos_proceso == NULL || list_size(marcos_proceso) == 0) {
+        // No hay marcos para este proceso
+        return -1;
     }
-    // Configurar contexto para escribir páginas a SWAP
-    t_contexto_suspension contexto;
-    contexto.pid = pid;
-    contexto.cliente = cliente;
-    contexto.error_encontrado = false;
-    
-    log_warning(logger_memoria, "POR RECORRER LAS PAGINAS");
-    // Recorrer todas las páginas del proceso y escribirlas a SWAP
-    recorrer_paginas_proceso(proceso->tabla_raiz, 1, 0, escribir_pagina_a_swap_callback, &contexto);
-    log_error(logger_memoria,"SE RECORRIO LAS PAGINAS DEL PROCESO");
-    if (contexto.error_encontrado) {
-        log_error(logger_memoria, "Error durante la suspensión del proceso PID %d", pid);
-        enviar_op_code(cliente, RECHAZO_PROCESO);
-        return;
+
+    // 2. Calcular el tamaño total a guardar
+    size_t tamanio_total = list_size(marcos_proceso) * memoria_config.TAM_PAGINA; // Porque el tamaño de cada marco es igual al de una pagina
+    void* buffer = malloc(tamanio_total);
+    if (buffer == NULL) {
+        // Error de memoria
+        list_destroy(marcos_proceso);
+        return -1;
     }
-    
-    // Eliminar las tablas de páginas del proceso (liberando memoria)
-    eliminar_tabla_proceso(pid);
-    
-    log_debug(logger_memoria, "## PID: <%d> - Proceso suspendido exitosamente", pid);
-    enviar_op_code(cliente, SUSPENSION_CONFIRMADA);
+
+    // 3. Leer los datos de cada marco y copiarlos al buffer
+    for (int i = 0; i < list_size(marcos_proceso); i++) {
+        int nro_marco = *(int*)list_get(marcos_proceso, i);
+        void* datos_marco = leer_marco_memoria(nro_marco);
+        memcpy(buffer + i * memoria_config.TAM_PAGINA, datos_marco, memoria_config.TAM_PAGINA);
+        free(datos_marco);
+    }
+
+    // 4. Escribir el buffer en swap
+    size_t offset_swap = buscar_espacio_libre_swap(tamanio_total); 
+    if (offset_swap == (size_t)-1) {
+        // No hay espacio suficiente en swap
+        free(buffer);
+        list_destroy(marcos_proceso);
+        return -1;
+    }
+    if (escribir_en_swap(buffer, tamanio_total, offset_swap) != 0) {
+        free(buffer);
+        list_destroy(marcos_proceso);
+        return -1;
+    }
+
+    // 5. Registrar el proceso en la lista de procesos en swap
+    ProcesoSwap* pswap = malloc(sizeof(ProcesoSwap));
+    pswap->pid = pid;
+    pswap->offset_swap = offset_swap;
+    pswap->tamanio = tamanio_total;
+    // Guardar el path del pseudocódigo (deberás obtenerlo del proceso en memoria antes de finalizarlo)
+    t_proceso_memoria* proc = buscar_proceso_en_memoria(pid); // función auxiliar externa
+    if (proc && proc->path_pseudocodigo) {
+        pswap->path_pseudocodigo = strdup(proc->path_pseudocodigo);
+    } else {
+        log_error(logger_memoria, "No se encontró el proceso %d en memoria", pid);
+        pswap->path_pseudocodigo = NULL;
+    }
+    list_add(procesos_swap, pswap); // Usar semaforo
+
+    // 6. Finalizo el proceso en memoria
+    finalizar_proceso(pid);
+
+    // 7. Liberar recursos
+    free(buffer);
+    list_destroy(marcos_proceso);
+
+    return 0;
 }
 
-// Función para reanudar un proceso suspendido desde SWAP
-void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente) {
-    log_info(logger_memoria, "## PID: <%d> - Iniciando reanudación del proceso desde SWAP", pid);
-    
-    // Verificar si el proceso tiene páginas en SWAP
-    bool tiene_paginas_en_swap = false;
-    log_warning(logger_memoria, "POR ENTRAR AL FOR el valor de si hay paginas en swap es: %i", tiene_paginas_en_swap);
-    for (int i = 0; i < list_size(paginas_en_swap); i++) {
-        log_error(logger_memoria,"ESTOY RECORRIENDO LAS ENTRADAS DE SWAP");
-        t_pagina_en_swap* entrada = list_get(paginas_en_swap, i);
-        if (entrada->pid == pid) {
-            log_error(logger_memoria,"ENCONTRE LA ENTRADA DEL PROCESO");
-            tiene_paginas_en_swap = true;
+size_t buscar_espacio_libre_swap(size_t tamanio) {
+    // 1. Buscar en la lista de huecos libres
+    for (int i = 0; i < list_size(huecos_swap); i++) {
+        HuecoSwap* hueco = list_get(huecos_swap, i);
+        if (hueco->tamanio >= tamanio) {
+            size_t offset = hueco->offset;
+            // Si el hueco es más grande que lo necesario, ajusta el hueco
+            if (hueco->tamanio > tamanio) {
+                hueco->offset += tamanio;
+                hueco->tamanio -= tamanio;
+            } else {
+                // Si el hueco es exacto, lo elimina de la lista
+                list_remove(huecos_swap, i);
+                free(hueco);
+            }
+            return offset;
+        }
+    }
+
+    // 2. Si no hay hueco, escribir al final del archivo
+    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "r+b");
+    if (swapfile == NULL) {
+        perror("No se pudo abrir el archivo swapfile.bin");
+        return (size_t)-1;
+    }
+    fseek(swapfile, 0, SEEK_END);
+    size_t tam_actual = ftell(swapfile);
+    fclose(swapfile);
+
+    return tam_actual;
+}
+
+int escribir_en_swap(void* buffer, size_t tamanio, size_t offset) {
+    // Abre el archivo swapfile.bin en modo lectura/escritura
+    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "r+b");
+    if (swapfile == NULL) {
+        perror("No se pudo abrir el archivo swapfile.bin");
+        return -1;
+    }
+
+    // Mueve el cursor al offset especificado
+    fseek(swapfile, offset, SEEK_SET);
+
+    // Escribe los datos del buffer en el archivo
+    size_t bytes_escritos = fwrite(buffer, 1, tamanio, swapfile);
+    fclose(swapfile);
+
+    if (bytes_escritos != tamanio) {
+        perror("Error al escribir en el archivo swapfile.bin");
+        return -1;
+    }
+
+    return 0; // Éxito
+}
+
+// Desuspende un proceso: lo restaura desde swap a memoria principal
+int desuspender_proceso(int pid) {
+    // 1. Buscar el proceso en la lista de procesos en swap => USAR SEMAFOROS
+    ProcesoSwap* pswap = NULL; 
+    for (int i = 0; i < list_size(procesos_swap); i++) {
+        ProcesoSwap* p = list_get(procesos_swap, i);
+        if (p->pid == pid) {
+            pswap = p;
             break;
         }
     }
-    log_debug(logger_memoria,"Tiene paginas en swap: %i",tiene_paginas_en_swap);
-    if (!tiene_paginas_en_swap) {
-        log_warning(logger_memoria, "NO TE LO REINICIO PORQUE No se encontraron páginas en SWAP para el proceso PID %d", pid);
-        usleep(10000000);
-        enviar_op_code(cliente, RECHAZO_PROCESO);
-        return;
+    if (!pswap) {
+        log_error(logger_memoria, "No se encontró el proceso %d en swap", pid);
+        return -1;
     }
-    
-    // Calcular cuántas páginas necesita el proceso
-    int paginas_necesarias = (tamanio + memoria_config.TAM_PAGINA - 1) / memoria_config.TAM_PAGINA;
-    
-    // Verificar si hay espacio suficiente en memoria principal
-    int marcos_libres = contar_marcos_libres();
-    log_debug(logger_memoria,"Los marcos libres son: %i",marcos_libres);
-    log_debug(logger_memoria,"Las paginas necesarias son: %i",paginas_necesarias);
-    if (marcos_libres < paginas_necesarias) {
-        log_warning(logger_memoria, "No hay espacio suficiente en memoria para reanudar PID %d (necesita %d marcos, hay %d libres)", pid, paginas_necesarias, marcos_libres);
-        usleep(10000000);
-        enviar_op_code(cliente, RECHAZO_PROCESO);
-        return;
+
+    // 2. Leer el contenido del proceso desde swap
+    void* buffer = malloc(pswap->tamanio);
+    if (!buffer) {
+        log_error(logger_memoria, "No se pudo reservar buffer para desuspender PID %d", pid);
+        return -1;
     }
-    
-    // Recrear la estructura de tablas de páginas
-    t_tabla_paginas* tabla_raiz = iniciar_proceso_paginacion(pid, tamanio);
-    if (!tabla_raiz) {
-        log_error(logger_memoria, "Error al recrear tablas de páginas para PID %d", pid);
-        usleep(10000000);
-        enviar_op_code(cliente, RECHAZO_PROCESO);
-        return;
+    if (leer_de_swap(buffer, pswap->tamanio, pswap->offset_swap) != 0) { 
+        free(buffer);
+        log_error(logger_memoria, "Error al leer de swap para PID %d", pid);
+        return -1;
     }
-    
-    // Agregar el proceso a la lista de seguimiento
-    agregar_proceso_a_lista(pid, tamanio, tabla_raiz);
-    
-    // Cargar todas las páginas desde SWAP
-    bool error_carga = false;
-    for (int i = 0; i < list_size(paginas_en_swap); i++) {
-        t_pagina_en_swap* entrada = list_get(paginas_en_swap, i);
-        if (entrada->pid == pid) {
-            // Obtener marco para esta página
-            int nro_marco = obtener_marco_de_pagina(tabla_raiz, entrada->nro_pagina);
-            if (nro_marco == -1) {
-                log_error(logger_memoria, "No se pudo obtener marco para página %d del proceso %d", entrada->nro_pagina, pid);
-                error_carga = true;
-                break;
-            }
-            
-            // Leer página desde SWAP
-            fseek(swapfile, entrada->offset_en_archivo, SEEK_SET);
-            void* direccion_fisica = marcos[nro_marco].direccion_fisica;
-            size_t bytes_leidos = fread(direccion_fisica, 1, memoria_config.TAM_PAGINA, swapfile);
-            
-            if (bytes_leidos != memoria_config.TAM_PAGINA) {
-                log_error(logger_memoria, "Error al leer página %d del proceso %d desde SWAP", entrada->nro_pagina, pid);
-                error_carga = true;
-                break;
-            }
-            
-            // Marcar el marco como ocupado
-            marcos[nro_marco].ocupado = true;
-            marcos[nro_marco].pid_propietario = pid;
-            
-            // Incrementar métrica de subidas a memoria principal
-            incrementar_metrica_proceso(pid, SUBIDAS_MEMORIA);
-            
-            log_debug(logger_memoria, "## PID: <%d> - Página <%d> cargada desde SWAP a marco <%d>", pid, entrada->nro_pagina, nro_marco);
-        }
+
+    // 3. Inicializar estructuras administrativas del proceso en memoria usando el path guardado
+    if (!inicializar_proceso(pid, pswap->tamanio, pswap->path_pseudocodigo)) {
+        free(buffer);
+        log_error(logger_memoria, "No se pudo inicializar el proceso %d en memoria", pid);
+        return -1;
     }
-    
-    if (error_carga) {
-        // Limpiar estructuras creadas en caso de error
-        eliminar_tabla_proceso(pid);
-        enviar_op_code(cliente, RECHAZO_PROCESO);
-        return;
+
+    // 4. Asignar los datos leídos de swap a los marcos físicos del proceso
+    t_list* marcos_proceso = obtener_marcos_proceso(pid);
+    for (int i = 0; i < list_size(marcos_proceso); i++) {
+        int nro_marco = *(int*)list_get(marcos_proceso, i);
+        void* datos_pagina = buffer + i * memoria_config.TAM_PAGINA;
+        escribir_marco_memoria(nro_marco, datos_pagina);
     }
-    
-    // Eliminar las páginas del proceso de la lista de SWAP
-    eliminar_paginas_de_proceso(pid);
-    
-    log_info(logger_memoria, "## PID: <%d> - Proceso reanudado exitosamente desde SWAP", pid);
-    enviar_op_code(cliente, ACEPTAR_PROCESO);
+    list_destroy(marcos_proceso);
+
+    // 5. Liberar el espacio ocupado en swap y eliminar el proceso de la lista de swap
+    HuecoSwap* hueco = malloc(sizeof(HuecoSwap));
+    hueco->offset = pswap->offset_swap;
+    hueco->tamanio = pswap->tamanio;
+    list_add(huecos_swap, hueco);
+    list_remove_element(procesos_swap, pswap);
+    if (pswap->path_pseudocodigo) free(pswap->path_pseudocodigo);
+    free(pswap);
+
+    // 6. Liberar buffer
+    free(buffer);
+
+    log_info(logger_memoria, "PID: %d desuspendido correctamente", pid);
+    return 0;
 }
 
-// Función para verificar si un proceso tiene páginas en SWAP
-bool proceso_tiene_paginas_en_swap(int pid) {
-    for (int i = 0; i < list_size(paginas_en_swap); i++) {
-        t_pagina_en_swap* entrada = list_get(paginas_en_swap, i);
-        if (entrada->pid == pid) {
-            return true;
-        }
+// Lee datos desde swapfile.bin al buffer indicado
+int leer_de_swap(void* buffer, size_t tamanio, size_t offset) {
+    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "rb");
+    if (!swapfile) {
+        perror("No se pudo abrir el archivo swapfile.bin para leer");
+        return -1;
     }
-    return false;
+    fseek(swapfile, offset, SEEK_SET);
+    size_t bytes_leidos = fread(buffer, 1, tamanio, swapfile);
+    fclose(swapfile);
+    if (bytes_leidos != tamanio) {
+        perror("Error al leer de swapfile.bin");
+        return -1;
+    }
+    return 0;
 }

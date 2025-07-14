@@ -8,5 +8,10 @@ int main(int argc, char* argv[]){
     inicializar_CPU(id);
     log_info(cpu_logger,"inicializacion exitosa"); 
     
+
+    // creo hilo para atender interrupciones
+
+    //creo hilo para trabajar con kernel dispatch
+
     return 0;
 }

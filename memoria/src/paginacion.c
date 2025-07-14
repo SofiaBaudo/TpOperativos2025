@@ -7,15 +7,15 @@
 // Retorna la tabla de páginas raíz del proceso si tuvo éxito, NULL si hubo error de memoria
 
 t_tabla_paginas* iniciar_proceso_paginacion(int pid, int tam_proceso) {
-    t_tabla_paginas* tabla_raiz = crear_tablas_para_proceso(tam_proceso);
+    t_tabla_paginas* tabla_raiz = crear_tablas_para_proceso(tam_proceso); // tabla raiz es un puntero que apunta a la tabla del proceso.
     log_warning(logger_memoria, "termine de crear las tablas para el proceso");
-    if (!tabla_raiz){
+    if(!tabla_raiz){
         log_debug(logger_memoria, "es null la tabla de raiz");
         return NULL;
     }     
     if (!asignar_marcos_a_todas_las_paginas(tabla_raiz, 1)) {
         log_debug(logger_memoria, "vacia a asignacion");
-        destruir_tabla_paginas_rec(tabla_raiz, 1);
+        destruir_tabla_y_marcos(tabla_raiz, 1);
         tabla_raiz = NULL;
     }
     return tabla_raiz;
@@ -94,7 +94,7 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes) {
 
                     for (int j = 0; j < i; j++) {
                         if (tabla->entradas[j].tabla_nivel_inferior) {
-                            destruir_tabla_paginas_rec(tabla->entradas[j].tabla_nivel_inferior, nivel_actual + 1);
+                            destruir_tabla_y_marcos(tabla->entradas[j].tabla_nivel_inferior, nivel_actual + 1);
                             tabla->entradas[j].tabla_nivel_inferior = NULL;
                         }
                     }
@@ -158,7 +158,7 @@ bool asignar_marco_a_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina_logica, 
 // -------------------- FINALIZACIÓN Y LIBERACIÓN DE TABLAS --------------------
 
 // Libera recursivamente la estructura de tablas de páginas y los marcos asociados
-void destruir_tabla_paginas_rec(t_tabla_paginas* tabla, int nivel_actual) {
+void destruir_tabla_y_marcos(t_tabla_paginas* tabla, int nivel_actual) { // OJO CON destruir_tabla_y_marcos 
     if (!tabla) {
         log_warning(logger_memoria, "⚠️ Nivel %d: intento de destruir tabla NULL", nivel_actual);
         return;
@@ -167,10 +167,19 @@ void destruir_tabla_paginas_rec(t_tabla_paginas* tabla, int nivel_actual) {
     log_debug(logger_memoria, "🗑️  Destruyendo tabla nivel %d en %p con %d entradas",
               nivel_actual, tabla, tabla->cantidad_entradas);
 
-    for (int i = 0; i < tabla->cantidad_entradas; i++) {
-        if (tabla->entradas[i].tabla_nivel_inferior != NULL) {
-            destruir_tabla_paginas_rec(tabla->entradas[i].tabla_nivel_inferior, nivel_actual + 1);
-            tabla->entradas[i].tabla_nivel_inferior = NULL;
+    if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
+        for (int i = 0; i < tabla->cantidad_entradas; i++) {
+            int marco = tabla->entradas[i].nro_marco;
+            if (marco != -1) {
+                liberar_marco(marco);
+            }
+        }
+    } else {
+        for (int i = 0; i < tabla->cantidad_entradas; i++) {
+            if (tabla->entradas[i].tabla_nivel_inferior != NULL) {
+                destruir_tabla_y_marcos(tabla->entradas[i].tabla_nivel_inferior, nivel_actual + 1);
+                tabla->entradas[i].tabla_nivel_inferior = NULL;
+            }
         }
     }
 
@@ -178,26 +187,6 @@ void destruir_tabla_paginas_rec(t_tabla_paginas* tabla, int nivel_actual) {
     free(tabla);
 
     log_debug(logger_memoria, "✅ Nivel %d destruido correctamente", nivel_actual);
-}
-
-
-// Libera todos los marcos asignados a las páginas de último nivel
-void liberar_marcos_de_tabla(t_tabla_paginas* tabla, int nivel_actual) {
-    if (!tabla) 
-        return;
-    if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
-        for (int i = 0; i < tabla->cantidad_entradas; i++) {
-            int marco = tabla->entradas[i].nro_marco;
-            if (marco != -1) {
-                liberar_marco(marco); 
-            }
-        }
-        return;
-    }
-    for (int i = 0; i < tabla->cantidad_entradas; i++) {
-        if (tabla->entradas[i].tabla_nivel_inferior)
-            liberar_marcos_de_tabla(tabla->entradas[i].tabla_nivel_inferior, nivel_actual + 1);
-    }
 }
 
 // -------------------- FUNCIONES PARA ACCESO A TABLA DE PÁGINAS --------------------

@@ -48,7 +48,7 @@ bool inicializar_memoria(void) {
 
 // Inicializa todas las listas globales del sistema de memoria
 bool inicializar_listas_globales(void) {
-    procesos_en_memoria = list_create();
+    procesos_en_memoria = list_create(); //lista de procesos en memoria fisica.
     inicializar_metricas_procesos();
     if (!procesos_en_memoria) {
         return false;

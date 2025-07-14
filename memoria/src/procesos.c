@@ -31,6 +31,7 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
         t_proceso_memoria* nuevo_proceso = malloc(sizeof(t_proceso_memoria));
         nuevo_proceso->pid = pid;
         nuevo_proceso->tamanio = tam_proceso;
+        nuevo_proceso->path_pseudocodigo = strdup(path_pseudocodigo); // Copiar la ruta del pseudocódigo
         nuevo_proceso->instrucciones = instrucciones;
         nuevo_proceso->tabla_paginacion_raiz = tabla_raiz;
 
@@ -42,7 +43,7 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
         return true;
     } else {
         if (tabla_raiz){
-            destruir_tabla_paginas_rec(tabla_raiz, 1);
+            destruir_tabla_y_marcos(tabla_raiz, 1);
             tabla_raiz = NULL;
         }
         if (instrucciones)
@@ -75,7 +76,7 @@ bool finalizar_proceso(int pid) {
     list_destroy_and_destroy_elements(proc->instrucciones, free);
 
     // 4. Liberar la tabla de paginación
-    destruir_tabla_paginas_rec(proc->tabla_paginacion_raiz, 1);
+    destruir_tabla_y_marcos(proc->tabla_paginacion_raiz, 1);
     proc->tabla_paginacion_raiz = NULL;
 
     // 5. Liberar el struct del proceso
@@ -153,3 +154,4 @@ bool dump_memoria_proceso(int pid) {
     log_info(logger_memoria, "## PID: %d - Dump de memoria exitoso en %s", pid, filename);
     return true;
 }
+

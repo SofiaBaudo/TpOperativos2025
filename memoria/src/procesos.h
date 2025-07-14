@@ -9,12 +9,15 @@
 #include "instrucciones_memoria.h"
 #include "variables_globales_memoria.h"
 
+typedef struct t_tabla_paginas t_tabla_paginas;
+
 typedef struct t_proceso_memoria {
     int pid;
     int tamanio;
+    char* path_pseudocodigo; // Ruta al pseudocódigo del proceso
     t_list* instrucciones; // Lista de instrucciones (cada elemento es un char)
     t_tabla_paginas* tabla_paginacion_raiz;
-} t_proceso_memoria;
+} t_proceso_memoria; // ESTA ESTRUCTURA ES LA QUE REPRESENTA A UN PROCESO EN MEMORIA 
 
 // Inicializa las estructuras de paginación y marcos para un nuevo proceso. Devuelve true si tuvo éxito, false si hubo error
 bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo);

@@ -3,51 +3,31 @@
 
 #include <bibliotecas.h>
 #include <variables_globales_memoria.h>
-#include <servidor_memoria.h>
-#include <metricas.h>
-#include <paginacion.h>
-#include <comunicaciones_memoria.h>
-#include <memoria_fisica.h>
-
-// Estructura para representar un proceso con su tabla de páginas
-typedef struct {
-    int pid;
-    int tamanio;
-    t_tabla_paginas* tabla_raiz;
-} t_tabla_proceso;
+#include "inicializar_memoria.h"
+#include "procesos.h"
 
 typedef struct {
     int pid;
-    int nro_pagina;// nro de pag logica dentro del proceso
-    int offset_en_archivo;// posicion dentro del archivo swapfile.bin
-} t_pagina_en_swap;
+    size_t offset_swap;      // Donde empieza el bloque del proceso en swapfile.bin
+    size_t tamanio;          // Tamaño total de los datos guardados (en bytes)
+    char* path_pseudocodigo; // Ruta al pseudocódigo del proceso
+} ProcesoSwap;
 
-// Estructura para pasar contexto durante suspensión
 typedef struct {
-    int pid;
-    int cliente;
-    bool error_encontrado;
-} t_contexto_suspension;
+    size_t offset;
+    size_t tamanio;
+} HuecoSwap;
 
-extern t_list* lista_procesos;
-extern FILE* swapfile;
-extern t_list* paginas_en_swap;
+extern t_list* procesos_swap; // Lista de procesos que están en SWAP
+extern t_list* huecos_swap; // Lista global de huecos libres
 
+void inicializar_swap(); 
+int suspender_proceso(int pid);
+size_t buscar_espacio_libre_swap(size_t tamanio);
+int escribir_en_swap(void* buffer, size_t tamanio, size_t offset);
 
-void inicializar_swap();
-void inicializar_lista_procesos();
-void escribir_pagina_en_swap(int pid, int nro_pagina, void* contenido, int tamanio_proceso, int cliente);
-void* leer_pagina_de_swap(int pid, int nro_pagina, int tamanio_proceso, int cliente);
-void eliminar_paginas_de_proceso(int pid);
-void cerrar_swap();
-t_tabla_proceso* obtener_tabla_proceso(int pid);
-void eliminar_tabla_proceso(int pid);
-int obtener_marco_de_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina);
-void recorrer_paginas_proceso(t_tabla_paginas* tabla_raiz, int nivel, int offset_pagina, void (*callback)(int, int, void*), void* contexto);
-void agregar_proceso_a_lista(int pid, int tamanio, t_tabla_paginas* tabla_raiz);
-void suspender_proceso_desde_kernel(int pid, int cliente);
-void reanudar_proceso_desde_kernel(int pid, int tamanio, int cliente);
-void escribir_pagina_a_swap_callback(int nro_pagina, int nro_marco, void* contexto);
-bool proceso_tiene_paginas_en_swap(int pid);
+int desuspender_proceso(int pid);
+int leer_de_swap(void* buffer, size_t tamanio, size_t offset);
+
 
 #endif
