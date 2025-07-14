@@ -811,4 +811,4 @@ char *cambiar_syscall_a_string(op_code syscall){
         default:
             return "Syscall Desconocida";
     }
-}
+} 
