@@ -23,7 +23,7 @@ struct t_tabla_paginas {
 
 t_tabla_paginas* iniciar_proceso_paginacion(int pid, int tam_proceso);
 t_tabla_paginas* crear_tablas_para_proceso(int tam_proceso);
-t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes);
+t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes);
 // Asigna marcos a todas las páginas de último nivel de la estructura multinivel
 bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual);
 // Asigna un marco físico a una página lógica específica

@@ -8,23 +8,7 @@ int main(int argc, char* argv[]){
  //argc es la cantidad de argumentos y argv que contiene cada argumento
   
    inicializar_kernel(archivo, tamanio);
-   //PRUEBA PARA PLANI TMCP
-
  
-   
-   //PRUEBA PARA PLANIFICADOR DE CORTO PLAZO SJF SIN/CON DESALOJO
-
- 
-   //atender_kernel_io();
-   //atender_kernel_dispatch();
-  
- 
-   //crear_proceso(3,"/home/utnso/tp-2025-1c-Sinergia-SO-13/memoria/src/Pseudocodigo/fede.txt");
-   //crear_proceso(2,"f1");
-   //atender_kernel_io();
-   //crear_proceso(5,"f3");
-   //crear_proceso(1,"f4");
-
    pthread_t hilo_dispatch;
    //pthread_t hilo_mediano_plazo;
    //pthread_t hilo_mediano_plazo_fifo;
@@ -40,7 +24,7 @@ int main(int argc, char* argv[]){
 
    //hilos para cpus e ios. Ios se pueden agregar durante la ejecucion y las cpus son fijas
    pthread_t hilo_plani_corto_plazo;
-   pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_con_desalojo,NULL); //Creamos el hilo
+   pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_fifo,NULL); //Creamos el hilo
    //pthread_create(&hilo_mediano_plazo,NULL,planificador_mediano_plazo,NULL);
    //pthread_create(&hilo_mediano_plazo_fifo,NULL,planificador_mediano_plazo_fifo,NULL);
    //pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_con_desalojo,NULL); //Creamos el hilo

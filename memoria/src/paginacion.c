@@ -29,26 +29,36 @@ t_tabla_paginas* crear_tablas_para_proceso(int tam_proceso) {
     log_debug(logger_memoria,"EL TAMAÑO DEL PROCESO ES: %i",tam_proceso);
     int paginas_necesarias = (tam_proceso + tam_pagina - 1) / tam_pagina;
     log_error(logger_memoria, "LAS PAGINAS NECESARIAS SON: %d", paginas_necesarias);
-    return crear_nivel_tabla(1, paginas_necesarias);
+    return crear_nivel_tabla(1, &paginas_necesarias);
 }
 
 // Función recursiva para crear niveles de tablas
-t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes) {
+t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
     int entradas_por_tabla = memoria_config.ENTRADAS_POR_TABLA;
     log_error(logger_memoria, "LAS ENTRADAS POR TABLA SON: %d", entradas_por_tabla);
-    int cantidad_entradas = 0;
-
+ 
+    if(*paginas_restantes <= 0 && nivel_actual == memoria_config.CANTIDAD_NIVELES){
+        log_warning(logger_memoria, "nivel final -> no hay paginas por mappear");
+        return NULL;
+    }
+    int cantidad_entradas;
     // En el último nivel, no crees más entradas de las necesarias
-    if (nivel_actual == memoria_config.CANTIDAD_NIVELES -1 ) {
-        log_warning(logger_memoria, "entre al primer if donde el nivel_actual es igaul a la cant niveles -1");
-        if(paginas_restantes > entradas_por_tabla)
-            cantidad_entradas = entradas_por_tabla;
-        else
-            cantidad_entradas = paginas_restantes;
-        } 
-    else {
+    if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
+        log_warning(logger_memoria, "nivel final alcanzado");
+        
+        if (*paginas_restantes > entradas_por_tabla) {
         cantidad_entradas = entradas_por_tabla;
-        log_warning(logger_memoria, "EL NUEVO VALOR DE CANTIDAD_ENTRADAS ES %i", cantidad_entradas);
+        } 
+        else if (*paginas_restantes > 0) {
+            cantidad_entradas = *paginas_restantes;
+        }else {
+            log_warning(logger_memoria, "nivel final pero no hay páginas para mapear");
+            return NULL;
+        }
+    } 
+    else {
+    cantidad_entradas = entradas_por_tabla;
+    log_warning(logger_memoria, "EL NUEVO VALOR DE CANTIDAD_ENTRADAS ES %i", cantidad_entradas);
     }
 
     log_warning(logger_memoria, "🧮 Nivel %d: cantidad de entradas = %d", nivel_actual, cantidad_entradas);
@@ -66,32 +76,36 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes) {
         return NULL;
     }
 
-    tabla->cantidad_entradas = cantidad_entradas; //en este caso 0
+    tabla->cantidad_entradas = cantidad_entradas;
 
     if (tabla->cantidad_entradas <= 0 || tabla->cantidad_entradas > entradas_por_tabla) {
         log_error(logger_memoria, "🧨 Valor inválido en cantidad_entradas: %d en nivel %d", tabla->cantidad_entradas, nivel_actual);
     }
 
-    log_debug(logger_memoria, "✅ Tabla creada en nivel %d (%p) con %d entradas (restantes: %d)",nivel_actual, tabla, cantidad_entradas, paginas_restantes);
+    log_debug(logger_memoria, "✅ Tabla creada en nivel %d (%p) con %d entradas (restantes: %ls)",nivel_actual, tabla, cantidad_entradas, paginas_restantes);
 
     for (int i = 0; i < cantidad_entradas; i++) {
         tabla->entradas[i].nro_pagina = i;
         tabla->entradas[i].nro_marco = -1;
-
-        if (nivel_actual == memoria_config.CANTIDAD_NIVELES - 1) {
-            if (paginas_restantes > 0) {
-                paginas_restantes--;
-            }
+        log_debug(logger_memoria, "➡️ Nivel %d - Entrada %d - paginas_restantes antes = %d", nivel_actual, i, *paginas_restantes);
+        
+        if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
             tabla->entradas[i].tabla_nivel_inferior = NULL;
+            if (*paginas_restantes > 0) {
+                (*paginas_restantes)--;
+            }
         } else {
-            if (paginas_restantes > 0) {
-                int paginas_en_subarbol = pow(entradas_por_tabla, memoria_config.CANTIDAD_NIVELES - nivel_actual - 1);
-                int paginas_a_mapear = paginas_restantes > paginas_en_subarbol ? paginas_en_subarbol : paginas_restantes;
+            if (*paginas_restantes <= 0) {
+                log_warning(logger_memoria, "⛔ Ya no hay páginas por mapear para crear subnivel en entrada %d del nivel %d", i, nivel_actual);
+            break;
+            }
 
-                tabla->entradas[i].tabla_nivel_inferior = crear_nivel_tabla(nivel_actual + 1, paginas_a_mapear);
-                if (!tabla->entradas[i].tabla_nivel_inferior) {
+            tabla->entradas[i].tabla_nivel_inferior = crear_nivel_tabla(nivel_actual + 1, paginas_restantes);
+            if (tabla->entradas[i].tabla_nivel_inferior) {
+                log_debug(logger_memoria, "✅ Nivel %d - Entrada %d: subnivel creado en %p", nivel_actual, i, tabla->entradas[i].tabla_nivel_inferior);
+            }
+            else {
                     log_error(logger_memoria, "❌ Error al crear subnivel en entrada %d del nivel %d", i, nivel_actual);
-
                     for (int j = 0; j < i; j++) {
                         if (tabla->entradas[j].tabla_nivel_inferior) {
                             destruir_tabla_y_marcos(tabla->entradas[j].tabla_nivel_inferior, nivel_actual + 1);
@@ -101,20 +115,18 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int paginas_restantes) {
                     free(tabla->entradas);
                     free(tabla);
                     return NULL;
-                }
-
-                paginas_restantes -= paginas_a_mapear;
-            } else {
-                tabla->entradas[i].tabla_nivel_inferior = NULL;
-            }
+                } 
         }
     }
-    log_debug(logger_memoria, "POR RETONAR TABLA");
     return tabla;
 }
+        
+
 
 // Asigna marcos a todas las páginas de último nivel de la estructura multinivel
 bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual) {
+    int marcosLibres = contar_marcos_libres(); 
+    log_debug(logger_memoria, "MARCOSSSSSSSSSS LIBRES %i",marcosLibres);
     if (!tabla){
         log_debug(logger_memoria, "tabla vacia de asignar marcos");
         return false;
@@ -122,6 +134,7 @@ bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual
     if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
         for (int i = 0; i < tabla->cantidad_entradas; i++) {
             int marco = obtener_siguiente_marco_libre();
+            log_debug(logger_memoria, "el marco libre es %i", marco);
             if (marco == -1) 
                 return false;
             tabla->entradas[i].nro_marco = marco;
@@ -130,11 +143,13 @@ bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual
     }
     for (int i = 0; i < tabla->cantidad_entradas; i++) {
         if (tabla->entradas[i].tabla_nivel_inferior) {
+            log_debug(logger_memoria, "el nivel es %i", nivel_actual);
             if (!asignar_marcos_a_todas_las_paginas(tabla->entradas[i].tabla_nivel_inferior, nivel_actual + 1))
                 return false;
-        }
+            }
+        log_debug(logger_memoria, "el nivel es %i", nivel_actual);
+        log_debug(logger_memoria, "estoy el indice de entrada %i",i);   
     }
-    log_debug(logger_memoria, "pase toda la funcion, voy a retornar true");
     return true;
 }
 
@@ -202,6 +217,7 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
         t_proceso_memoria* proc = list_get(procesos_en_memoria, i);
         if (proc->pid == pid) {
             proceso = proc;
+            log_debug(logger_memoria, "EL PROCESO ES %d", proceso->pid);
             break;
         }
     }
@@ -226,8 +242,8 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
     t_tabla_paginas* actual = tabla_raiz;
     
     log_debug(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d", pid, nro_pagina_logica);
-    
-    for (int nivel = 1; nivel < niveles; nivel++) {
+    int marco = -8;
+    for (int nivel = 1; nivel <= niveles; nivel++) {
         // Aplicar retardo por acceso a tabla
         log_debug(logger_memoria,"Adentro del for");
         usleep(memoria_config.RETARDO_MEMORIA * 1000);
@@ -237,16 +253,31 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
         log_debug(logger_memoria, "termine de actualizar metricas");
         usleep(2000000);
         // Calcular índice para este nivel
+        //VER
         int idx = (nro_pagina_logica / (int)pow(entradas, niveles-nivel)) % entradas;
-        
-        if (idx >= actual->cantidad_entradas || !actual->entradas[idx].tabla_nivel_inferior) {
-            log_error(logger_memoria, "PID: %d - Página %d no encontrada en nivel %d", pid, nro_pagina_logica, nivel);
+        log_warning(logger_memoria, "EL INDICE PARA ESTE NIVEL ES %i", idx);
+        log_warning(logger_memoria, "LA CANTIDAD DE ENTRADAS DE ESTE ES %d", actual->cantidad_entradas);
+        if (idx >= actual->cantidad_entradas) {
+            log_error(logger_memoria, "PID: %d - Página %d no encontrada en nivel %d porque el idx es mayor a la cantidad de entradas", pid, nro_pagina_logica, nivel);
             return -1;
         }
-        
-        actual = actual->entradas[idx].tabla_nivel_inferior;
+        if (nivel < niveles) { //osea que no estas en el ultimo
+            if (!actual->entradas[idx].tabla_nivel_inferior) {
+                log_error(logger_memoria, "PID: %d - Página %d no encontrada en nivel %d porque no tiene tabla inferior y no es el ultimo nivel", pid, nro_pagina_logica, nivel);
+                return -1;
+            }
+            actual = actual->entradas[idx].tabla_nivel_inferior;
+        }
+        else { //es el ultimo nivel
+            marco = actual->entradas[idx].nro_marco;
+            log_debug(logger_memoria, "el valor de idx es %i", idx);
+            if (marco == -1) {
+            log_error(logger_memoria, "el marco es -1");
+            return -1;
+            }
+        }
     }
-    
+    /*
     // Acceso final a la página de último nivel
     usleep(memoria_config.RETARDO_MEMORIA * 1000);
     actualizar_metricas_acceso_tabla_paginas(pid);
@@ -259,8 +290,9 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
     
     int marco = actual->entradas[idx_final].nro_marco;
     
-    log_debug(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d - Marco: %d", pid, nro_pagina_logica, marco);
     
+    */
+   log_debug(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d - Marco: %d", pid, nro_pagina_logica, marco);
     return marco;
 }
 

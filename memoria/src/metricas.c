@@ -16,7 +16,7 @@ void crear_metricas_proceso(int pid) {
     nuevas_metricas->cant_subidas_memoria_principal = 0;
     nuevas_metricas->cant_lecturas_memoria = 0;
     nuevas_metricas->cant_escrituras_memoria = 0;
-    
+
     pthread_mutex_lock(&mutex_lista_metricas_procesos);
     list_add(lista_metricas_procesos, nuevas_metricas);
     pthread_mutex_unlock(&mutex_lista_metricas_procesos);

@@ -233,7 +233,9 @@ int conseguirMarcoCache(int pid, int nroPag){
     int marco;
     if(tlbrespuesta == -1){
         marco = navegarNiveles(nroPag, pid);
-        agregarEntradaATLB(nroPag, marco);
+        if(ENTRADAS_TLB != 0){
+            agregarEntradaATLB(nroPag, marco);
+        }
     }
     else{
         marco = tlbrespuesta;

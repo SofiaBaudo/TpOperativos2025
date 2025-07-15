@@ -3,8 +3,8 @@
 void* memoria_usuario = NULL;
 
 t_marco* marcos = NULL; //represento la memoria con un void*
-int cantidad_marcos = 0;
-int tam_pagina = 0;
+int cantidad_marcos;
+int tam_pagina;
 
 bool inicializar_memoria_fisica(void) {
     // PASO 1: Calcular parámetros
@@ -29,6 +29,7 @@ bool inicializar_memoria_fisica(void) {
     // PASO 4: Inicializar cada marco
     for (int i = 0; i < cantidad_marcos; i++) {
         marcos[i].numero_marco = i;
+        log_debug(logger_memoria, "EL NUM DE marco es %i", marcos[i].numero_marco);
         marcos[i].pid_propietario = -1;  // Libre
         marcos[i].ocupado = false;
         marcos[i].direccion_fisica = memoria_usuario + (i * tam_pagina);
@@ -41,10 +42,14 @@ bool inicializar_memoria_fisica(void) {
 // Devuelve el número del siguiente marco libre, o -1 si no hay disponibles
 int obtener_siguiente_marco_libre(void) {
     int marco_libre = -1;
+    tam_pagina = memoria_config.TAM_PAGINA;
+    cantidad_marcos = memoria_config.TAM_MEMORIA / tam_pagina;
+   
     pthread_mutex_lock(&memoria_usuario_mutex);
     for (int i = 0; i < cantidad_marcos; i++) {
         if (!marcos[i].ocupado) {
             marco_libre = i;
+            marcos[i].ocupado = true; //SE PODRIA GUARDAR TAMBIEN EL PROPIETARIO DEL MARCO
             break;
         }
     }
@@ -54,6 +59,9 @@ int obtener_siguiente_marco_libre(void) {
 
 // Devuelve la cantidad de marcos libres actualmente en memoria
 int contar_marcos_libres(void) {
+    tam_pagina = memoria_config.TAM_PAGINA;
+    cantidad_marcos = memoria_config.TAM_MEMORIA / tam_pagina;
+   
     int libres = 0;
     pthread_mutex_lock(&memoria_usuario_mutex);
     for (int i = 0; i < cantidad_marcos; i++) {
@@ -65,6 +73,9 @@ int contar_marcos_libres(void) {
 
 // Libera un marco físico, marcándolo como libre y reseteando sus datos
 void liberar_marco(int nro_marco) {
+    tam_pagina = memoria_config.TAM_PAGINA;
+    cantidad_marcos = memoria_config.TAM_MEMORIA / tam_pagina;
+   
     if (nro_marco < 0 || nro_marco >= cantidad_marcos)
         return;
     pthread_mutex_lock(&memoria_usuario_mutex);
@@ -112,6 +123,9 @@ int escribir_memoria_fisica(int direccion_fisica, char* buffer, size_t tamanio) 
 
 // Escribe los datos de una página en el marco físico indicado
 int escribir_marco_memoria(int nro_marco, void* datos_pagina) {
+    tam_pagina = memoria_config.TAM_PAGINA;
+    cantidad_marcos = memoria_config.TAM_MEMORIA / tam_pagina;
+   
     if (nro_marco < 0 || nro_marco >= cantidad_marcos) {
         log_error(logger_memoria, "escribir_marco_memoria: número de marco inválido %d", nro_marco);
         return -1;

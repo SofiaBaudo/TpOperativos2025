@@ -40,6 +40,8 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
         pthread_mutex_unlock(&mutex_procesos_en_memoria);
 
         log_info(logger_memoria, "Proceso %d inicializado correctamente con %d marcos. Path pseudocódigo: %s", pid, marcos_necesarios, path_pseudocodigo);
+        crear_metricas_proceso(pid);
+        log_debug(logger_memoria, "metricas creadas");
         return true;
     } else {
         if (tabla_raiz){
@@ -51,6 +53,7 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
         log_error(logger_memoria, "Fallo la inicialización del proceso %d", pid);
         return false;
     }
+    
 }
 
 
