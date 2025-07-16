@@ -352,26 +352,7 @@ t_buffer *crear_buffer_pid_dirFis_datos(int pid, int dirFis, char* datos){
 	buffer_aux->offset += sizeof(int);
 	return buffer_aux;
 }
-t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, void* contenido, int marco, int tamPag){
-	t_buffer *buffer_aux = crear_buffer();
-	int longitud = tamPag;
-	buffer_aux->size = 3*sizeof(int) + longitud + sizeof(int);
-	buffer_aux->offset = 0;
-	buffer_aux->stream = malloc(buffer_aux->size);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, &nroPag, sizeof(int));
-	buffer_aux->offset += sizeof(int);
-	
-	memcpy(buffer_aux->stream + buffer_aux->offset, &longitud, sizeof(int));
-	buffer_aux->offset += sizeof(int);
-	memcpy(buffer_aux->stream + buffer_aux->offset, contenido, longitud);
-	buffer_aux->offset += longitud;	
-	memcpy(buffer_aux->stream + buffer_aux->offset, &marco, sizeof(int));
-	buffer_aux->offset += sizeof(int);
-	return buffer_aux;
-	// el contendio tiene que entrar en tampag entonces podemos ponerlo como tampag para sacar el size?
-}
+
 
 t_buffer *crear_buffer_cpu(int pid, int pc){ //esto se lo manda kernel a cpu
 	t_buffer *buffer_aux = crear_buffer();
@@ -428,10 +409,9 @@ void *deserializar_contenido(t_paquete *paquete) {
     memcpy(contenido, stream + offset, longitud);
     offset += longitud;
 	
-    free(paquete->buffer->stream);
+	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
-	
     return contenido;
 }
 
@@ -525,9 +505,6 @@ int deserializar_nroPag(t_paquete *paquete){
 	int nroPag;
 	stream += sizeof(int);
 	memcpy(&nroPag,stream,sizeof(int));
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
-	free(paquete);
 	return nroPag;
 }
 
@@ -535,10 +512,14 @@ int deserializar_marco(t_paquete *paquete){
 	void *stream = paquete->buffer->stream;
 	int marco;
 	memcpy(&marco,stream,sizeof(int));
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
-	free(paquete);
 	return marco;
+}
+
+int deserializar_tamPag(t_paquete *paquete){
+	void *stream = paquete->buffer->stream;
+	int tamPag;
+	memcpy(&tamPag,stream,sizeof(int));
+	return tamPag;
 }
 
 int deserializar_dirFis(t_paquete *paquete){
@@ -900,8 +881,6 @@ char* instruccion_a_string(op_code codigo) {
 		return "LEER_PAGINA_COMPLETA";
 		case RESPUESTA_LEER_PAGINA_COMPLETA:
 		return "RESPUESTA_LEER_PAGINA_COMPLETA";
-		case ACTUALIZAR_PAGINA_COMPLETA:
-		return "ACTUALIZAR_PAGINA_COMPLETA";
 		case RESPUESTA_ACTUALIZAR_PAGINA_COMPLETA:
 		return "RESPUESTA_ACTUALIZAR_PAGINA_COMPLETA";
 		default:

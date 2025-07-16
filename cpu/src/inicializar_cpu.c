@@ -13,6 +13,7 @@ void inicializar_CPU(int id){
     log_debug(cpu_log_debug, "jsjfdslkfdslfds");
     inicializar_configs();
     inicializarTLB();
+    imprimirTLB();
     inicializarCache();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;

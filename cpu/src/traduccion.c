@@ -4,37 +4,40 @@
 #include <string.h>
 #include <stdlib.h>
 #include <cache.h>
-
+NodoEntradasTLB *punterosPos = NULL;
 
 int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te tendria que devolver la dir fisica
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
-    int marco;
+    int marco; 
+    char* var = "hola";
     if(estaHabilitadaCache()){
-        if(estaEnCache(numPag, pid)){
-            int resultado = usarCache(pid, numPag, instruccion,contenido);
-            if(resultado != -1){
-                marco = resultado;
-            }
-             //no hace falta devolver porque se hizo en cache
+        int resultado = usarCache(pid, numPag, instruccion,(void*)var);
+        log_debug(cpu_log_debug, "termine de usar la cache, el resultado es %i", resultado);
+        if(resultado != -1){
+            marco = resultado;
         }
-        else{
-            agregarPagCache(numPag, pid, instruccion);
-            int tlbrespuesta;
-            tlbrespuesta = buscarTlb(numPag, pid);
-               if(tlbrespuesta == -1){
-                //osea que no se encontro
+    }
+    else{
+        log_debug(cpu_log_debug, "no esta habilitada la cache");
+        int tlbrespuesta = -1;
+        if(ENTRADAS_TLB != 0){
+                log_debug(cpu_log_debug, "entre al if de que hay entradas");
+                tlbrespuesta = buscarTlb(numPag, pid);
+                log_debug(cpu_log_debug, "la respuesta de si se encontro es %i", tlbrespuesta);
+            if(tlbrespuesta != -1){
+                marco = tlbrespuesta;
+                imprimirTLB();
+            }
+            else{
                 marco = navegarNiveles(numPag, pid);
+                log_debug(cpu_log_debug,"YA NAVEGUE LOS NIVELES.");
                 agregarEntradaATLB(numPag, marco);
-        }
-        else{
-            marco = tlbrespuesta;
-            //aca no actualizas la referencia porque ya llamas modificarRefenrecia en buscarEnTLB
-            //aca solo actualizo --> si en el config esta lru
-             }
+                imprimirTLB();
+                
             }
-        }    
- 
+        }
+    }
     int direccionFisica = marco*tamPag + desplazamiento;
     return direccionFisica; 
 }
@@ -50,17 +53,17 @@ int navegarNiveles(int numPag, int pid){
         int elevado = pow(entradasTabla, cantNiveles-i);
         int entradaNivel = floor((numPag/elevado) % entradasTabla);
         enviarValoresMem(entradaNivel, pid);
-        numMarco = conseguirMarco(pid);
+        numMarco = conseguirMarco(pid, numPag);
     }
     //el numero de marco que tenemos despues del if es el num de marco final(el ultimo de todos --> es el marco fisico)
     int marcoFinal = numMarco;
     return marcoFinal;
 }
 
-int conseguirMarco(int pid){
+int conseguirMarco(int pid, int nroPag){
     int numMarco;
     numMarco = recibir_entero(fd_conexion_dispatch_memoria);
-    log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <NUMERO_PAGINA> - Marco: <%d>", pid, numMarco);
+    log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", pid, nroPag ,numMarco);
     //se envia el paquete con la entradaNivel y el pid, memoria lo deseerializa y me envia el numero de marco unicamente, entonces no hace falta hacer un paquete. 
     return numMarco;
 }
@@ -68,18 +71,19 @@ int buscarTlb(int numPag, int pid){
     NodoEntradasTLB *aux = listaTlb;
    for(int i = 0; i < ENTRADAS_TLB; i++){  
         if(aux->info.numPag == numPag ){
-            log_info(cpu_logger, "PID: <%d> - TLB HIT - Pagina: <%d>", pid, aux->info.numPag);
+            log_error(cpu_logger, "PID: <%d> - TLB HIT - Pagina: <%d>", pid, aux->info.numPag);
             log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", pid, aux->info.numPag, aux->info.numMarco);
             modificarReferencia(numPag);
             return aux->info.numMarco;
         }
         aux = aux->sgte;
    }
-    log_info(cpu_logger,"PID: <%d> - TLB MISS - Pagina: <%d>", pid, numPag);
+    log_error(cpu_logger,"PID: <%d> - TLB MISS - Pagina: <%d>", pid, numPag);
     return -1;
 }
 void agregarEntradaATLB(int numPag, int numMarco){
     if(strcmp(REEMPLAZO_TLB, "FIFO") == 0){
+        log_debug(cpu_log_debug, "el algoritmo es fifo");
         implementarAlgoritmoFIFO(numPag, numMarco);
     }
     else if(strcmp(REEMPLAZO_TLB, "LRU") == 0){
@@ -88,8 +92,9 @@ void agregarEntradaATLB(int numPag, int numMarco){
     }
     
 }
-NodoEntradasTLB *punterosPos = NULL;
+
 void implementarAlgoritmoFIFO(int numPag, int numMarco){
+    log_debug(cpu_log_debug,"entre a la funcion de fifo");
     if (punterosPos == NULL){
         return; 
     }    
@@ -130,12 +135,14 @@ void modificarReferencia(int numPag){
         if(aux->info.numPag == numPag){
             aux->info.tiempoSinReferencia = 0;
             aux->info.apareceEnTLB = true;
+            
         }
         else{
             aux->info.tiempoSinReferencia++;
         }
         aux = aux->sgte;
     }
+    
 }
 
 void inicializarTLB(){
@@ -168,16 +175,14 @@ void inicializarTLB(){
 
 
 void imprimirTLB(){
-    NodoEntradasTLB *aux = listaTlb;
-    if (aux == NULL) {
-        return;
-    }
-
-    NodoEntradasTLB* actual = aux;
+    NodoEntradasTLB* actual = listaTlb;
     for(int i = 0; i < ENTRADAS_TLB; i++){
+        log_info(cpu_logger, "NroPag %d: Pag %d,  nroMarco: %d,  tiempoSinRerencia %d",
+                 i, actual->info.numPag, actual->info.numMarco, actual->info.tiempoSinReferencia);
         actual = actual->sgte;
     }
 }
+
 
 NodoEntradasTLB *encontrarNodoConMenosReferencia(){
     NodoEntradasTLB *aux = listaTlb;

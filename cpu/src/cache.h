@@ -18,5 +18,6 @@ int conseguirMarcoCache(int pid, int nroPag);
 void desalojarProcesoCache(int pid);
 void imprimirCache();
 void algoritmoClockM(int pid, char *instruccion, int nroPag, void*contenido);
+t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, void* contenido, int marco, int tamPag);
 
 #endif

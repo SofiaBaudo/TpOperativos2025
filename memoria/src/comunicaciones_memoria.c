@@ -141,11 +141,12 @@ void enviar_contenido_pagina(int socket_destino, void* contenido, int tam_pagina
 
 
 // Destruye un pedido de actualizar página completa
-void destruir_pedido_actualizar_pagina_completa(t_pedido_actualizar_pagina_completa* pedido) {
+void destruir_pedido_actualizar_pagina_completa(t_paquete* pedido){
     if (!pedido)
         return;
-    if (pedido->contenido) 
-        free(pedido->contenido);
+    void* contenido = deserializar_contenido(pedido);
+    if (contenido) 
+        free(contenido);
     free(pedido);
 }
 
@@ -161,7 +162,7 @@ void enviar_confirmacion_actualizacion(int socket_destino, bool exito) {
     
     size_t total_enviado = 0;
     while (total_enviado < paquete_size) {
-        ssize_t enviado = send(socket_destino, (char*)paquete + total_enviado, paquete_size - total_enviado, 0);
+        size_t enviado = send(socket_destino, (char*)paquete + total_enviado, paquete_size - total_enviado, 0);
         if (enviado <= 0) break;
         total_enviado += enviado;
     }

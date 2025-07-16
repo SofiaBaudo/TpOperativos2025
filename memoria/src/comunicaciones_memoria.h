@@ -57,6 +57,6 @@ struct t_pedido_actualizar_pagina_completa* recibir_pedido_actualizar_pagina_com
 void enviar_numero_marco(int socket_destino, int marco);
 void enviar_contenido_pagina(int socket_destino, void* contenido, int tam_pagina);
 void enviar_confirmacion_actualizacion(int socket_destino, bool exito);
-void destruir_pedido_actualizar_pagina_completa(t_pedido_actualizar_pagina_completa* pedido);
+void destruir_pedido_actualizar_pagina_completa(t_paquete* pedido);
 
 #endif

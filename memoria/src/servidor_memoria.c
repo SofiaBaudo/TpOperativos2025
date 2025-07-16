@@ -289,20 +289,30 @@ void manejar_cliente_cpu(int cliente){
                 free(pedido);
                 break;
             }
-            case ACTUALIZAR_PAGINA_COMPLETA: {
+            case ENVIO_PID_NROPAG_CONTENIDO_MARCO: {
                 // Recibir pedido de actualización de página completa
-                t_pedido_actualizar_pagina_completa* pedido = recibir_pedido_actualizar_pagina_completa(cliente);
+                log_debug(logger_memoria,"estoy antes de las deserializaciones");
+                int pid = deserializar_pid_memoria(pedido);
+                int nroPag = deserializar_nroPag(pedido);
+                int marco = deserializar_marco(pedido);
+                int tamPag = deserializar_tamPag(pedido);
+                void* contenido = deserializar_contenido(pedido);
+                log_debug(logger_memoria,"PID: %i, NROPAG: %i, MARCO: %i,TAMPAG: %i",pid,nroPag,marco,tamPag);
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir pedido de actualización de página completa");
                     break;
                 }
 
                 // Actualizar el contenido de la página
-                bool exito = actualizar_contenido_pagina_completa(pedido->marco, pedido->contenido, pedido->tam_pagina);
-                
-                // Enviar confirmación a la CPU
-                enviar_confirmacion_actualizacion(cliente, exito);
-
+                bool exito = actualizar_contenido_pagina_completa(marco,contenido,tamPag);
+                if(exito){
+                    t_buffer*buffer = crear_buffer_vacio();
+                    crear_paquete(ACTUALIZACION_EXITOSA,buffer,cliente);
+                }
+                else{
+                    t_buffer*buffer = crear_buffer_vacio();
+                    crear_paquete(ACTUALIZACION_FALLIDA,buffer,cliente);
+                }
                 destruir_pedido_actualizar_pagina_completa(pedido);
                 break;
             }

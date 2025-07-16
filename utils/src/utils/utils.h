@@ -90,13 +90,14 @@ typedef enum op_code
 	ENVIO_PID_NROPAG_CONTENIDO_MARCO,
 	INSTRUCCION_TERMINADA,
 	SYSCALL_EJECUTADA,
+	ACTUALIZACION_EXITOSA,
+	ACTUALIZACION_FALLIDA,
 	
 	//operaciones nuevas para TLB y cache de páginas desde memoria, funciones de memoria.
 	ACCESO_TABLA_PAGINAS,
 	RESPUESTA_ACCESO_TABLA_PAGINAS,
 	LEER_PAGINA_COMPLETA,
 	RESPUESTA_LEER_PAGINA_COMPLETA,
-	ACTUALIZAR_PAGINA_COMPLETA,
 	RESPUESTA_ACTUALIZAR_PAGINA_COMPLETA,
 	MANDAR_PID_Y_PC_FETCH,
 	ENVIO_VALOR_LEIDO,
@@ -121,8 +122,6 @@ typedef struct{
 } t_paquete;
 
 // Estructura del paquete de proceso
-
-
 
 //ESTADOS
 typedef enum{
@@ -221,7 +220,6 @@ t_buffer *crear_buffer_MarcoMem(int pid, int entradaNivel);
 t_buffer *mandar_pid_a_memoria(int pid);
 t_buffer *devolver_pid_a_kernel(int pid);
 t_buffer *crear_buffer_pid_numPag(int pid, int nroPag);
-t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, void* contenido, int marco, int tamPag);
 t_buffer *crear_buffer_io_nombre(char *nombre);
 t_buffer *crear_buffer_tamPag_entradasTabla_cantNiveles(int tamPag, int entradasTabla, int cantNiveles);
 t_buffer *crear_buffer_pid_entradaNivel(int pid, int entradaNivel);
@@ -267,6 +265,8 @@ char *deserializar_nombre_archivo_memoria(t_paquete *paquete);
 char *deserializar_nombre_instruccion(t_paquete *paquete);
 char *deserializar_dataIns(t_paquete *paquete);
 int deserializar_dirFis(t_paquete *paquete);
+int deserializar_marco(t_paquete *paquete);
+int deserializar_tamPag(t_paquete *paquete);
 
 //SIN CLASIFICACION
 char* instruccion_a_string(op_code codigo);

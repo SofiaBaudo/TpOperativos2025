@@ -37,7 +37,7 @@ void *iniciar_conexion_kernel_interrupt(void *arg){
     op_code respuesta = recibir_op_code(fd_conexion_kernel_interrupt);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
     if (respuesta == HANDSHAKE_ACCEPTED){
         log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
-        enviar_id(fd_conexion_kernel_dispatch, identificador_cpu);
+        enviar_id(fd_conexion_kernel_interrupt, identificador_cpu);
         pthread_t hilo_interrupciones;
         pthread_create(&hilo_interrupciones,NULL,esperar_interrupcion,NULL);
         pthread_detach(hilo_interrupciones);

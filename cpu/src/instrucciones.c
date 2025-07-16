@@ -54,6 +54,7 @@ char* fetch(int pid,int pc){
     crear_paquete(FETCH_INSTRUCCION, buffer, fd_conexion_dispatch_memoria);
     t_paquete *paquete = recibir_paquete(fd_conexion_dispatch_memoria);
     char *instruccion_recibida = deserializar_nombre_instruccion(paquete);
+    log_debug(cpu_log_debug, "la instrucciones %s", instruccion_recibida);
     return instruccion_recibida;
 }
 
@@ -157,10 +158,14 @@ void instruccion_goto(int parametro){
 
 void mandar_syscall(t_instruccion instruccion){
     tengo_que_solicitar_pid_y_pc = true;
+    log_debug(cpu_log_debug, "la instruccion es %s", instruccion.opcode);
     if(strcmp(instruccion.opcode, "INIT_PROC") == 0){
+        log_debug(cpu_log_debug, "entre al if");
         int tamanio = atoi(instruccion.param2);
         t_buffer *buffer = crear_buffer_instruccion_init_proc(instruccion.param1, tamanio, &pid, &pc);
         crear_paquete(INIT_PROC,buffer,fd_conexion_kernel_dispatch);
+        log_debug(cpu_log_debug, "termine de mandar el paquete");
+        log_debug(cpu_log_debug, "el opcode es %s", instruccion.param1);
         pc++;
         recibir_op_code(fd_conexion_kernel_dispatch);
         return;

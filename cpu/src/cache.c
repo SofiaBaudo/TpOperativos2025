@@ -14,23 +14,22 @@ int usarCache(int pid, int numPag, char *instruccion, void* contenido){
             if(aux->info.numPag == numPag){
                 aux->info.bitdeUso = 1;
                 aux->info.bitModificado = bitModificado(instruccion);
-                numMarco = conseguirMarcoCache(pid, numPag);
-                return numMarco;
-                break;
             }
             aux = aux->sgte;
         }
     }
     else{
         agregarPagCache(numPag, pid, instruccion);
-        return -1;
+        imprimirCache();                                                                    
     }  
-    return -1;
+   numMarco = conseguirMarcoCache(pid, numPag);
+return numMarco;
 }
 
 void agregarPagCache(int nroPag, int pid, char* instruccion){
         NodosCache *aux = cache;
-        void* contenido = obtenerContenido(nroPag, pid);
+        void* contenido = malloc(tamPag);
+        contenido = obtenerContenido(nroPag, pid);
         
         if(hayEspacioLibreCache()){
             aux = retornarEspacioLibreCache();
@@ -43,7 +42,7 @@ void agregarPagCache(int nroPag, int pid, char* instruccion){
             agregarConAlgoritmos(pid, instruccion, nroPag, contenido);
         }
     log_info(cpu_logger, "PID: <%d> - Cache Add - Pagina: <%d>", pid, nroPag);
-    }
+}
 
 void agregarConAlgoritmos(int pid, char *instruccion, int nroPag, void* contenido){
 
@@ -99,7 +98,7 @@ void inicializarCache(){
         NodosCache* nuevo = malloc(sizeof(NodosCache));
         nuevo->info.bitdeUso = -1;
         nuevo->info.bitModificado =-1;
-        nuevo->info.contenido = NULL;
+        nuevo->info.contenido = malloc(sizeof(void*));
         nuevo->info.numPag = -1;
         nuevo->sgte = NULL;
 
@@ -159,12 +158,26 @@ int bitModificado(char *instruccion){
 }
 void algoritmoClock(int pid, char *instruccion, int nroPag, void* contenido){
     while(1){
+        log_debug(cpu_log_debug,"el bit de uso es %i", punteroCache->info.bitdeUso);
         if(punteroCache->info.bitdeUso == 0){
             if(punteroCache->info.bitModificado == 1){
+                log_debug(cpu_log_debug, "entre al if de modificado = 1");
                 int marco = conseguirMarcoCache(pid, punteroCache->info.numPag);
+                log_debug(cpu_log_debug, "el marco es: %i",marco);
+                
                 t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco, tamPag);
+                log_error(cpu_log_debug,"POR ENVIAR PAQUETE");
                 crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
-                log_info(cpu_logger,"PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, punteroCache->info.numPag, marco);
+                log_debug(cpu_log_debug,"termine de mandar el paquete");
+                t_paquete *paquete = recibir_paquete(fd_conexion_dispatch_memoria);
+                op_code respuesta = obtener_codigo_de_operacion(paquete);
+                if(respuesta == ACTUALIZACION_EXITOSA){
+                    log_info(cpu_logger,"PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, punteroCache->info.numPag, marco);
+                }
+                else{
+                    log_error(cpu_log_debug, "FALLO ACTUALIZACION POR PARTE DE MEMORIA");
+                }
+                
             }
             punteroCache->info.bitdeUso = 1;
             punteroCache->info.bitModificado = bitModificado(instruccion);
@@ -179,6 +192,36 @@ void algoritmoClock(int pid, char *instruccion, int nroPag, void* contenido){
     }  
     punteroCache = punteroCache->sgte; 
 }
+t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, void* contenido, int marco, int tamPag) {
+    log_debug(cpu_log_debug, "Entrando a crear_buffer... PID=%d, NroPag=%d, Marco=%d, TamPag=%d", pid, nroPag, marco, tamPag);
+
+    t_buffer *buffer_aux = crear_buffer();
+    buffer_aux->size = 4 * sizeof(int) + tamPag;
+    buffer_aux->offset = 0;
+
+    memcpy(buffer_aux->stream + buffer_aux->offset, &pid, sizeof(int));
+    buffer_aux->offset += sizeof(int);
+    log_debug(cpu_log_debug,"PASE PID");
+
+    memcpy(buffer_aux->stream + buffer_aux->offset, &nroPag, sizeof(int));
+    buffer_aux->offset += sizeof(int);
+    log_debug(cpu_log_debug,"PASE NRO DE PAGINA");
+
+    memcpy(buffer_aux->stream + buffer_aux->offset, &marco, sizeof(int));
+    buffer_aux->offset += sizeof(int);
+    log_debug(cpu_log_debug,"PASE NUMERO DE MARCO");
+
+    memcpy(buffer_aux->stream + buffer_aux->offset, &tamPag, sizeof(int));
+    buffer_aux->offset += sizeof(int);
+    log_debug(cpu_log_debug,"PASO TAMAÑO DEL CONTENIDO");
+
+    memcpy(buffer_aux->stream + buffer_aux->offset, contenido, tamPag);
+    buffer_aux->offset += sizeof(int);
+    log_debug(cpu_log_debug,"ESTOY DEVOLVIENDO EL BUFFER LLENO");
+
+    return buffer_aux;
+}
+
 void algoritmoClockM(int pid, char *instruccion, int nroPag, void*contenido){
     while(1){
         if(punteroCache->info.bitdeUso == 0 && punteroCache->info.bitModificado == 0){
