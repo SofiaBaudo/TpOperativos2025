@@ -49,7 +49,7 @@ struct t_pedido_instruccion* recibir_pedido_instruccion(int socket_cliente);
 void enviar_instruccion(int socket_destino,char* instruccion);
 // Recibe un pedido de lectura de memoria del socket y lo deserializa
 void enviar_valor_leido(int socket_destino, void* buffer, size_t tamanio);
-void destruir_pedido_escritura_memoria(t_pedido_escritura_memoria* pedido);
+//void destruir_pedido_escritura_memoria(t_pedido_escritura_memoria* pedido);
 // Funciones para la comunicacion con cpu
 struct t_pedido_acceso_tabla_paginas* recibir_pedido_acceso_tabla_paginas(int socket_cliente);
 struct t_pedido_leer_pagina_completa* recibir_pedido_leer_pagina_completa(int socket_cliente);

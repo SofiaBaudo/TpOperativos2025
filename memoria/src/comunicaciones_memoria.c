@@ -146,7 +146,8 @@ void destruir_pedido_actualizar_pagina_completa(t_paquete* pedido){
         return;
     void* contenido = deserializar_contenido(pedido);
     if (contenido) 
-        free(contenido);
+    log_debug(logger_memoria, "entre al destruccion y estoy x hcer los frees"),
+    free(contenido);
     free(pedido);
 }
 

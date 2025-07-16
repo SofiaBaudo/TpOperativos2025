@@ -61,17 +61,17 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
     log_warning(logger_memoria, "EL NUEVO VALOR DE CANTIDAD_ENTRADAS ES %i", cantidad_entradas);
     }
 
-    log_warning(logger_memoria, "🧮 Nivel %d: cantidad de entradas = %d", nivel_actual, cantidad_entradas);
+    log_warning(logger_memoria, "Nivel %d: cantidad de entradas = %d", nivel_actual, cantidad_entradas);
 
     t_tabla_paginas* tabla = malloc(sizeof(t_tabla_paginas));
     if (!tabla) {
-        log_error(logger_memoria, "❌ malloc falló en nivel %d", nivel_actual);
+        log_error(logger_memoria, "malloc falló en nivel %d", nivel_actual);
         return NULL;
     }
 
     tabla->entradas = calloc(cantidad_entradas, sizeof(t_entrada_tabla));
     if (!tabla->entradas) {
-        log_error(logger_memoria, "❌ calloc falló en nivel %d", nivel_actual);
+        log_error(logger_memoria, "calloc falló en nivel %d", nivel_actual);
         free(tabla);
         return NULL;
     }
@@ -79,15 +79,15 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
     tabla->cantidad_entradas = cantidad_entradas;
 
     if (tabla->cantidad_entradas <= 0 || tabla->cantidad_entradas > entradas_por_tabla) {
-        log_error(logger_memoria, "🧨 Valor inválido en cantidad_entradas: %d en nivel %d", tabla->cantidad_entradas, nivel_actual);
+        log_error(logger_memoria, "Valor inválido en cantidad_entradas: %d en nivel %d", tabla->cantidad_entradas, nivel_actual);
     }
 
-    log_debug(logger_memoria, "✅ Tabla creada en nivel %d (%p) con %d entradas (restantes: %ls)",nivel_actual, tabla, cantidad_entradas, paginas_restantes);
+    log_debug(logger_memoria, "Tabla creada en nivel %d (%p) con %d entradas (restantes: %ls)",nivel_actual, tabla, cantidad_entradas, paginas_restantes);
 
     for (int i = 0; i < cantidad_entradas; i++) {
         tabla->entradas[i].nro_pagina = i;
         tabla->entradas[i].nro_marco = -1;
-        log_debug(logger_memoria, "➡️ Nivel %d - Entrada %d - paginas_restantes antes = %d", nivel_actual, i, *paginas_restantes);
+        log_debug(logger_memoria, "Nivel %d - Entrada %d - paginas_restantes antes = %d", nivel_actual, i, *paginas_restantes);
         
         if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
             tabla->entradas[i].tabla_nivel_inferior = NULL;
@@ -96,16 +96,16 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
             }
         } else {
             if (*paginas_restantes <= 0) {
-                log_warning(logger_memoria, "⛔ Ya no hay páginas por mapear para crear subnivel en entrada %d del nivel %d", i, nivel_actual);
+                log_warning(logger_memoria, "ya no hay páginas por mapear para crear subnivel en entrada %d del nivel %d", i, nivel_actual);
             break;
             }
 
             tabla->entradas[i].tabla_nivel_inferior = crear_nivel_tabla(nivel_actual + 1, paginas_restantes);
             if (tabla->entradas[i].tabla_nivel_inferior) {
-                log_debug(logger_memoria, "✅ Nivel %d - Entrada %d: subnivel creado en %p", nivel_actual, i, tabla->entradas[i].tabla_nivel_inferior);
+                log_debug(logger_memoria, "Nivel %d - Entrada %d: subnivel creado en %p", nivel_actual, i, tabla->entradas[i].tabla_nivel_inferior);
             }
             else {
-                    log_error(logger_memoria, "❌ Error al crear subnivel en entrada %d del nivel %d", i, nivel_actual);
+                    log_error(logger_memoria, "Error al crear subnivel en entrada %d del nivel %d", i, nivel_actual);
                     for (int j = 0; j < i; j++) {
                         if (tabla->entradas[j].tabla_nivel_inferior) {
                             destruir_tabla_y_marcos(tabla->entradas[j].tabla_nivel_inferior, nivel_actual + 1);
@@ -175,7 +175,7 @@ bool asignar_marco_a_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina_logica, 
 // Libera recursivamente la estructura de tablas de páginas y los marcos asociados
 void destruir_tabla_y_marcos(t_tabla_paginas* tabla, int nivel_actual) { // OJO CON destruir_tabla_y_marcos 
     if (!tabla) {
-        log_warning(logger_memoria, "⚠️ Nivel %d: intento de destruir tabla NULL", nivel_actual);
+        log_warning(logger_memoria, "Nivel %d: intento de destruir tabla NULL", nivel_actual);
         return;
     }
 
@@ -201,7 +201,7 @@ void destruir_tabla_y_marcos(t_tabla_paginas* tabla, int nivel_actual) { // OJO 
     free(tabla->entradas);
     free(tabla);
 
-    log_debug(logger_memoria, "✅ Nivel %d destruido correctamente", nivel_actual);
+    log_debug(logger_memoria, "Nivel %d destruido correctamente", nivel_actual);
 }
 
 // -------------------- FUNCIONES PARA ACCESO A TABLA DE PÁGINAS --------------------

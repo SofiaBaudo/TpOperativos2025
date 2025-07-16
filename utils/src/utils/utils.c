@@ -409,9 +409,6 @@ void *deserializar_contenido(t_paquete *paquete) {
     memcpy(contenido, stream + offset, longitud);
     offset += longitud;
 	
-	free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
     return contenido;
 }
 

@@ -80,8 +80,20 @@ void inicializarCache(){
 void* obtenerContenido(int nroPag, int pid){
     t_buffer *buffer = crear_buffer_pid_numPag(pid, nroPag);
     crear_paquete(ENVIO_PID_NROPAG, buffer, fd_conexion_dispatch_memoria);
-    void *contenido;
-    recv(fd_conexion_dispatch_memoria, &contenido, sizeof(void*),0);
+
+    void* contenido = malloc(tamPag);  
+    if (contenido == NULL) {
+        log_error(cpu_logger, "malloc falló al reservar contenido.");
+        return NULL;
+    }
+
+    int bytesRecibidos = recv(fd_conexion_dispatch_memoria, contenido, tamPag, 0);
+    if (bytesRecibidos <= 0) {
+        log_error(cpu_logger, "recv falló o conexión cerrada");
+        free(contenido);
+        return NULL;
+    }
+
     return contenido;
 }
 
@@ -163,14 +175,13 @@ void algoritmoClock(int pid, char *instruccion, int nroPag, void* contenido){
                 log_debug(cpu_log_debug, "entre al if de modificado = 1");
                 int marco = conseguirMarcoCache(pid, punteroCache->info.numPag);
                 log_debug(cpu_log_debug, "el marco es: %i",marco);
-                
                 t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco, tamPag);
                 log_error(cpu_log_debug,"POR ENVIAR PAQUETE");
                 crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
                 log_debug(cpu_log_debug,"termine de mandar el paquete");
-                t_paquete *paquete = recibir_paquete(fd_conexion_dispatch_memoria);
-                op_code respuesta = obtener_codigo_de_operacion(paquete);
-                
+                op_code respuesta = recibir_op_code(fd_conexion_dispatch_memoria);
+                log_debug(cpu_log_debug, "recibi el opcode");
+    
                 if(respuesta == ACTUALIZACION_EXITOSA){
                     log_info(cpu_logger,"PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pid, punteroCache->info.numPag, marco);
                 }
@@ -179,6 +190,11 @@ void algoritmoClock(int pid, char *instruccion, int nroPag, void* contenido){
                 }
                 
             }
+            if (punteroCache->info.contenido != NULL) {
+                free(punteroCache->info.contenido);
+                punteroCache->info.contenido = NULL;
+            }
+
             punteroCache->info.bitdeUso = 1;
             punteroCache->info.bitModificado = bitModificado(instruccion);
             punteroCache->info.contenido = contenido;

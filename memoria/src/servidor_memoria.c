@@ -289,7 +289,7 @@ void manejar_cliente_cpu(int cliente){
                 free(pedido);
                 break;
             }
-            case ENVIO_PID_NROPAG_CONTENIDO_MARCO: {
+            case ENVIO_PID_NROPAG_CONTENIDO_MARCO: { // ACTUALIZACION PAGINA
                 // Recibir pedido de actualización de página completa
                 log_debug(logger_memoria,"estoy antes de las deserializaciones");
                 int pid = deserializar_pid_memoria(pedido);
@@ -306,14 +306,20 @@ void manejar_cliente_cpu(int cliente){
                 // Actualizar el contenido de la página
                 bool exito = actualizar_contenido_pagina_completa(marco,contenido,tamPag);
                 if(exito){
-                    t_buffer*buffer = crear_buffer_vacio();
-                    crear_paquete(ACTUALIZACION_EXITOSA,buffer,cliente);
+                    log_debug(logger_memoria, "entro al if actualizacion exitosa");
+                    enviar_op_code(cliente,ACTUALIZACION_EXITOSA);
+                    log_warning(logger_memoria,"SE ENVIO EL OPCODE");
                 }
                 else{
-                    t_buffer*buffer = crear_buffer_vacio();
-                    crear_paquete(ACTUALIZACION_FALLIDA,buffer,cliente);
+                    log_debug(logger_memoria, "entro al if actualizacion fallida");
+                    enviar_op_code(cliente,ACTUALIZACION_FALLIDA);
+                    log_warning(logger_memoria,"SE ENVIO EL OPCODE CON LA ACTUALIZACION FALLIDA");
                 }
-                destruir_pedido_actualizar_pagina_completa(pedido);
+                //destruir_pedido_actualizar_pagina_completa(pedido);
+                free(contenido); 
+                free(pedido->buffer->stream);
+                free(pedido->buffer);
+                free(pedido);
                 break;
             }
             case ENVIO_PID_Y_ENTRADANIVEL: {//hablar de cambiar el nombre
