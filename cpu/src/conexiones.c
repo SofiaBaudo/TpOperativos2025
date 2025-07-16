@@ -7,7 +7,7 @@
 
 bool tengo_que_solicitar_pid_y_pc;
 bool hayInterrupcion;
-
+pthread_mutex_t mx_interrupcion;
 void* iniciar_conexion_kernel_dispatch(void *arg){
     int identificador_cpu = *((int*) arg);
     free(arg);
@@ -38,6 +38,7 @@ void *iniciar_conexion_kernel_interrupt(void *arg){
     if (respuesta == HANDSHAKE_ACCEPTED){
         log_info(cpu_logger, "Conexion con el kernel dispatch establecida correctamente");
         enviar_id(fd_conexion_kernel_interrupt, identificador_cpu);
+        pthread_mutex_init(&mx_interrupcion,NULL);
         pthread_t hilo_interrupciones;
         pthread_create(&hilo_interrupciones,NULL,esperar_interrupcion,NULL);
         pthread_detach(hilo_interrupciones);
@@ -110,8 +111,8 @@ void* inicializar_kernel(void* arg){
     *valor_id = id;
     log_debug(cpu_log_debug,"ANTES DE LA CREACION DEL HILO");
     pthread_create(&hilo_cliente_kernel, NULL, iniciar_conexion_kernel_dispatch, valor_id);
-    iniciar_conexion_kernel_interrupt(valor_id);
     pthread_join(hilo_cliente_kernel, NULL);
+    iniciar_conexion_kernel_interrupt(valor_id);
     log_debug(cpu_log_debug,"DESPUES DE LA CREACION DEL HILO");
     while(1){
        ejecutar_instrucciones(NULL);

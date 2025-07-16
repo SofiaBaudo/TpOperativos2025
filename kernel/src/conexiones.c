@@ -201,8 +201,8 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
             case FIN_DE_IO: //Corresponde al enum de fin de IO
                 if(posicion!=-1){
                     sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
-                    transicionar_a_ready(proceso,BLOCKED);
                     log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a READY",proceso->pid);
+                    transicionar_a_ready(proceso,BLOCKED);
                 }
                 else{
                     log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a SUSP_READY",proceso->pid);

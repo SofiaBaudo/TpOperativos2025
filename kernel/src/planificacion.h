@@ -37,7 +37,7 @@ void transicionar_a_new(struct pcb *proceso);
 float calcular_proxima_estimacion(struct pcb *proceso);
 void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *));
 void intentar_iniciar();
-void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_de_cpu *cpu_en_la_que_ejecuta);
+void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado);
 void enviar_proceso_a_memoria(struct pcb* proceso);
 void crear_hilo_de_ejecucion(struct pcb*proceso, struct instancia_de_cpu*cpu_aux);
 

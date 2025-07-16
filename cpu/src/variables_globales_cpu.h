@@ -46,7 +46,7 @@ extern t_log *cpu_log_debug;
 extern t_config *cpu_config; 
 extern t_log *logger;
 extern bool hayInterrupcion;
-
+extern pthread_mutex_t mx_interrupcion;
 
 // Declaración Variables Globales CPU
 

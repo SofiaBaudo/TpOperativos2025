@@ -198,9 +198,12 @@ void mandar_syscall(t_instruccion instruccion){
 //Chequear Interrupcion
 void check_interrupt(void){
     if(hayInterrupcion){ //recibio una interrupcion
-        t_buffer *buffer = crear_buffer_cpu(pc, pid);
+        t_buffer *buffer = crear_buffer_cpu(pid, pc);
         crear_paquete(DESALOJO_ACEPTADO, buffer,fd_conexion_kernel_dispatch); 
+        tengo_que_solicitar_pid_y_pc = true;
+        pthread_mutex_lock(&mx_interrupcion);
         hayInterrupcion = false;
+        pthread_mutex_unlock(&mx_interrupcion);
     }
     else{
         log_info(cpu_logger, "No hay interrupcion");
@@ -210,7 +213,9 @@ void check_interrupt(void){
 void* esperar_interrupcion(){
     while(1){
     op_code solicitud_de_desalojo = recibir_op_code(fd_conexion_kernel_interrupt);
+    pthread_mutex_lock(&mx_interrupcion);
     hayInterrupcion = true;
+    pthread_mutex_unlock(&mx_interrupcion);
     log_info(cpu_logger," ## Llega interrupción al puerto Interrupt <por desalojo>");
     }
     return NULL;

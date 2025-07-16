@@ -135,7 +135,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
                 struct instancia_de_cpu *cpu_aux = buscar_cpu_con_proceso_con_mayor_estimacion();
                 enviar_op_code(cpu_aux->socket_interrupt,SOLICITO_DESALOJO);
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
-                reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)-1);
+                reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas));
                 pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
                 sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]); //Porque todavia no desalojamos nada, simplemente dimos el aviso
             }
@@ -632,9 +632,10 @@ void *poner_a_ejecutar(void *argumentos){
         }
         switch(motivo_de_devolucion){
             case DESALOJO_ACEPTADO:
+                liberar_cpu(cpu_en_la_que_ejecuta);
                 temporal_stop(proceso->duracion_ultima_rafaga);
                 proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
-                desalojar_proceso_de_cpu(proceso,cpu_en_la_que_ejecuta);
+                desalojar_proceso_de_cpu(proceso);
                 log_info(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
                 bloqueante = true;
                 break;
@@ -734,9 +735,8 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
     }
 }
 
-void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado, struct instancia_de_cpu *cpu_en_la_que_ejecuta){
+void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado){
     sacar_proceso_de_cola_de_estado(proceso_desalojado,EXEC);
-    liberar_cpu(cpu_en_la_que_ejecuta);
     log_debug(kernel_debug_log,"Se desaloja de la cola EXECUTE al proceso con id: %i",proceso_desalojado->pid);
     transicionar_a_ready(proceso_desalojado,EXEC);
 }
