@@ -47,6 +47,7 @@ extern t_config *cpu_config;
 extern t_log *logger;
 extern bool hayInterrupcion;
 extern pthread_mutex_t mx_interrupcion;
+extern bool ultima_instruccion_fue_syscall_bloqueante;
 
 // Declaración Variables Globales CPU
 

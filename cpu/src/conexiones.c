@@ -7,10 +7,11 @@
 
 bool tengo_que_solicitar_pid_y_pc;
 bool hayInterrupcion;
+bool ultima_instruccion_fue_syscall_bloqueante;
 pthread_mutex_t mx_interrupcion;
 void* iniciar_conexion_kernel_dispatch(void *arg){
     int identificador_cpu = *((int*) arg);
-    free(arg);
+    ultima_instruccion_fue_syscall_bloqueante = false;
     fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
     enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU_DISPATCH);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
@@ -31,6 +32,7 @@ close(socket);
 
 void *iniciar_conexion_kernel_interrupt(void *arg){
     int identificador_cpu = *(int *)arg;
+    free(arg);
     fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_INTERRUPT);
     hayInterrupcion = false;
     enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU_INTERRUPT);                    //avisa que es CPU.

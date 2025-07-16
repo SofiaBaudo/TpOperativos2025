@@ -101,6 +101,7 @@ void execute(t_instruccion instruccion, int pid){
         instruccion_goto(param1);
     }
     else if(strcmp(nombre_instruccion, "INIT_PROC") == 0 || strcmp(nombre_instruccion, "EXIT") == 0 || strcmp(nombre_instruccion, "DUMP_MEMORY") == 0 || strcmp(nombre_instruccion, "IO") == 0){
+        
         mandar_syscall(instruccion);
         pc++;
     }
@@ -175,6 +176,7 @@ void mandar_syscall(t_instruccion instruccion){
         t_buffer* buffer = crear_buffer_cpu(pid, pc);
         crear_paquete(EXIT, buffer, fd_conexion_kernel_dispatch);
         pc++;
+        ultima_instruccion_fue_syscall_bloqueante = true;
         desalojarProcesoTLB();
         desalojarProcesoCache(pid);
         recibir_op_code(fd_conexion_kernel_dispatch); //este opcode avisa que memoria ya autorizó que el proceso termine
@@ -185,25 +187,37 @@ void mandar_syscall(t_instruccion instruccion){
         t_buffer *buffer = crear_buffer_instruccion_io(instruccion.param1,milisegundos,&pid,&pc);
         crear_paquete(IO, buffer, fd_conexion_kernel_dispatch);
         pc++;
+        ultima_instruccion_fue_syscall_bloqueante = true;
         return;
     }
     else if(strcmp(instruccion.opcode, "DUMP_MEMORY") == 0){
         t_buffer *buffer = crear_buffer_vacio();
         crear_paquete(DUMP_MEMORY, buffer, fd_conexion_kernel_dispatch);
         pc++;
+        ultima_instruccion_fue_syscall_bloqueante = true;
         return;
     }
 }
 
 //Chequear Interrupcion
 void check_interrupt(void){
-    if(hayInterrupcion){ //recibio una interrupcion
+    if(hayInterrupcion && !ultima_instruccion_fue_syscall_bloqueante){ //recibio una interrupcion
         t_buffer *buffer = crear_buffer_cpu(pid, pc);
         crear_paquete(DESALOJO_ACEPTADO, buffer,fd_conexion_kernel_dispatch); 
         tengo_que_solicitar_pid_y_pc = true;
         pthread_mutex_lock(&mx_interrupcion);
         hayInterrupcion = false;
         pthread_mutex_unlock(&mx_interrupcion);
+        ultima_instruccion_fue_syscall_bloqueante = false;
+        op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);
+    }
+    else if(hayInterrupcion){
+        pthread_mutex_lock(&mx_interrupcion);
+        hayInterrupcion = false;
+        pthread_mutex_unlock(&mx_interrupcion);
+    }
+    else if(ultima_instruccion_fue_syscall_bloqueante){
+        ultima_instruccion_fue_syscall_bloqueante = false;
     }
     else{
         log_info(cpu_logger, "No hay interrupcion");

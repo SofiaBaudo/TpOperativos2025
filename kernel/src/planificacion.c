@@ -133,6 +133,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             if(desalojo){
                 //cambiar todo para que haya alguna funcion que te devuelva la cpu y no la posicion
                 struct instancia_de_cpu *cpu_aux = buscar_cpu_con_proceso_con_mayor_estimacion();
+                //temporal_stop(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
                 enviar_op_code(cpu_aux->socket_interrupt,SOLICITO_DESALOJO);
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
                 reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas));
@@ -266,7 +267,7 @@ void frenar_y_restar_cronometros(t_list *lista){
         struct instancia_de_cpu *cpu_aux = list_iterator_next(aux);
         temporal_stop(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
         int a_restar = temporal_gettime(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
-        cpu_aux->proceso_ejecutando->proxima_estimacion -= a_restar; //a la estimacion le resto lo que ya ejecuto
+        cpu_aux->proceso_ejecutando->ultima_estimacion -= a_restar; //a la estimacion le resto lo que ya ejecuto
     }
     list_iterator_destroy(aux);
     return;
@@ -632,11 +633,12 @@ void *poner_a_ejecutar(void *argumentos){
         }
         switch(motivo_de_devolucion){
             case DESALOJO_ACEPTADO:
-                liberar_cpu(cpu_en_la_que_ejecuta);
                 temporal_stop(proceso->duracion_ultima_rafaga);
+                log_info(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
+                liberar_cpu(cpu_en_la_que_ejecuta);
                 proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
                 desalojar_proceso_de_cpu(proceso);
-                log_info(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
+                enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,DESALOJO_REALIZADO);
                 bloqueante = true;
                 break;
             case INIT_PROC:
@@ -684,6 +686,7 @@ void *poner_a_ejecutar(void *argumentos){
                 else{
                     log_info(kernel_logger,"## (<PID: %i>) - Bloqueado por IO: <%s>",proceso->pid,proceso->nombre_io_que_lo_bloqueo);
                     temporal_stop(proceso->duracion_ultima_rafaga);
+                    liberar_cpu(cpu_en_la_que_ejecuta);
                     proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
                     sacar_proceso_de_cola_de_estado(proceso,EXEC);
                     cambiarEstado(proceso,EXEC,BLOCKED);
@@ -691,7 +694,6 @@ void *poner_a_ejecutar(void *argumentos){
                     pthread_create(&proceso->hilo_al_bloquearse,NULL,funcion_para_bloqueados,proceso);
                     pthread_detach(proceso->hilo_al_bloquearse);
                     //Inicializamos el cronometro de bloqueado
-                    liberar_cpu(cpu_en_la_que_ejecuta);
                     pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
@@ -738,7 +740,8 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
 void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado){
     sacar_proceso_de_cola_de_estado(proceso_desalojado,EXEC);
     log_debug(kernel_debug_log,"Se desaloja de la cola EXECUTE al proceso con id: %i",proceso_desalojado->pid);
-    transicionar_a_ready(proceso_desalojado,EXEC);
+    cambiarEstadoOrdenado(proceso_desalojado,EXEC,READY,menor_por_estimacion);
+    //transicionar_a_ready(proceso_desalojado,EXEC);
 }
 
 void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
