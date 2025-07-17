@@ -101,7 +101,9 @@ int leer_memoria_fisica(int direccion_fisica, char* valor_leido, size_t tamanio)
 // Lee un marco de memoria física y devuelve un puntero al buffer con su contenido
 void* leer_marco_memoria(int nro_marco) {
     void* buffer = malloc(memoria_config.TAM_PAGINA);
-    if (!buffer) return NULL;
+    if (!buffer) {
+        return NULL;
+    }
     int direccion_fisica = marcos[nro_marco].numero_marco * memoria_config.TAM_PAGINA;
     leer_memoria_fisica(direccion_fisica, buffer, memoria_config.TAM_PAGINA);
     return buffer;
@@ -136,6 +138,7 @@ int escribir_marco_memoria(int nro_marco, void* datos_pagina) {
 
 // Devuelve una lista de números de marcos asignados al proceso con el PID dado
 t_list* obtener_marcos_proceso(int pid) {
+
     t_list* lista_marcos = list_create();
     if (lista_marcos == NULL) {
         log_error(logger_memoria, "Error al crear lista de marcos para el proceso %d", pid);
@@ -154,6 +157,7 @@ t_list* obtener_marcos_proceso(int pid) {
     int niveles = memoria_config.CANTIDAD_NIVELES;
     for (int i = 0; i < tabla->cantidad_entradas; i++) {
         t_entrada_tabla* entrada = &tabla->entradas[i];
+        
         t_entrada_tabla* actual = entrada;
         t_tabla_paginas* tabla_actual = tabla;
         // Bajar exactamente niveles-1 veces para llegar al último nivel
@@ -172,3 +176,5 @@ t_list* obtener_marcos_proceso(int pid) {
     }
     return lista_marcos;
 }
+
+

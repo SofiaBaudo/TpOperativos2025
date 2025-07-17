@@ -11,7 +11,7 @@ void inicializar_swap(){
         perror("No se pudo abrir el archivo swapfile.bin");
         exit(EXIT_FAILURE);
     }
-    fclose(swapfile);
+    fclose(swapfile);   
 
     // Inicializar la lista global de procesos en swap
     procesos_swap = list_create();
@@ -184,8 +184,11 @@ int desuspender_proceso(int pid) {
 
     // 4. Asignar los datos leídos de swap a los marcos físicos del proceso
     t_list* marcos_proceso = obtener_marcos_proceso(pid);
+    //marcos_proceso -> es la lista de marcos que tiene un proceso
     for (int i = 0; i < list_size(marcos_proceso); i++) {
-        int nro_marco = *(int*)list_get(marcos_proceso, i);
+       // int nro_marco = *(int*)list_get(marcos_proceso, i);
+        t_marco* marco_aux = list_get(marcos_proceso, i);
+        int nro_marco = marco_aux->numero_marco;
         void* datos_pagina = buffer + i * memoria_config.TAM_PAGINA;
         escribir_marco_memoria(nro_marco, datos_pagina);
     }
