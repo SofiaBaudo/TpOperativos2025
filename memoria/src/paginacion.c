@@ -40,7 +40,7 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
     if(*paginas_restantes <= 0 && nivel_actual == memoria_config.CANTIDAD_NIVELES){
         log_warning(logger_memoria, "nivel final -> no hay paginas por mappear");
         return NULL;
-    }
+    }   
     int cantidad_entradas;
     // En el último nivel, no crees más entradas de las necesarias
     if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {

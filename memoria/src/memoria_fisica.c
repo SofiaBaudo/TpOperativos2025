@@ -137,15 +137,35 @@ int escribir_marco_memoria(int nro_marco, void* datos_pagina) {
 }
 
 // Devuelve una lista de números de marcos asignados al proceso con el PID dado
-t_list* obtener_marcos_proceso(int pid) {
+// Función recursiva auxiliar
+void recolectar_marcos_tabla(t_tabla_paginas* tabla, int nivel_actual, t_list* lista_marcos) {
+    int nivel_maximo = memoria_config.CANTIDAD_NIVELES;
+    if (tabla == NULL) return;
+    for (int i = 0; i < tabla->cantidad_entradas; i++) {
+        t_entrada_tabla* entrada = &tabla->entradas[i];
+        if (nivel_actual == nivel_maximo) { // Último nivel
+            if( entrada->tabla_nivel_inferior != NULL){
+                log_error(logger_memoria, "Error: Entrada de tabla de último nivel con tabla inferior no debería existir");
+                continue; // No debería haber tablas inferiores en el último nivel
+            }
+            int* marco = malloc(sizeof(int));
+            *marco = entrada->nro_marco;
+            list_add(lista_marcos, marco);
+        } else {
+            if (entrada->tabla_nivel_inferior != NULL) {
+                recolectar_marcos_tabla(entrada->tabla_nivel_inferior, nivel_actual + 1, lista_marcos);
+            }
+        }
+    }
+}
 
+t_list* obtener_marcos_proceso(int pid) {
     t_list* lista_marcos = list_create();
     if (lista_marcos == NULL) {
         log_error(logger_memoria, "Error al crear lista de marcos para el proceso %d", pid);
         return NULL;
     }
 
-    // Buscar el proceso en memoria para acceder a su tabla de páginas
     t_proceso_memoria* proc = buscar_proceso_en_memoria(pid); // Debe estar implementada
     if (proc == NULL || proc->tabla_paginacion_raiz == NULL) {
         log_error(logger_memoria, "No se encontró el proceso %d o su tabla de páginas", pid);
@@ -153,27 +173,7 @@ t_list* obtener_marcos_proceso(int pid) {
         return NULL;
     }
 
-    t_tabla_paginas* tabla = proc->tabla_paginacion_raiz;
-    int niveles = memoria_config.CANTIDAD_NIVELES;
-    for (int i = 0; i < tabla->cantidad_entradas; i++) {
-        t_entrada_tabla* entrada = &tabla->entradas[i];
-        
-        t_entrada_tabla* actual = entrada;
-        t_tabla_paginas* tabla_actual = tabla;
-        // Bajar exactamente niveles-1 veces para llegar al último nivel
-        for (int nivel = 1; nivel < niveles; nivel++) {
-            if (actual->tabla_nivel_inferior == NULL) {
-                log_error(logger_memoria, "Error: tabla_nivel_inferior NULL antes de llegar al último nivel para página %d", i);
-                break;
-            }
-            tabla_actual = actual->tabla_nivel_inferior;
-            actual = &tabla_actual->entradas[actual->nro_pagina];
-        }
-        // Ahora actual apunta a la entrada del último nivel
-        int* nro_marco = malloc(sizeof(int));
-        *nro_marco = actual->nro_marco;
-        list_add(lista_marcos, nro_marco);
-    }
+    recolectar_marcos_tabla(proc->tabla_paginacion_raiz, 1, lista_marcos);
     return lista_marcos;
 }
 

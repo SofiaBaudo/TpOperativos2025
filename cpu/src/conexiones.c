@@ -86,9 +86,7 @@ void* inicializar_memoria(void* arg){
         printf("No se pudo crear el archivo de log para la CPU %d\n", id);
         exit(1);
     }
-    pthread_t hilo_cliente_mem;
-    pthread_create(&hilo_cliente_mem, NULL, iniciar_conexion_memoria_dispatch,valor_id);
-    pthread_join(hilo_cliente_mem, NULL); //esto hace que espere a que termine el hilo hijo para terminar el programa. 
+    iniciar_conexion_memoria_dispatch(valor_id);
     log_info(logger, "CPU %d: Conexión con Memoria establecida", id);
     log_info(logger, "Finalizando hilo de Memoria");
     log_destroy(logger);
@@ -111,11 +109,8 @@ void* inicializar_kernel(void* arg){
     pthread_t hilo_cliente_kernel;
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
-    log_debug(cpu_log_debug,"ANTES DE LA CREACION DEL HILO");
-    pthread_create(&hilo_cliente_kernel, NULL, iniciar_conexion_kernel_dispatch, valor_id);
-    pthread_join(hilo_cliente_kernel, NULL);
+    iniciar_conexion_kernel_dispatch(valor_id);
     iniciar_conexion_kernel_interrupt(valor_id);
-    log_debug(cpu_log_debug,"DESPUES DE LA CREACION DEL HILO");
     while(1){
        ejecutar_instrucciones(NULL);
     }

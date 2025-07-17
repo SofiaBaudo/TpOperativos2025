@@ -69,5 +69,5 @@ void listar_metricas_de_tiempo_y_estado(struct pcb *proceso);
 char *cambiar_syscall_a_string(op_code syscall);
 //PlANI MEDIANO PLAZO
 void* funcion_para_bloqueados(void* arg);
-
+void liberar_paquete(t_paquete *paquete);
 

@@ -229,16 +229,13 @@ void *planificador_mediano_plazo_proceso_mas_chico_primero(){
 void* funcion_para_bloqueados(void* arg){
     struct pcb* proceso = (struct pcb*) arg; //lo hacemos para que pasen los argumentos al hilo.
     usleep(atoi(TIEMPO_SUSPENSION)*1000); //preguntar
-    log_warning(kernel_debug_log,"TERMINO EL TIEMPO DE SUSPENSION");
     pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
     int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
     pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
     if(pos!=-1){ //ESTA EN BLOQUEADO
-        log_warning(kernel_debug_log,"ADENTRO DEL IF DE FUNCION PARA BLOQUEADOS");
         sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
         cambiarEstado(proceso,BLOCKED,SUSP_BLOCKED); //A chequear
         sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]);
-        log_warning(kernel_debug_log,"Sem post hecho");
     }
     return NULL;
 }
@@ -705,7 +702,8 @@ void *poner_a_ejecutar(void *argumentos){
                 log_debug(kernel_debug_log,"SYSCALL DESCONOCIDA");
                 break;
         }
-        /*------*/
+    liberar_paquete(paquete);
+        
     }
     return NULL;
 }
@@ -725,6 +723,7 @@ struct pcb* buscar_proceso_bloqueado_por_io(t_list *lista, char *nombre){
             return proceso;
         }
     }
+    list_iterator_destroy(iterador);
     return NULL;
 }
 
@@ -778,11 +777,7 @@ void liberar_proceso(struct pcb *proceso){
         temporal_destroy(proceso->metricas_de_tiempo[i]);
         }
     }
-    //free(proceso->ruta_del_archivo_de_pseudocodigo);
-    /*if(proceso->nombre_io_que_lo_bloqueo){
-        free(proceso->nombre_io_que_lo_bloqueo);
-        ARREGLAR MEMORY LEAK
-    }*/
+    free(proceso->ruta_del_archivo_de_pseudocodigo);
     free(proceso);
 }
 
@@ -815,3 +810,9 @@ char *cambiar_syscall_a_string(op_code syscall){
             return "Syscall Desconocida";
     }
 } 
+
+void liberar_paquete(t_paquete *paquete){
+   free(paquete->buffer->stream);
+   free(paquete->buffer);
+   free(paquete);
+}

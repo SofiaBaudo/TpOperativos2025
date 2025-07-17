@@ -309,13 +309,14 @@ void desalojarProcesoCache(int pid){
 }
 
 int conseguirMarcoCache(int pid, int nroPag){
-    int tlbrespuesta = buscarTlb(nroPag, pid);
+    int tlbrespuesta = -1;
     int marco;
+    if(ENTRADAS_TLB != 0){
+        tlbrespuesta = buscarTlb(nroPag, pid);
+    }    
     if(tlbrespuesta == -1){
         marco = navegarNiveles(nroPag, pid);
-        if(ENTRADAS_TLB != 0){
-            agregarEntradaATLB(nroPag, marco);
-        }
+        agregarEntradaATLB(nroPag, marco); 
     }
     else{
         marco = tlbrespuesta;

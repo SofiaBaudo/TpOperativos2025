@@ -17,13 +17,9 @@ void inicializar_CPU(int id){
     inicializarCache();
     int* valor_id = malloc(sizeof(int));
     *valor_id = id;
-
-    pthread_t hiloKernel;
-    pthread_t hiloMemoria;
-    pthread_create(&hiloKernel, NULL, inicializar_kernel, valor_id);
-    pthread_create(&hiloMemoria, NULL, inicializar_memoria, valor_id);    
-    pthread_join(hiloKernel, NULL);
-    pthread_join(hiloMemoria, NULL);  
+    inicializar_memoria(valor_id); 
+    inicializar_kernel(valor_id);
+   
 }
 
 //Funcion de Inicializacion de Logs

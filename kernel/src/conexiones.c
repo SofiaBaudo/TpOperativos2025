@@ -199,6 +199,8 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
         int posicion = ver_si_esta_bloqueado_y_devolver_posicion(proceso);
         switch(respuesta){
             case FIN_DE_IO: //Corresponde al enum de fin de IO
+                free(proceso->nombre_io_que_lo_bloqueo);
+                proceso->nombre_io_que_lo_bloqueo = NULL;
                 if(posicion!=-1){
                     sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
                     log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a READY",proceso->pid);
@@ -211,6 +213,8 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 }
                 break;
             case DESCONEXION_IO: //desconexion de la instancia con la que estamos trabajando
+                free(proceso->nombre_io_que_lo_bloqueo);
+                proceso->nombre_io_que_lo_bloqueo = NULL;
                 io_conectada = false;
                 posicion = buscar_io_especifica(ios_conectados,io_aux->socket_io_para_comunicarse);
                 list_remove(ios_conectados,posicion);

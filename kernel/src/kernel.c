@@ -10,7 +10,7 @@ int main(int argc, char* argv[]){
    inicializar_kernel(archivo, tamanio);
    
    pthread_t hilo_dispatch;
-   pthread_t hilo_mediano_plazo;
+  pthread_t hilo_mediano_plazo;
    pthread_t hilo_mediano_plazo_fifo;
    pthread_t hilo_io;
    pthread_t hilo_interrupt;
