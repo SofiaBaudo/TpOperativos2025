@@ -17,6 +17,7 @@ bool inicializar_memoria_fisica(void) {
         log_error(logger_memoria, "Error al asignar memoria física");
         return false;
     }
+    memset(memoria_usuario, 0, memoria_config.TAM_MEMORIA);
    
     // PASO 3: Crear array de marcos --> BITMAPPPP visto en clase
     marcos = malloc(cantidad_marcos * sizeof(t_marco));
@@ -90,6 +91,7 @@ int leer_memoria_fisica(int direccion_fisica, char* valor_leido, size_t tamanio)
     int ret = 0;
     pthread_mutex_lock(&memoria_usuario_mutex);
     if (direccion_fisica + tamanio > memoria_config.TAM_MEMORIA) {
+        memset(valor_leido, 0, tamanio);
         ret = -1;
     } else {
         memcpy(valor_leido, (char*)memoria_usuario + direccion_fisica, tamanio);
@@ -104,6 +106,7 @@ void* leer_marco_memoria(int nro_marco) {
     if (!buffer) {
         return NULL;
     }
+    memset(buffer, 0, memoria_config.TAM_PAGINA);
     int direccion_fisica = marcos[nro_marco].numero_marco * memoria_config.TAM_PAGINA;
     leer_memoria_fisica(direccion_fisica, buffer, memoria_config.TAM_PAGINA);
     return buffer;

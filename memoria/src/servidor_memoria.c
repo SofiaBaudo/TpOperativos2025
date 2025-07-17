@@ -73,7 +73,7 @@ void manejar_cliente_kernel(int cliente) {
                 int pid = deserializar_pid_memoria(proceso_paquete);
                 int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
                 char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
-                log_warning(logger_memoria,"ANtes de armar la ruta el nombre es: %s",path_pseudocodigo);
+                log_warning(logger_memoria,"Antes de armar la ruta el nombre es: %s",path_pseudocodigo);
                 char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);
                 log_debug(logger_memoria, "el pseudocodigo es: %s", path_absoluto);
                 if(inicializar_proceso(pid,tam_proceso,path_absoluto)){
@@ -90,18 +90,15 @@ void manejar_cliente_kernel(int cliente) {
                 log_debug(logger_memoria,"ESTOY EN CASO DESUSUSPENCION_PROCESO");
                 t_paquete *proceso_paquete = recibir_paquete(cliente);
                 int pid = deserializar_pid_memoria(proceso_paquete);
-                //int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
-                //char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
                 if (!proceso_paquete) {
                     log_error(logger_memoria, "Error al recibir paquete de proceso suspendido");
                     enviar_op_code(cliente, RECHAZO_PROCESO);
                     break;
                 }
-                // Intentar reanudar el proceso desde SWAP
                 desuspender_proceso(pid);
 
                 //log_info(logger_memoria, "## PID: %d - Proceso Desuspendido - Tamaño: %d", pid, tam_proceso);
-                enviar_op_code(cliente, 1);
+                enviar_op_code(cliente, ACEPTAR_PROCESO);
                 break;
             }
             case FINALIZAR_PROCESO: {
@@ -124,12 +121,17 @@ void manejar_cliente_kernel(int cliente) {
                     break;
                 }
                 // Suspender el proceso
-                suspender_proceso(pid);
-                enviar_op_code(cliente, 1); 
+                int resultado_suspension = suspender_proceso(pid);
+                if(resultado_suspension == 0){
+                log_debug(logger_memoria, "PROCESO SUSPENDIDO CORRECTAMENTE");
+                }
+	
+                enviar_op_code(cliente, SUSPENSION_CONFIRMADA); 
                 break;
             }
             case DUMP_MEMORY: {
-                int pid = recibir_entero(cliente);
+                t_paquete* paquete = recibir_paquete(cliente);
+                int pid = deserializar_pid_memoria(paquete);
                 bool dump_ok = dump_memoria_proceso(pid);
                 if (dump_ok) {
                     enviar_op_code(cliente, ACEPTAR_PROCESO); // o DUMP_OK

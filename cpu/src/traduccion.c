@@ -10,9 +10,8 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
     int numPag = floor(direccion/tamPag);
     int desplazamiento = direccion % tamPag; 
     int marco; 
-    char* var = "hola";
     if(estaHabilitadaCache()){
-        int resultado = usarCache(pid, numPag, instruccion,(void*)var);
+        int resultado = usarCache(pid, numPag, instruccion,contenido);
         log_debug(cpu_log_debug, "termine de usar la cache, el resultado es %i", resultado);
         if(resultado != -1){
             marco = resultado;
@@ -25,19 +24,22 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
                 log_debug(cpu_log_debug, "entre al if de que hay entradas");
                 tlbrespuesta = buscarTlb(numPag, pid);
                 log_debug(cpu_log_debug, "la respuesta de si se encontro es %i", tlbrespuesta);
-            if(tlbrespuesta != -1){
+        }
+        if(tlbrespuesta != -1){
                 marco = tlbrespuesta;
                 imprimirTLB();
-            }
-            else{
+        }
+        else{
                 marco = navegarNiveles(numPag, pid);
                 log_debug(cpu_log_debug,"YA NAVEGUE LOS NIVELES.");
+                if(ENTRADAS_TLB!= 0){
                 agregarEntradaATLB(numPag, marco);
                 imprimirTLB();
+                }
                 
-            }
         }
-    }
+        }
+    
     int direccionFisica = marco*tamPag + desplazamiento;
     return direccionFisica; 
 }

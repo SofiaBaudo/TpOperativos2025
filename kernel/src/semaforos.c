@@ -39,7 +39,7 @@ void inicializar_sincronizacion() {
     else{
         sem_init(&INTENTAR_INICIAR_NEW, 0, 0);
     }
-    sem_init(&INTENTAR_INICIAR_SUSP_READY,0,0); 
+    sem_init(&INTENTAR_INICIAR_SUSP_READY,0,1); 
     sem_init(&CPUS_LIBRES,0,0);
     sem_init(&REPLANIFICAR,0,0);
     sem_init(&SUSP_READY_SIN_PROCESOS,0,0);

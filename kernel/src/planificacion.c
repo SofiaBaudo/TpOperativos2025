@@ -8,30 +8,30 @@ int identificador_del_proceso = 0;
 struct pcb *proximo_a_consultar;
 
 
-void crear_proceso(int tamanio,char *ruta_archivo) { // tambien tiene que recibir el tamanio y el path
-    struct pcb* pcb = malloc(sizeof(struct pcb)); 
-    pcb = inicializar_un_proceso(pcb,tamanio,ruta_archivo); 
-    transicionar_a_new(pcb); //aca esta lo de ultimo proceso en entrar
-    log_info(kernel_logger,"## (< PID: %i>) Se crea el proceso - ESTADO: NEW",pcb->pid);
-    incrementar_var_global_id_proceso();
+void crear_proceso(int tamanio,char *ruta_archivo) { // 
+    struct pcb* proceso = malloc(sizeof(struct pcb)); //creo estructura con tamaño del proceso.
+    proceso = inicializar_un_proceso(proceso,tamanio,ruta_archivo); //inicializo las estructuras del proceso
+    transicionar_a_new(proceso); // mando el proceso al estado new
+    log_info(kernel_logger,"## (< PID: %i>) Se crea el proceso - ESTADO: NEW",proceso->pid);
+    incrementar_var_global_id_proceso(); //incremento la variable global, si proceso que llega es N, el proximo es N+1
     return; 
 }
 
 void *planificador_largo_plazo_fifo(){
-    esperar_enter_por_pantalla();
+    esperar_enter_por_pantalla(); //espera a un enter para poder empezar
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     while(1){
-        sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // si no hay nada espera a que llegue un proceso
-        sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // inicializado en 0, cuando llega algo a NEW, se activa.
+        sem_wait(&INTENTAR_INICIAR_NEW); //activa el planificador si se suspende un proceso, finaliza un proceso o se pone a ejecutar.
         sem_wait(&UNO_A_LA_VEZ[NEW]); //este semaforo hace que el planificador maneje un proceso a la vez.
-        if(!list_is_empty(colaEstados[SUSP_READY])){
+        if(!list_is_empty(colaEstados[SUSP_READY])){ //espera a que la cola de suspendido ready este vacía para poder actuar.
             sem_wait(&SUSP_READY_SIN_PROCESOS);
         }
-        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); //no lo sacamos de la lista todavia pero obtenemos una referencia
-        bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_DESDE_NEW);
+        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); //obtengo una copia del primer proceso de la cola de NEW.
+        bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_DESDE_NEW); //consulto a memoria si hay espacio disponible para entrar.
         if(respuesta){
             primer_proceso = sacar_primero_de_la_lista(NEW); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la cola de NEW
-            transicionar_a_ready(primer_proceso,NEW);
+            transicionar_a_ready(primer_proceso,NEW); //mandamos el proceso a READY.
             sem_post(&INTENTAR_INICIAR_NEW); //incremento el semaforo para que pueda iniciar el planificador.
         }   
         else{
@@ -46,7 +46,7 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
     esperar_enter_por_pantalla();
     log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
     while(1){
-        sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);// si no hay nada espera a que llegue un proceso
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);// inicializado en 0, cuando llega algo a NEW, se activa.
         sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
         sem_wait(&UNO_A_LA_VEZ[NEW]); //este semaforo hace que el planificador maneje un proceso a la vez.
         //verifico que la cola de SUSP_READY este vacía.
@@ -163,9 +163,11 @@ void *planificador_mediano_plazo(){
         t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
         crear_paquete(SUSPENDER_PROCESO,buffer,socket);
         log_warning(kernel_debug_log,"PAQUETE ENVIADO A MEMORIA");
-        recibir_op_code(socket);
-        cerrar_conexion(socket);
-        intentar_iniciar();
+        op_code respuesta = recibir_op_code(socket);
+        if(respuesta = SUSPENSION_CONFIRMADA){
+            cerrar_conexion(socket);
+            intentar_iniciar();
+        }
     }
 }
 
@@ -346,7 +348,7 @@ int buscar_en_lista(t_list *lista, int pid) {
     }
 
     list_iterator_destroy(aux); // destruyo el iterador creado por mas que no haya encontrado el proceso que queriamos.
-    printf("El proceso con PID %d no se encuentra en la lista\n", pid);
+    log_debug(kernel_debug_log,"El proceso con PID %d no se encuentra en la lista\n", pid);
     return -1;
 }
 
@@ -527,9 +529,9 @@ char *cambiar_a_string(Estado estado) {
 
 
 bool consultar_si_puede_entrar(struct pcb *proceso,op_code operacion){
-    int socket = iniciar_conexion_kernel_memoria();
-    enviar_op_code(socket,operacion);
-    bool respuesta = solicitar_permiso_a_memoria(socket,proceso,operacion); //(Adentro de la funcion, vamos a manejar un op_code)
+    int socket = iniciar_conexion_kernel_memoria(); //inicio la conexion de me
+    enviar_op_code(socket,operacion); 
+    bool respuesta = solicitar_permiso_a_memoria(socket,proceso,operacion); //solicito el permiso
     cerrar_conexion(socket);
     return respuesta;
 }
@@ -640,7 +642,7 @@ void *poner_a_ejecutar(void *argumentos){
                 break;
             case INIT_PROC:
                 char *nombre_archivo = deserializar_nombre_archivo_init_proc(paquete);
-                int tamanio = deserializar_tamanio (paquete);
+                int tamanio = deserializar_tamanio(paquete);
                 crear_proceso(tamanio,nombre_archivo);
                 proceso->pc++;
                 enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
@@ -655,6 +657,7 @@ void *poner_a_ejecutar(void *argumentos){
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
+                log_error(kernel_debug_log, "ESTOY ACA");
                 proceso->pc++;
                 sacar_proceso_de_cola_de_estado(proceso,EXEC);
                 int respuesta = manejar_dump(proceso,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
@@ -675,6 +678,7 @@ void *poner_a_ejecutar(void *argumentos){
                 pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                 int pos = buscar_IO_solicitada(ios_conectados,proceso->nombre_io_que_lo_bloqueo);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
+                log_debug(kernel_debug_log,"TERMINE DE BUSCAR EL NOMBRE");
                 if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
                     log_warning(kernel_debug_log,"adentro del IF de io");
                     finalizar_proceso(proceso,EXEC);
@@ -695,6 +699,7 @@ void *poner_a_ejecutar(void *argumentos){
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     sem_post(io_aux->hay_procesos_esperando);
+                    log_debug(kernel_debug_log, "TERMINE DE HACER EL ELSE");
                 }
                 bloqueante = true;
                 break;
@@ -702,8 +707,7 @@ void *poner_a_ejecutar(void *argumentos){
                 log_debug(kernel_debug_log,"SYSCALL DESCONOCIDA");
                 break;
         }
-    liberar_paquete(paquete);
-        
+    
     }
     return NULL;
 }

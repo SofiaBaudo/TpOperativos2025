@@ -82,7 +82,8 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
         log_error(logger_memoria, "Valor inválido en cantidad_entradas: %d en nivel %d", tabla->cantidad_entradas, nivel_actual);
     }
 
-    log_debug(logger_memoria, "Tabla creada en nivel %d (%p) con %d entradas (restantes: %ls)",nivel_actual, tabla, cantidad_entradas, paginas_restantes);
+    log_debug(logger_memoria, "Tabla creada en nivel %d (%p) con %d entradas (restantes: %d)", nivel_actual, tabla, cantidad_entradas, *paginas_restantes);
+
 
     for (int i = 0; i < cantidad_entradas; i++) {
         tabla->entradas[i].nro_pagina = i;

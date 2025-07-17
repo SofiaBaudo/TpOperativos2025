@@ -29,63 +29,62 @@ void inicializar_swap(){
 int suspender_proceso(int pid){
     log_info(logger_memoria, "## PID: <%d> - Iniciando suspensión del proceso", pid);
     
-    // 1. Obtener la lista de marcos ocupados por el proceso en memoria principal
     t_list* marcos_proceso = obtener_marcos_proceso(pid);
     if (marcos_proceso == NULL || list_size(marcos_proceso) == 0) {
-        // No hay marcos para este proceso
         return -1;
     }
 
-    // 2. Calcular el tamaño total a guardar
-    size_t tamanio_total = list_size(marcos_proceso) * memoria_config.TAM_PAGINA; // Porque el tamaño de cada marco es igual al de una pagina
+    size_t tamanio_total = list_size(marcos_proceso) * memoria_config.TAM_PAGINA;
     void* buffer = malloc(tamanio_total);
     if (buffer == NULL) {
-        // Error de memoria
         list_destroy(marcos_proceso);
         return -1;
     }
+    memset(buffer, 0, tamanio_total);
 
-    // 3. Leer los datos de cada marco y copiarlos al buffer
     for (int i = 0; i < list_size(marcos_proceso); i++) {
         int nro_marco = *(int*)list_get(marcos_proceso, i);
         void* datos_marco = leer_marco_memoria(nro_marco);
+        if (datos_marco == NULL) {
+            log_error(logger_memoria, "Error al leer marco %d", nro_marco);
+            free(buffer);
+            list_destroy(marcos_proceso);
+            return -1;
+        }
         memcpy(buffer + i * memoria_config.TAM_PAGINA, datos_marco, memoria_config.TAM_PAGINA);
         free(datos_marco);
     }
 
-    // 4. Escribir el buffer en swap
-    size_t offset_swap = buscar_espacio_libre_swap(tamanio_total); 
+    size_t offset_swap = buscar_espacio_libre_swap(tamanio_total);
     if (offset_swap == (size_t)-1) {
-        // No hay espacio suficiente en swap
         free(buffer);
         list_destroy(marcos_proceso);
         return -1;
     }
+
     if (escribir_en_swap(buffer, tamanio_total, offset_swap) != 0) {
         free(buffer);
         list_destroy(marcos_proceso);
         return -1;
     }
 
-    // 5. Registrar el proceso en la lista de procesos en swap
     ProcesoSwap* pswap = malloc(sizeof(ProcesoSwap));
     pswap->pid = pid;
     pswap->offset_swap = offset_swap;
     pswap->tamanio = tamanio_total;
-    // Guardar el path del pseudocódigo (deberás obtenerlo del proceso en memoria antes de finalizarlo)
-    t_proceso_memoria* proc = buscar_proceso_en_memoria(pid); // función auxiliar externa
+    t_proceso_memoria* proc = buscar_proceso_en_memoria(pid);
     if (proc && proc->path_pseudocodigo) {
         pswap->path_pseudocodigo = strdup(proc->path_pseudocodigo);
     } else {
         log_error(logger_memoria, "No se encontró el proceso %d en memoria", pid);
         pswap->path_pseudocodigo = NULL;
     }
-    list_add(procesos_swap, pswap); // Usar semaforo
 
-    // 6. Finalizo el proceso en memoria
+    // Aquí usar semáforo para proteger acceso concurrente
+    list_add(procesos_swap, pswap);
+
     finalizar_proceso(pid);
 
-    // 7. Liberar recursos
     free(buffer);
     list_destroy(marcos_proceso);
 
@@ -127,22 +126,29 @@ size_t buscar_espacio_libre_swap(size_t tamanio) {
 int escribir_en_swap(void* buffer, size_t tamanio, size_t offset) {
     // Abre el archivo swapfile.bin en modo lectura/escritura
     FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "r+b");
+    
     if (swapfile == NULL) {
         perror("No se pudo abrir el archivo swapfile.bin");
         return -1;
     }
 
     // Mueve el cursor al offset especificado
-    fseek(swapfile, offset, SEEK_SET);
-
+    //fseek(swapfile, offset, SEEK_SET);
+    if (fseek(swapfile, offset, SEEK_SET) != 0) {
+        perror("Error al posicionar el cursor en swapfile.bin");
+        fclose(swapfile);
+        return -1;
+    }
     // Escribe los datos del buffer en el archivo
     size_t bytes_escritos = fwrite(buffer, 1, tamanio, swapfile);
-    fclose(swapfile);
 
     if (bytes_escritos != tamanio) {
         perror("Error al escribir en el archivo swapfile.bin");
+        fclose(swapfile);
         return -1;
     }
+    fflush(swapfile);
+    fclose(swapfile);
 
     return 0; // Éxito
 }
