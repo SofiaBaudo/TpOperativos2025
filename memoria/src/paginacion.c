@@ -25,9 +25,7 @@ t_tabla_paginas* iniciar_proceso_paginacion(int pid, int tam_proceso) {
 // Crea la estructura de tablas para un proceso dado su tamaño
 t_tabla_paginas* crear_tablas_para_proceso(int tam_proceso) {
     int tam_pagina = memoria_config.TAM_PAGINA;
-    log_debug(logger_memoria,"EL TAMAÑO DEL PROCESO ES: %i",tam_proceso);
     int paginas_necesarias = (tam_proceso + tam_pagina - 1) / tam_pagina;
-    log_debug(logger_memoria, "LAS PAGINAS NECESARIAS SON: %d", paginas_necesarias);
     return crear_nivel_tabla(1, &paginas_necesarias);
 }
 
@@ -41,8 +39,6 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
     int cantidad_entradas;
     // En el último nivel, no crees más entradas de las necesarias
     if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
-        log_warning(logger_memoria, "nivel final alcanzado");
-        
         if (*paginas_restantes > entradas_por_tabla) {
         cantidad_entradas = entradas_por_tabla;
         } 
@@ -137,9 +133,7 @@ bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual
             log_debug(logger_memoria, "el nivel es %i", nivel_actual);
             if (!asignar_marcos_a_todas_las_paginas(tabla->entradas[i].tabla_nivel_inferior, nivel_actual + 1))
                 return false;
-            }
-        log_debug(logger_memoria, "el nivel es %i", nivel_actual);
-        log_debug(logger_memoria, "estoy el indice de entrada %i",i);   
+            } 
     }
     return true;
 }
@@ -168,9 +162,6 @@ void destruir_tabla_y_marcos(t_tabla_paginas* tabla, int nivel_actual) { // OJO 
         log_warning(logger_memoria, "Nivel %d: intento de destruir tabla NULL", nivel_actual);
         return;
     }
-
-    log_debug(logger_memoria, "🗑️  Destruyendo tabla nivel %d en %p con %d entradas",
-              nivel_actual, tabla, tabla->cantidad_entradas);
 
     if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
         for (int i = 0; i < tabla->cantidad_entradas; i++) {
@@ -231,22 +222,16 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
     int entradas = memoria_config.ENTRADAS_POR_TABLA;
     t_tabla_paginas* actual = tabla_raiz;
     
-    log_debug(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d", pid, nro_pagina_logica);
     int marco = -8;
     for (int nivel = 1; nivel <= niveles; nivel++) {
         // Aplicar retardo por acceso a tabla
-        log_debug(logger_memoria,"Adentro del for");
         usleep(memoria_config.RETARDO_MEMORIA * 1000);
         
         // Actualizar métricas
         actualizar_metricas_acceso_tabla_paginas(pid);
-        log_debug(logger_memoria, "termine de actualizar metricas");
         usleep(2000000);
         // Calcular índice para este nivel
-        //VER
         int idx = (nro_pagina_logica / (int)pow(entradas, niveles-nivel)) % entradas;
-        log_warning(logger_memoria, "EL INDICE PARA ESTE NIVEL ES %i", idx);
-        log_warning(logger_memoria, "LA CANTIDAD DE ENTRADAS DE ESTE ES %d", actual->cantidad_entradas);
         if (idx >= actual->cantidad_entradas) {
             log_error(logger_memoria, "PID: %d - Página %d no encontrada en nivel %d porque el idx es mayor a la cantidad de entradas", pid, nro_pagina_logica, nivel);
             return -1;
@@ -267,22 +252,6 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
             }
         }
     }
-    /*
-    // Acceso final a la página de último nivel
-    usleep(memoria_config.RETARDO_MEMORIA * 1000);
-    actualizar_metricas_acceso_tabla_paginas(pid);
-    
-    int idx_final = nro_pagina_logica % entradas;
-    if (idx_final >= actual->cantidad_entradas) {
-        log_error(logger_memoria, "PID: %d - Página %d fuera de rango en nivel final", pid, nro_pagina_logica);
-        return -1;
-    }
-    
-    int marco = actual->entradas[idx_final].nro_marco;
-    
-    
-    */
-   log_debug(logger_memoria, "PID: %d - Acceso a tabla de páginas - Página: %d - Marco: %d", pid, nro_pagina_logica, marco);
     return marco;
 }
 
@@ -307,9 +276,7 @@ void* obtener_contenido_pagina_completa(int marco, int tam_pagina) {
     void* direccion_marco = memoria_usuario + (marco * tam_pagina);
     memcpy(contenido, direccion_marco, tam_pagina);
     pthread_mutex_unlock(&memoria_usuario_mutex);
-    
-    log_debug(logger_memoria, "Acceso a página completa - Marco: %d - Tamaño: %d", marco, tam_pagina);
-    
+
     return contenido;
 }
 
@@ -333,8 +300,6 @@ bool actualizar_contenido_pagina_completa(int marco, void* contenido, int tam_pa
     void* direccion_marco = memoria_usuario + (marco * tam_pagina);
     memcpy(direccion_marco, contenido, tam_pagina);
     pthread_mutex_unlock(&memoria_usuario_mutex);
-    
-    log_debug(logger_memoria, "Actualización de página completa - Marco: %d - Tamaño: %d", marco, tam_pagina);
     
     return true;
 }

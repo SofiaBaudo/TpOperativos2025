@@ -37,7 +37,6 @@ char* obtener_instruccion_proceso(int pid, int pc) {
         char* original = list_get(proc->instrucciones, pc);
         if (original){
             copia = strdup(original);
-            log_debug(logger_memoria,"Copia es: %s",copia);
         } else {
             copia = strdup("FUERA_DE_RANGO");
             log_warning(logger_memoria, "PC %d del proceso %d apunta a una línea vacía", pc, pid);

@@ -12,7 +12,6 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
     int marco; 
     if(estaHabilitadaCache()){
         int resultado = usarCache(pid, numPag, instruccion,contenido);
-        log_debug(cpu_log_debug, "termine de usar la cache, el resultado es %i", resultado);
         if(resultado != -1){
             marco = resultado;
         }
@@ -73,7 +72,7 @@ int buscarTlb(int numPag, int pid){
    for(int i = 0; i < ENTRADAS_TLB; i++){  
         if(aux->info.numPag == numPag ){
             log_error(cpu_logger, "PID: <%d> - TLB HIT - Pagina: <%d>", pid, aux->info.numPag);
-            log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", pid, aux->info.numPag, aux->info.numMarco);
+            log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", pid, numPag, aux->info.numMarco);
             modificarReferencia(numPag);
             return aux->info.numMarco;
         }
@@ -84,7 +83,6 @@ int buscarTlb(int numPag, int pid){
 }
 void agregarEntradaATLB(int numPag, int numMarco){
     if(strcmp(REEMPLAZO_TLB, "FIFO") == 0){
-        log_debug(cpu_log_debug, "el algoritmo es fifo");
         implementarAlgoritmoFIFO(numPag, numMarco);
     }
     else if(strcmp(REEMPLAZO_TLB, "LRU") == 0){
@@ -95,7 +93,6 @@ void agregarEntradaATLB(int numPag, int numMarco){
 }
 
 void implementarAlgoritmoFIFO(int numPag, int numMarco){
-    log_debug(cpu_log_debug,"entre a la funcion de fifo");
     if (punterosPos == NULL){
         return; 
     }    

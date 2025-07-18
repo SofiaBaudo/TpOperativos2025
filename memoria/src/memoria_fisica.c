@@ -35,8 +35,6 @@ bool inicializar_memoria_fisica(void) {
         marcos[i].ocupado = false;
         marcos[i].direccion_fisica = memoria_usuario + (i * tam_pagina);
     }
-   
-    log_debug(logger_memoria, "Memoria física inicializada exitosamente");
     return true;
 }
 

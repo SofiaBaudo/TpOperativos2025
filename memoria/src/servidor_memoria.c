@@ -39,7 +39,6 @@ void* manejar_cliente(void *socketCliente)
             manejar_cliente_kernel(cliente);
             break;
         case HANDSHAKE_CPU:
-            log_debug(logger_memoria, "Se conecto CPU");
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
             t_buffer* buffer = crear_buffer_tamPag_entradasTabla_cantNiveles(
                 memoria_config.TAM_PAGINA,
@@ -67,14 +66,11 @@ void manejar_cliente_kernel(int cliente) {
         log_debug(logger_memoria, "Peticion recibida de KERNEL: %s", instruccion_a_string(peticion_kernel));
         switch (peticion_kernel){
             case INICIALIZAR_PROCESO_DESDE_NEW:{
-                log_warning(logger_memoria,"POR RECIBIR EL PAQUETE");
                 t_paquete *proceso_paquete = recibir_paquete(cliente);
                 int pid = deserializar_pid_memoria(proceso_paquete);
-                log_debug(logger_memoria,"el pid que llego es: %i",pid);
                 int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
                 char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
                 char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);
-                log_debug(logger_memoria, "el pseudocodigo es: %s", path_absoluto);
                 if(inicializar_proceso(pid,tam_proceso,path_absoluto)){
                     log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
                     enviar_op_code(cliente, ACEPTAR_PROCESO);
@@ -106,7 +102,7 @@ void manejar_cliente_kernel(int cliente) {
                 t_paquete *paquete = recibir_paquete(cliente);
                 int pid = deserializar_pid_memoria(paquete);
                 finalizar_proceso(pid);
-                log_info(logger_memoria, "## PID: %d - Proceso Destruido ", pid); // Log obligatorio de destrucción de proceso (faltan: metricas y swaps)
+                destruir_metricas_proceso(pid);
                 enviar_op_code(cliente, FINALIZACION_CONFIRMADA);
                 break;
             }
@@ -156,14 +152,11 @@ void manejar_cliente_cpu(int cliente){
         t_paquete *pedido = recibir_paquete(cliente);
         usleep(memoria_config.RETARDO_MEMORIA * 1000);
         op_code peticion = obtener_codigo_de_operacion(pedido);
-        log_debug(logger_memoria, "Peticion recibida de CPU: %s", instruccion_a_string(peticion));
         switch (peticion){
             case FETCH_INSTRUCCION: {
                 int pid;
                 int pc;
                 deserializar_pid_y_pc(pedido,&pid,&pc);
-                log_debug(logger_memoria,"EL pid es %i", pid);
-                log_debug(logger_memoria, "El pc es %i", pc);
 
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir pedido de instrucción");
@@ -183,7 +176,6 @@ void manejar_cliente_cpu(int cliente){
                 if (instruccion != NULL) {
                     t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
                     crear_paquete(MANDAR_INSTRUCCION,buffer,cliente);
-                    log_debug(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: %s", pid, pc, instruccion);
                     free(instruccion);
                 }else{
                     enviar_instruccion(cliente, "");
@@ -217,7 +209,6 @@ void manejar_cliente_cpu(int cliente){
                 
                 // Enviar valor leído a la CPU
                 t_buffer* buffer_valor_leido = crear_buffer_char_asterisco(valor_leido);
-                log_debug(logger_memoria,"El valor enviado es: %s",valor_leido);
                 usleep(2000000);
                 crear_paquete(ENVIO_VALOR_LEIDO,buffer_valor_leido,cliente);
                 //enviar_valor_leido(cliente, valor_leido, tamanio);
@@ -300,14 +291,10 @@ void manejar_cliente_cpu(int cliente){
                 // Actualizar el contenido de la página
                 bool exito = actualizar_contenido_pagina_completa(marco,contenido,tamPag);
                 if(exito){
-                    log_debug(logger_memoria, "entro al if actualizacion exitosa");
                     enviar_op_code(cliente,ACTUALIZACION_EXITOSA);
-                    log_warning(logger_memoria,"SE ENVIO EL OPCODE");
                 }
                 else{
-                    log_debug(logger_memoria, "entro al if actualizacion fallida");
                     enviar_op_code(cliente,ACTUALIZACION_FALLIDA);
-                    log_warning(logger_memoria,"SE ENVIO EL OPCODE CON LA ACTUALIZACION FALLIDA");
                 }
                 //destruir_pedido_actualizar_pagina_completa(pedido);
                 free(contenido); 
@@ -334,32 +321,19 @@ void manejar_cliente_cpu(int cliente){
             }
             case ENVIO_PID_NROPAG: { //hablar de cambiar el nombre
                 // Recibir pedido con PID y número de página para obtener contenido
-                log_debug(logger_memoria,"Entre a envio pid y nropag");
                 usleep(2000000);
                 int pid = deserializar_pid_memoria(pedido);
-                log_debug(logger_memoria, "el numero de pid es %i", pid);
                 int nroPag = deserializar_nroPag(pedido);
-                log_debug(logger_memoria, "el numero de pagina es %i", nroPag);
-
                 int marco = obtener_marco_de_pagina_logica(pid, nroPag);
-                log_debug(logger_memoria, "el marco es: %i", marco);
                 if (marco != -1) {
-                    log_debug(logger_memoria, "entre al if del marco");
                     usleep(2000000);
                     // Obtener el contenido completo de la página
                     void* contenido = obtener_contenido_pagina_completa(marco, memoria_config.TAM_PAGINA);
-                    log_debug(logger_memoria, "contenido obtenido");
                     if (contenido != NULL) {
-                        log_debug(logger_memoria, "entre al if del if porque el contenido no es NULL");
                         usleep(2000000);
                         send(cliente, &contenido, sizeof(void*), 0);
-                        
-                        log_debug(logger_memoria, "PID: %d - Enviado puntero contenido para página: %d, marco: %d", pid, nroPag, marco);
-                        
-                        // Liberar el contenido que obtuvimos
                         free(contenido);
                     } else {
-                        log_debug(logger_memoria, "entre al else del if");
                         // Enviar puntero nulo en caso de error
                         void* contenido_nulo = NULL;
                         send(cliente, &contenido_nulo, sizeof(void*), 0);

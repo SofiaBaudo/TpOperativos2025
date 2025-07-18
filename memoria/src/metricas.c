@@ -40,7 +40,6 @@ t_metricas* buscar_metricas_proceso(int pid) {
 // Función para incrementar una métrica específica de un proceso
 void incrementar_metrica_proceso(int pid, tipo_metrica metrica) {
     t_metricas* metricas_proceso = NULL;
-    log_debug(logger_memoria, "el size de lista_metricas_proceso es: %i ", list_size(lista_metricas_procesos));
     // Buscar métricas dentro del mutex
     for (int i = 0; i < list_size(lista_metricas_procesos); i++) {
         pthread_mutex_lock(&mutex_lista_metricas_procesos);
@@ -83,32 +82,15 @@ void incrementar_metrica_proceso(int pid, tipo_metrica metrica) {
     //pthread_mutex_unlock(&mutex_lista_metricas_procesos);
 }
 
-// Función para mostrar las métricas de un proceso (log obligatorio)
-void mostrar_metricas_proceso(int pid) {
-    t_metricas* metricas = buscar_metricas_proceso(pid);
-    
-    if (metricas == NULL) {
-        log_error(logger_memoria, "No se encontraron métricas para el proceso PID: %d", pid);
-        return;
-    }
-    
-    //destruyo el proceso con las metricas actualizadas
-    log_info(logger_memoria, "## PID: <%d> - Proceso Destruido - Metricas - Acc.T.Pag: <%d>; Inst.Sol.: <%d>; SWAP: <%d>; Mem.Prin.: <%d>; Lec.Mem.: <%d>; Esc.Mem.: <%d>",
-        metricas->pid,
-        metricas->cant_acceso_tabla_pagina,
-        metricas->instrucciones_solicitadas,
-        metricas->bajadas_swap,
-        metricas->cant_subidas_memoria_principal,
-        metricas->cant_lecturas_memoria,
-        metricas->cant_escrituras_memoria
-    );
-}
-
 // Función para destruir las métricas de un proceso
 void destruir_metricas_proceso(int pid) {
     pthread_mutex_lock(&mutex_lista_metricas_procesos);
     for (int i = 0; i < list_size(lista_metricas_procesos); i++) {
         t_metricas* metricas = list_get(lista_metricas_procesos, i);
+        if (metricas == NULL) {
+        log_error(logger_memoria, "No se encontraron métricas para el proceso PID: %d", pid);
+        return;
+        }
         if (metricas->pid == pid) {
             // Mostrar métricas antes de destruir
             log_info(logger_memoria, "## PID: <%d> - Proceso Destruido - Metricas - Acc.T.Pag: <%d>; Inst.Sol.: <%d>; SWAP: <%d>; Mem.Prin.: <%d>; Lec.Mem.: <%d>; Esc.Mem.: <%d>",
@@ -134,6 +116,5 @@ void destruir_metricas_proceso(int pid) {
 
 // Función auxiliar para actualizar métricas de acceso a tabla de páginas
 void actualizar_metricas_acceso_tabla_paginas(int pid) {
-    log_debug(logger_memoria,"EStoy por entrar a incrementar metrica proceso");
     incrementar_metrica_proceso(pid, ACCESO_TABLA);
 }

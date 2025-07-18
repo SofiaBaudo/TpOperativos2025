@@ -13,7 +13,6 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
 
     // 3. Contar marcos libres usando función de memoria_fisica
     int libres = contar_marcos_libres();
-    log_debug(logger_memoria, "cantidad libres es %i", libres);
     if (libres < marcos_necesarios) {
         log_warning(logger_memoria, "No hay marcos libres suficientes para el proceso %d: necesita %d, hay %d", pid, marcos_necesarios, libres);
         return false;
@@ -107,10 +106,7 @@ t_proceso_memoria* buscar_proceso_en_memoria(int pid) {
 
 // Dump de memoria de un proceso. Devuelve true si fue exitoso, false si hubo error
 bool dump_memoria_proceso(int pid) {
-    log_debug(logger_memoria, "entre al dump_meme_proc");
     t_proceso_memoria* proceso = buscar_proceso_en_memoria(pid);
-    log_debug(logger_memoria, "PID a hacer dump: %d", pid);
-
     if (!proceso) {
         log_error(logger_memoria, "DUMP_MEMORY: Proceso %d no encontrado", pid);
         return false;
@@ -166,60 +162,3 @@ bool dump_memoria_proceso(int pid) {
     log_debug(logger_memoria, "PID: %d - Dump de memoria exitoso: %s", pid, nombre_archivo);
     return true;
 }
-
-
-/*
-bool dump_memoria_proceso(int pid) {
-    log_debug(logger_memoria, "entre al dump_meme_proc");
-    t_proceso_memoria* proceso = buscar_proceso_en_memoria(pid);
-    log_debug(logger_memoria, "PID a hacer dump: %d", pid);
-    if (!proceso) {
-        log_error(logger_memoria, "DUMP_MEMORY: Proceso %d no encontrado", pid);
-        return false;
-    }
-
-    int tamanio = proceso->tamanio;
-    if (tamanio <= 0) {
-        log_error(logger_memoria, "Dump fallido: tamaño inválido para PID %d", pid);
-        return false;
-    }
-
-    void* buffer = malloc(tamanio);
-    if (!buffer) {
-        log_error(logger_memoria, "DUMP_MEMORY: No se pudo reservar memoria para el dump de PID %d", pid);
-        return false;
-    }
-
-    pthread_mutex_lock(&memoria_usuario_mutex);
-    // Copiar la memoria real del proceso (asume contiguo, adaptar si es necesario)
-    memcpy(buffer, (char*)memoria_usuario + (pid * tamanio), tamanio);
-    pthread_mutex_unlock(&memoria_usuario_mutex);
-
-    // Obtener timestamp con formato YYYYMMDD%H%M%S
-    time_t now = time(NULL);
-    struct tm tm_info;
-    localtime_r(&now, &tm_info);
-    char timestamp[32];
-    strftime(timestamp, sizeof(timestamp), "%Y%m%d%H%M%S", &tm_info);
-    // Crear nombre del archivo: <DUMP_PATH>/<PID>-<TIMESTAMP>.dmp
-    char filename[256];
-    snprintf(filename, sizeof(filename), "%s%d-%s.dmp", memoria_config.DUMP_PATH, pid, timestamp);
-
-    FILE* archivo = fopen(filename, "wb");
-    if (!archivo) {
-        log_error(logger_memoria, "No se pudo crear el archivo dump: %s", filename);
-        free(buffer);
-        return false;
-    }
-    size_t written = fwrite(buffer, 1, tamanio, archivo);
-    fclose(archivo);
-    free(buffer);
-    if (written != (size_t)tamanio) {
-        log_error(logger_memoria, "DUMP_MEMORY: Error al escribir archivo %s (escribió %zu de %d bytes)", filename, written, tamanio);
-        return false;
-    }
-
-    log_debug(logger_memoria, "PID: %d - Dump de memoria exitoso en %s", pid, filename);
-    return true;
-}
-*/
