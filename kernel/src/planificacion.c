@@ -23,7 +23,7 @@ void *planificador_largo_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // inicializado en 0, cuando llega algo a NEW, se activa.
         sem_wait(&INTENTAR_INICIAR_NEW); //activa el planificador si se suspende un proceso, finaliza un proceso o se pone a ejecutar.
-        sem_wait(&UNO_A_LA_VEZ[NEW]); //este semaforo hace que el planificador maneje un proceso a la vez.
+        //sem_wait(&UNO_A_LA_VEZ[NEW]); //este semaforo hace que el planificador maneje un proceso a la vez.
         if(!list_is_empty(colaEstados[SUSP_READY])){ //espera a que la cola de suspendido ready este vacía para poder actuar.
             sem_wait(&SUSP_READY_SIN_PROCESOS);
         }
@@ -37,7 +37,7 @@ void *planificador_largo_plazo_fifo(){
         else{
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]); //si no hay espacio en memoria, aviso que el proceso sigue estando en new.
         }
-        sem_post(&UNO_A_LA_VEZ[NEW]);//me aseguro que se siga tratando de a un proceso.
+        //sem_post(&UNO_A_LA_VEZ[NEW]);//me aseguro que se siga tratando de a un proceso.
     } 
     return NULL;
 }

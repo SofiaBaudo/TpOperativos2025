@@ -161,7 +161,6 @@ struct parametros_de_ejecucion{
 //ESTRUCTURA DE UNA IO
 struct instancia_de_io{
 	char* nombre; //nombre que identifica la IO
-    t_list *procesos_esperando; //lista de procesos que estan esperando por la IO
 	sem_t *hay_procesos_esperando; //semaforo que avisa si hay un proceso esperando
 	int socket_io_para_comunicarse; //es el numero de socket de IO, con eso la busca.
 	pthread_t hilo_instancia_de_io; //hilo de instancia de IO, cada instancia tiene su propia IO.
