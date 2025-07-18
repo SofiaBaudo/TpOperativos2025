@@ -67,8 +67,10 @@ void manejar_cliente_kernel(int cliente) {
         log_debug(logger_memoria, "Peticion recibida de KERNEL: %s", instruccion_a_string(peticion_kernel));
         switch (peticion_kernel){
             case INICIALIZAR_PROCESO_DESDE_NEW:{
+                log_warning(logger_memoria,"POR RECIBIR EL PAQUETE");
                 t_paquete *proceso_paquete = recibir_paquete(cliente);
                 int pid = deserializar_pid_memoria(proceso_paquete);
+                log_debug(logger_memoria,"el pid que llego es: %i",pid);
                 int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
                 char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
                 char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);

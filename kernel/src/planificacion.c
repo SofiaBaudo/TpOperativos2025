@@ -53,11 +53,13 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
         if(!list_is_empty(colaEstados[SUSP_READY])){
             sem_wait(&SUSP_READY_SIN_PROCESOS); //espero a que se vacíe la lista de susp ready.
         }
-        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(NEW); //obtengo una copia del proceso a consultar
+        pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
+        struct pcb* primer_proceso = obtener_copia_primer_proceso_de_sin_mutex(NEW); //obtengo una copia del proceso a consultar
         if(primer_proceso->pid == proximo_a_consultar->pid){ 
             bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_DESDE_NEW);
             if(respuesta){
-                primer_proceso = sacar_primero_de_la_lista(NEW); //saco el primer proceso de la lista de NEW
+                primer_proceso = sacar_primero_de_la_lista_de_sin_mutex(NEW); //saco el primer proceso de la lista de NEW
+                log_debug(kernel_debug_log,"EL PROCESO QUE ACABO DE SACAR Y ESTOY POR PASAR A READY ES: %i",primer_proceso->pid);
                 transicionar_a_ready(primer_proceso,NEW); // lo transiciono a READY
                 actualizar_proximo_a_consultar(NEW); //actualizo el proximo proceso a consultar
                 if(!list_is_empty(colaEstados[NEW])){ //si la cola de NEW no esta vacía, intento iniciarla  
@@ -72,7 +74,42 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
             log_debug(kernel_debug_log,"El ultimo proceso en entrar no es el mas chico");
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);  //aviso que el proceso sigue en new
         }
+        pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
         sem_post(&UNO_A_LA_VEZ[NEW]); //me aseguro que se siga tratando de a un proceso a la vez.
+    }
+}
+
+void *planificador_mediano_plazo_proceso_mas_chico_primero(){
+    while(1){
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);// si no hay nada espera a que llegue un proceso
+        sem_wait(&INTENTAR_INICIAR_SUSP_READY);
+        sem_wait(&UNO_A_LA_VEZ[SUSP_READY]);
+        pthread_mutex_lock(&mx_usar_cola_estado[SUSP_READY]);
+        struct pcb* primer_proceso = obtener_copia_primer_proceso_de_sin_mutex(SUSP_READY);
+        if(primer_proceso->pid == proximo_a_consultar->pid){
+            bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO);
+            if(respuesta == true){
+                primer_proceso = sacar_primero_de_la_lista_de_sin_mutex(SUSP_READY);
+                transicionar_a_ready(primer_proceso,SUSP_READY);
+                sem_post(&INTENTAR_INICIAR_SUSP_READY);
+                if(list_is_empty(colaEstados[SUSP_READY])){ //SI LA LISTA ESTA VACIA LE AVISAMOS AL PLANIFICADOR DE LARGO PLAZO 
+                    actualizar_proximo_a_consultar(NEW); 
+                    sem_post(&SUSP_READY_SIN_PROCESOS);     //QUE PUEDE INTENTAR INICIAR ALGUNO DE LOS QUE ESTAN ESPERANDO EN NEW
+                }
+                else{
+                    actualizar_proximo_a_consultar(SUSP_READY);
+                }
+                sem_post(&INTENTAR_INICIAR_SUSP_READY);
+            }
+            else{
+                sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+            }
+        }
+        else{
+            sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+        }
+        pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_READY]);
+        sem_post(&UNO_A_LA_VEZ[SUSP_READY]);
     }
 }
 
@@ -141,8 +178,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
                 pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
                 reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)); // reanudo los cronometros
                 pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-                sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]); //Porque todavia no desalojamos nada, simplemente dimos el aviso, 
-                                                            // el desalojo se hace cuando se esta ejecutando el anterior proceso
+                sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]); //Porque todavia no desalojamos nada, simplemente dimos el aviso, // el desalojo se hace cuando se esta ejecutando el anterior proceso
             }
             else{
             log_debug(kernel_debug_log,"No se desaloja");
@@ -202,37 +238,6 @@ void *planificador_mediano_plazo_fifo(){
     }
 }
 
-void *planificador_mediano_plazo_proceso_mas_chico_primero(){
-    while(1){
-        sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);// si no hay nada espera a que llegue un proceso
-        sem_wait(&INTENTAR_INICIAR_SUSP_READY);
-        sem_wait(&UNO_A_LA_VEZ[SUSP_READY]);
-        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY);
-        if(primer_proceso->pid == proximo_a_consultar->pid){
-            bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO);
-            if(respuesta == true){
-                primer_proceso = sacar_primero_de_la_lista(SUSP_READY);
-                transicionar_a_ready(primer_proceso,SUSP_READY);
-                sem_post(&INTENTAR_INICIAR_SUSP_READY);
-                if(list_is_empty(colaEstados[SUSP_READY])){ //SI LA LISTA ESTA VACIA LE AVISAMOS AL PLANIFICADOR DE LARGO PLAZO 
-                    actualizar_proximo_a_consultar(NEW); 
-                    sem_post(&SUSP_READY_SIN_PROCESOS);     //QUE PUEDE INTENTAR INICIAR ALGUNO DE LOS QUE ESTAN ESPERANDO EN NEW
-                }
-                else{
-                    actualizar_proximo_a_consultar(SUSP_READY);
-                }
-                sem_post(&INTENTAR_INICIAR_SUSP_READY);
-            }
-            else{
-                sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
-            }
-        }
-        else{
-            sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
-        }
-        sem_post(&UNO_A_LA_VEZ[SUSP_READY]);
-    }
-}
 
 //FUNCIONES PLANI MEDIANO PLAZO
 
@@ -259,8 +264,7 @@ void* funcion_para_bloqueados(void* arg){ //ES UN HILO QUE BLOQUEA EL PROCESO Y 
 bool ver_si_hay_que_desalojar(struct pcb *proceso){
     pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
     frenar_y_restar_cronometros(cpus_conectadas); //freno los cronometros de los procesos que estan ejecutando
-    bool desalojo = recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(cpus_conectadas,proceso); //recorro la lista de cpus para preguntar 
-                                                                                                    // si los procesos que estan ejecutando alli tienen mayor estimacion que el proceso que estoy enviando
+    bool desalojo = recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(cpus_conectadas,proceso); //recorro la lista de cpus para preguntar // si los procesos que estan ejecutando alli tienen mayor estimacion que el proceso que estoy enviando
     pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
     return desalojo;
 }
@@ -401,8 +405,7 @@ bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct 
     t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
     while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
         struct instancia_de_cpu *cpu_aux = list_iterator_next(aux); //me voy fijando las cpus con sus respectivos procesos
-        if (cpu_aux->proceso_ejecutando->proxima_estimacion > proceso->proxima_estimacion) { /*Si el proceso que esta ejecutando tiene mayor 
-                                                                                                tiene mayor estimacion que el proceso nuevo*/ 
+        if (cpu_aux->proceso_ejecutando->proxima_estimacion > proceso->proxima_estimacion) { /*Si el proceso que esta ejecutando tiene mayor tiene mayor estimacion que el proceso nuevo*/ 
             list_iterator_destroy(aux);  //destruyo el iterador
             return true; // corresponde desalojar
         }
@@ -425,6 +428,17 @@ struct pcb *obtener_copia_primer_proceso_de(Estado estado){ //devuelve una copia
     }
 }
 
+struct pcb* obtener_copia_primer_proceso_de_sin_mutex(Estado estado){
+    if(list_is_empty(colaEstados[estado])){
+        return NULL;
+    }
+    else{
+    struct pcb *proceso = list_get(colaEstados[estado], 0);  // 
+    return proceso;
+    }
+}
+
+
 struct pcb *sacar_primero_de_la_lista(Estado estado){
     struct pcb *aux;
     pthread_mutex_lock(&mx_usar_cola_estado[estado]);
@@ -432,6 +446,14 @@ struct pcb *sacar_primero_de_la_lista(Estado estado){
     pthread_mutex_unlock(&mx_usar_cola_estado[estado]);
     return aux;
 }
+
+struct pcb *sacar_primero_de_la_lista_de_sin_mutex(Estado estado){
+    struct pcb *aux;
+    aux = list_remove(colaEstados[estado],0); //como el list add agrerga al final, sacamos del principio para no romper el comportamiento de la cola
+    return aux;
+}
+
+
 
 //CAMBIOS DE ESTADO
 
@@ -552,7 +574,8 @@ bool consultar_si_puede_entrar(struct pcb *proceso,op_code operacion){
 }
 
 void actualizar_proximo_a_consultar(Estado estadoInicial){
-    struct pcb *primer_proceso_actualizado = obtener_copia_primer_proceso_de(estadoInicial);
+    struct pcb *primer_proceso_actualizado = obtener_copia_primer_proceso_de_sin_mutex(estadoInicial);
+    log_debug(kernel_debug_log,"YA SALI DE ACA DEL QUE NO TIENE MUTEX");
     if(primer_proceso_actualizado!=NULL){
         pthread_mutex_lock(&mx_proximo_a_consultar);
         proximo_a_consultar = primer_proceso_actualizado;
@@ -777,9 +800,13 @@ void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
     enviar_op_code(socket,FINALIZAR_PROCESO);
     crear_paquete(FINALIZAR_PROCESO,buffer,socket);
     op_code confirmacion = recibir_op_code(socket);
+    log_debug(kernel_debug_log,"POR CERRAR CONEXION CON MEMORIA"); 
     cerrar_conexion(socket);
+    log_debug(kernel_debug_log,"ANTES DE INTENTAR INICIAR");  
     intentar_iniciar();
-    sacar_proceso_de_cola_de_estado(proceso,EXIT_ESTADO);   
+    log_debug(kernel_debug_log,"PASE EL INTENTAR INICIAR");  
+    sacar_proceso_de_cola_de_estado(proceso,EXIT_ESTADO); 
+    log_debug(kernel_debug_log,"TERMINE DE SACAR EL PROCESO DE LA COLA DE EXIT");  
     listar_metricas_de_tiempo_y_estado(proceso); 
     log_info(kernel_logger,"## (<PID: %i>) - Finaliza el proceso",proceso->pid);
     liberar_proceso(proceso); //free de todos los punteros, lo demas se va con el free (proceso) 
@@ -787,6 +814,7 @@ void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
 
 void listar_metricas_de_tiempo_y_estado(struct pcb *proceso){
     Estado estado_actual;
+    log_debug(kernel_debug_log,"ESTOY EN LAS METRICAS");
     for(int i=0; i<7; i++){
         estado_actual = i;
         char *estado_string = cambiar_a_string(estado_actual);
@@ -810,14 +838,19 @@ void intentar_iniciar(){
     if(!list_is_empty(colaEstados[SUSP_READY])){
         log_debug(kernel_debug_log,"POR HACER UN SEM POST DE INTENTAR INICIAR");
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
+            pthread_mutex_lock(&mx_usar_cola_estado[SUSP_READY]);
             actualizar_proximo_a_consultar(SUSP_READY);
+            pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_READY]);
         }
         sem_post(&INTENTAR_INICIAR_SUSP_READY);
     }
     else{
         log_debug(kernel_debug_log,"ESTOY EN EL ELSE DE INTENTAR INICIAR");
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
+            pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
             actualizar_proximo_a_consultar(NEW);
+            pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
+
         }
         sem_post(&INTENTAR_INICIAR_NEW);
     }

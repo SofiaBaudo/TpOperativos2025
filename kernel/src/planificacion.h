@@ -41,6 +41,8 @@ void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado);
 void enviar_proceso_a_memoria(struct pcb* proceso);
 void crear_hilo_de_ejecucion(struct pcb*proceso, struct instancia_de_cpu*cpu_aux);
 struct pcb *buscar_proceso_a_suspender();
+struct pcb* obtener_copia_primer_proceso_de_sin_mutex(Estado estado);
+struct pcb *sacar_primero_de_la_lista_de_sin_mutex(Estado estado);
 //CPU
 int buscar_cpu_libre(t_list *lista);
 struct instancia_de_cpu *obtener_cpu(int posicion);
