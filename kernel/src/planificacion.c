@@ -164,7 +164,7 @@ void *planificador_mediano_plazo(){
         crear_paquete(SUSPENDER_PROCESO,buffer,socket);
         log_warning(kernel_debug_log,"PAQUETE ENVIADO A MEMORIA");
         op_code respuesta = recibir_op_code(socket);
-        if(respuesta = SUSPENSION_CONFIRMADA){
+        if(respuesta == SUSPENSION_CONFIRMADA){
             cerrar_conexion(socket);
             intentar_iniciar();
         }
@@ -266,7 +266,7 @@ void frenar_y_restar_cronometros(t_list *lista){
         struct instancia_de_cpu *cpu_aux = list_iterator_next(aux);
         temporal_stop(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
         int a_restar = temporal_gettime(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
-        cpu_aux->proceso_ejecutando->ultima_estimacion -= a_restar; //a la estimacion le resto lo que ya ejecuto
+        cpu_aux->proceso_ejecutando->proxima_estimacion -= a_restar; //a la estimacion le resto lo que ya ejecuto
     }
     list_iterator_destroy(aux);
     return;
@@ -392,6 +392,7 @@ bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct 
             return true;
         }
     }
+    list_iterator_destroy(aux);
     return false;
 }
 
@@ -589,17 +590,16 @@ void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu){
     crear_paquete(ENVIO_PID_Y_PC,buffer,cpu->socket_para_comunicarse); //esta funcion crea el paquete y tambien lo envia
 }
 
-int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
-    temporal_stop(aux->duracion_ultima_rafaga);
+op_code manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
+    log_debug(kernel_debug_log,"ESTOY ACA POR EL DUMP");
     cambiarEstado(aux,EXEC,BLOCKED);
     //sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
-    aux->tiempo_bloqueado = temporal_create();
     int socket = iniciar_conexion_kernel_memoria();
+    enviar_op_code(socket,DUMP_MEMORY);
     t_buffer *buffer = mandar_pid_a_memoria(aux->pid);
     crear_paquete(DUMP_MEMORY,buffer,socket);
-    sacar_proceso_de_cola_de_estado(aux,EXEC);
     liberar_cpu(cpu_en_la_que_ejecuta);
-    int respuesta = recibir_entero(socket);
+    op_code respuesta = recibir_op_code(socket);
     return respuesta;
 }
 
@@ -649,6 +649,7 @@ void *poner_a_ejecutar(void *argumentos){
                 //avisar que termine
                 break;
             case EXIT:
+                liberar_paquete(paquete);
                 //Hay que sacarlo de la lista de exit
                 finalizar_proceso(proceso,EXEC);
                 liberar_cpu(cpu_en_la_que_ejecuta);
@@ -657,17 +658,22 @@ void *poner_a_ejecutar(void *argumentos){
                 bloqueante = true;
                 break;
             case DUMP_MEMORY:
+                liberar_paquete(paquete);
+                temporal_stop(proceso->duracion_ultima_rafaga);
                 log_error(kernel_debug_log, "ESTOY ACA");
                 proceso->pc++;
                 sacar_proceso_de_cola_de_estado(proceso,EXEC);
                 int respuesta = manejar_dump(proceso,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
                 if(respuesta == DUMP_ACEPTADO){
+                    if(strcmp(ALGORITMO_CORTO_PLAZO,"FIFO")!=0){
                     proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
+                    }
                     transicionar_a_ready(proceso,BLOCKED);
                 }
                 else{
                     finalizar_proceso(proceso,BLOCKED);
                 }
+                enviar_op_code(cpu_en_la_que_ejecuta->socket_para_comunicarse,SYSCALL_EJECUTADA);
                 bloqueante = true; 
                 break;   
             case IO:

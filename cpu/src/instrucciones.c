@@ -191,10 +191,11 @@ void mandar_syscall(t_instruccion instruccion){
         return;
     }
     else if(strcmp(instruccion.opcode, "DUMP_MEMORY") == 0){
-        t_buffer *buffer = crear_buffer_vacio();
+        t_buffer *buffer = crear_buffer_cpu(pid,pc);
         crear_paquete(DUMP_MEMORY, buffer, fd_conexion_kernel_dispatch);
         pc++;
         ultima_instruccion_fue_syscall_bloqueante = true;
+        recibir_op_code(fd_conexion_kernel_dispatch);
         return;
     }
 }

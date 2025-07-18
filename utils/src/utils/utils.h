@@ -146,7 +146,6 @@ struct pcb{
 	float proxima_estimacion; 
 	float ultima_estimacion; 
 	t_temporal *duracion_ultima_rafaga; 
-	t_temporal *tiempo_bloqueado;
 	pthread_t hilo_al_bloquearse;
 	int proxima_rafaga_io;
 	char* nombre_io_que_lo_bloqueo;

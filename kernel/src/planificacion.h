@@ -63,7 +63,7 @@ bool recorrer_lista_de_cpus_y_ver_si_corresponde_desalojar(t_list *lista,struct 
 
 //MANEJO DE SYSCALLS
 void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu);
-int manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta);
+op_code manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta);
 void liberar_cpu(struct instancia_de_cpu *cpu);
 void listar_metricas_de_tiempo_y_estado(struct pcb *proceso);
 char *cambiar_syscall_a_string(op_code syscall);

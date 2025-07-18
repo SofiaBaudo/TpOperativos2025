@@ -35,8 +35,7 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
                 if(ENTRADAS_TLB!= 0){
                 agregarEntradaATLB(numPag, marco);
                 imprimirTLB();
-                }
-                
+                }                
         }
         }
     

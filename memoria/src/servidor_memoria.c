@@ -131,12 +131,17 @@ void manejar_cliente_kernel(int cliente) {
             }
             case DUMP_MEMORY: {
                 t_paquete* paquete = recibir_paquete(cliente);
+                log_debug(logger_memoria, "Recibi paquete de kernel");
                 int pid = deserializar_pid_memoria(paquete);
+                log_info(logger_memoria, "## PID: <%i> - Memory Dump solicitado", pid);
+                log_debug(logger_memoria, "por entrar al dump_meme_proc");
                 bool dump_ok = dump_memoria_proceso(pid);
                 if (dump_ok) {
-                    enviar_op_code(cliente, ACEPTAR_PROCESO); // o DUMP_OK
+                    log_debug(logger_memoria, "por enviar dump ok");
+                    enviar_op_code(cliente, DUMP_ACEPTADO); // o DUMP_OK
                 } else {
-                    enviar_op_code(cliente, RECHAZO_PROCESO); // o DUMP_ERROR
+                    log_debug(logger_memoria, "por enviar dump no ok");
+                    enviar_op_code(cliente, DUMP_RECHAZADO); // o DUMP_ERROR
                 }
                 break;
             }
