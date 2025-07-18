@@ -45,7 +45,7 @@ char* obtener_instruccion_proceso(int pid, int pc) {
     } else {
         copia = strdup("FUERA_DE_RANGO");
         log_warning(logger_memoria, "PC %d fuera de rango para el proceso %d", pc, pid);
-    }
+    }  
     pthread_mutex_unlock(&mutex_procesos_en_memoria);
     return copia;
 }

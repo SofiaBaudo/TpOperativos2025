@@ -86,7 +86,7 @@ bool finalizar_proceso(int pid) {
     free(proc);
 
     // 6. Loguear el resultado
-    log_info(logger_memoria, "Proceso %d finalizado y recursos liberados", pid);
+    log_debug(logger_memoria, "Proceso %d finalizado y recursos liberados", pid);
     return true;
 }
 

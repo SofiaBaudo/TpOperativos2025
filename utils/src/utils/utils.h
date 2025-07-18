@@ -147,7 +147,7 @@ struct pcb{
 	float ultima_estimacion; 
 	t_temporal *duracion_ultima_rafaga; 
 	pthread_t hilo_al_bloquearse;
-	int proxima_rafaga_io;
+	int proxima_rafaga_io; 
 	char* nombre_io_que_lo_bloqueo;
 };
 
@@ -158,21 +158,20 @@ struct parametros_de_ejecucion{
 
 //ESTRUCTURA DE UNA IO
 struct instancia_de_io{
-	char* nombre;
-    t_list *procesos_esperando;
-	sem_t *hay_procesos_esperando;
-	int socket_io_para_comunicarse;
-	pthread_t hilo_instancia_de_io;
+	char* nombre; //nombre que identifica la IO
+    t_list *procesos_esperando; //lista de procesos que estan esperando por la IO
+	sem_t *hay_procesos_esperando; //semaforo que avisa si hay un proceso esperando
+	int socket_io_para_comunicarse; //es el numero de socket de IO, con eso la busca.
+	pthread_t hilo_instancia_de_io; //hilo de instancia de IO, cada instancia tiene su propia IO.
 };
 
 //ESTRUCTURA DE UNA CPU
 struct instancia_de_cpu{
-	int id_cpu;
-	bool puede_usarse;
-	struct pcb *proceso_ejecutando;
-	//t_list *procesos_esperando;
-	int socket_para_comunicarse;
-	int socket_interrupt;
+	int id_cpu; //identificador de la cpu
+	bool puede_usarse; //si se puede usarse
+	struct pcb *proceso_ejecutando; //contiene al proceso que ejecuta
+	int socket_para_comunicarse; //socket dispatch para la comunicacion
+	int socket_interrupt; //socket para la interrupcion
 };
 //RECURSOS
 typedef enum{

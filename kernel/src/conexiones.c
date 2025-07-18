@@ -201,11 +201,11 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
             case FIN_DE_IO: //Corresponde al enum de fin de IO
                 //free(proceso->nombre_io_que_lo_bloqueo);
                 proceso->nombre_io_que_lo_bloqueo = NULL;
-                if(posicion!=-1){
+                if(posicion!=-1){ // SI SE TERMINA SU EJECUCION DE IO, Y ESTABA BLOQUEADO, LO TRANSICIONO A READY
                     sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
                     log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a READY",proceso->pid);
                     transicionar_a_ready(proceso,BLOCKED);
-                }
+                } //SI SE TERMINA SU EJECUCION DE IO, Y SE HABIA SUSPENDIDO ANTERIORMENTE, LO TRANSICIONO A SUSP_READY
                 else{
                     log_info(kernel_logger,"## (<%i>) finalizó IO y pasa a SUSP_READY",proceso->pid);
                     sacar_proceso_de_cola_de_estado(proceso,SUSP_BLOCKED);
@@ -214,10 +214,11 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 break;
             case DESCONEXION_IO: //desconexion de la instancia con la que estamos trabajando
                 //free(proceso->nombre_io_que_lo_bloqueo);
+                //SI SE DESCONECTA LA IO, TENEMOS QUE FINALIZAR TODOS LOS PROCESOS QUE ESTEN CON LA IO CORRESPONDIENTE.
                 proceso->nombre_io_que_lo_bloqueo = NULL;
                 io_conectada = false;
                 posicion = buscar_io_especifica(ios_conectados,io_aux->socket_io_para_comunicarse);
-                list_remove(ios_conectados,posicion);
+                list_remove(ios_conectados,posicion); //SACO LA IO DE LA LISTA
                 if(posicion ==-1){                   
                     finalizar_proceso(proceso,SUSP_BLOCKED);
                 }
@@ -228,11 +229,11 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 int cantidad_restante = cantidad_de_instancias_conectadas(ios_conectados,io_aux->nombre);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                 if(cantidad_restante==0){
-                    sem_destroy(io_aux->hay_procesos_esperando); 
-                    recorrer_lista_y_finalizar_procesos(colaEstados[BLOCKED],io_aux->nombre,BLOCKED);
-                    recorrer_lista_y_finalizar_procesos(colaEstados[SUSP_BLOCKED],io_aux->nombre,SUSP_BLOCKED);
+                    sem_destroy(io_aux->hay_procesos_esperando);  //DESTRUYO EL SEMAFORO DE ESA IO
+                    recorrer_lista_y_finalizar_procesos(colaEstados[BLOCKED],io_aux->nombre,BLOCKED); //RECORRO LA LISTA DE BLOCKED Y FINALIZO LOS PROCESOS CON SUS RESPECTIVOS IOS
+                    recorrer_lista_y_finalizar_procesos(colaEstados[SUSP_BLOCKED],io_aux->nombre,SUSP_BLOCKED); //RECORRO LA LISTA DE SUSP_BLOCKED Y FINALIZO LOS PROCESOS CON SUS RESPECTIVOS IOS
                 }
-                liberar_io(io_aux);
+                liberar_io(io_aux); //LIBERO LA IO
                 break;  
                 default:
                 log_debug(kernel_debug_log,"Entre al default de IO");
