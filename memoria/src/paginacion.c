@@ -27,15 +27,13 @@ t_tabla_paginas* crear_tablas_para_proceso(int tam_proceso) {
     int tam_pagina = memoria_config.TAM_PAGINA;
     log_debug(logger_memoria,"EL TAMAÑO DEL PROCESO ES: %i",tam_proceso);
     int paginas_necesarias = (tam_proceso + tam_pagina - 1) / tam_pagina;
-    log_error(logger_memoria, "LAS PAGINAS NECESARIAS SON: %d", paginas_necesarias);
+    log_debug(logger_memoria, "LAS PAGINAS NECESARIAS SON: %d", paginas_necesarias);
     return crear_nivel_tabla(1, &paginas_necesarias);
 }
 
 // Función recursiva para crear niveles de tablas
 t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
     int entradas_por_tabla = memoria_config.ENTRADAS_POR_TABLA;
-    log_error(logger_memoria, "LAS ENTRADAS POR TABLA SON: %d", entradas_por_tabla);
- 
     if(*paginas_restantes <= 0 && nivel_actual == memoria_config.CANTIDAD_NIVELES){
         log_warning(logger_memoria, "nivel final -> no hay paginas por mappear");
         return NULL;
@@ -57,10 +55,8 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
     } 
     else {
     cantidad_entradas = entradas_por_tabla;
-    log_warning(logger_memoria, "EL NUEVO VALOR DE CANTIDAD_ENTRADAS ES %i", cantidad_entradas);
+    log_debug(logger_memoria, "EL NUEVO VALOR DE CANTIDAD_ENTRADAS ES %i", cantidad_entradas);
     }
-
-    log_warning(logger_memoria, "Nivel %d: cantidad de entradas = %d", nivel_actual, cantidad_entradas);
 
     t_tabla_paginas* tabla = malloc(sizeof(t_tabla_paginas));
     if (!tabla) {
