@@ -149,8 +149,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
             reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)); //reanudo los cronometros
             pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-            sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]); // //Porque todavia no desalojamos nada, simplemente dimos el aviso, 
-                                                    // el desalojo se hace cuando se esta ejecutando el anterior proceso
+            sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]); // //Porque todavia no desalojamos nada, simplemente dimos el aviso, // el desalojo se hace cuando se esta ejecutando el anterior proceso
             }
         }
         sem_post(&CPUS_LIBRES); 
@@ -162,7 +161,9 @@ void *planificador_mediano_plazo(){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]); //se activa el planificador si llega un proceso a SUSP_BLOCKED
         log_warning(kernel_debug_log,"SE SUSPENDIO UN PROCESO");
         //agregar semaforo de uno a la vez como vector
-        struct pcb *proceso = obtener_copia_primer_proceso_de(SUSP_BLOCKED);
+        pthread_mutex_lock(&mx_usar_cola_estado[SUSP_BLOCKED]);
+        struct pcb *proceso = buscar_proceso_a_suspender();
+        pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_BLOCKED]);
         int socket = iniciar_conexion_kernel_memoria();
         enviar_op_code(socket,SUSPENDER_PROCESO);
         t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
@@ -170,19 +171,21 @@ void *planificador_mediano_plazo(){
         log_warning(kernel_debug_log,"PAQUETE ENVIADO A MEMORIA");
         op_code respuesta = recibir_op_code(socket);
         if(respuesta == SUSPENSION_CONFIRMADA){ //SI SE SUSPENDIO
-            cerrar_conexion(socket);
+            log_debug(kernel_debug_log,"ESTOY POR INTENTAR INICIAR UN PROCESO");
             intentar_iniciar(); //INTENTAMOS INICIAR EL PLANICADOR DE MEDIANO PLAZO 
+            cerrar_conexion(socket);
         }
     }
 }
 
 void *planificador_mediano_plazo_fifo(){
     while(1){
-    sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
-    sem_wait(&INTENTAR_INICIAR_SUSP_READY);
-    sem_wait(&UNO_A_LA_VEZ[SUSP_READY]);
-    log_debug(kernel_debug_log,"ESTOY EN EL PLANI DE MEDIANO PLAZO FIFO");
-    struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
+        sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
+        sem_wait(&INTENTAR_INICIAR_SUSP_READY);
+        sem_wait(&UNO_A_LA_VEZ[SUSP_READY]);
+        log_debug(kernel_debug_log,"ESTOY EN EL PLANI DE MEDIANO PLAZO FIFO");
+        struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
+        log_debug(kernel_debug_log,"PIDIENDOLE A MEMORIA INGRESAR UN PROCESO SUSPENDIDO");
         bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO); //Darle una vuelta de tuerca para que memoria sepa que es un proceso suspendido 
         if (respuesta == true){
             primer_proceso = sacar_primero_de_la_lista(SUSP_READY); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
@@ -195,7 +198,7 @@ void *planificador_mediano_plazo_fifo(){
         else{
             sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
         }
-        sem_post(&UNO_A_LA_VEZ[SUSP_READY]);
+            sem_post(&UNO_A_LA_VEZ[SUSP_READY]);
     }
 }
 
@@ -233,17 +236,20 @@ void *planificador_mediano_plazo_proceso_mas_chico_primero(){
 
 //FUNCIONES PLANI MEDIANO PLAZO
 
-void* funcion_para_bloqueados(void* arg){ //ES UN HILO QUE BLOQUEA EL PROCESO Y TE DICE SI HAY QUE SUSPENDER EL PROCESO, 
-                                            // SI SE PASA DEL TIEMPO Y NO AGARRA LA IO, LO SUSPENDE
+void* funcion_para_bloqueados(void* arg){ //ES UN HILO QUE BLOQUEA EL PROCESO Y TE DICE SI HAY QUE SUSPENDER EL PROCESO, // SI SE PASA DEL TIEMPO Y NO AGARRA LA IO, LO SUSPENDE
     struct pcb* proceso = (struct pcb*) arg; //lo hacemos para que pasen los argumentos al hilo.
+    int cantidad_inicial = proceso->cantidad_de_veces_que_estuvo_bloqueado_por_io;
     usleep(atoi(TIEMPO_SUSPENSION)*1000); // 
+    if(proceso->cantidad_de_veces_que_estuvo_bloqueado_por_io == cantidad_inicial){
     pthread_mutex_lock(&mx_usar_cola_estado[BLOCKED]);
     int pos = buscar_en_lista(colaEstados[BLOCKED],proceso->pid);
     pthread_mutex_unlock(&mx_usar_cola_estado[BLOCKED]);
     if(pos!=-1){ //ESTA EN BLOQUEADO
         sacar_proceso_de_cola_de_estado(proceso,BLOCKED);
+        proceso->debe_ser_suspendido = true;
         cambiarEstado(proceso,BLOCKED,SUSP_BLOCKED); //ENVIO EL PROCEOS A SUSP_BLOCKED
         sem_post(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]); //AVISO QUE ALGO SE SUSPENDIO.
+    }
     }
     return NULL;
 }
@@ -311,6 +317,7 @@ struct pcb* inicializar_un_proceso(struct pcb*pcb,int tamanio,char *ruta_archivo
     }
     pcb->metricas_de_estado[NEW]++; //al estar inicializando el proceso, aumento la de NEW.
     pcb->metricas_de_tiempo[NEW] = temporal_create(); //creo un cronometro para saber cuanto tiempo estuvo en cada estado.
+    pcb->cantidad_de_veces_que_estuvo_bloqueado_por_io = 0;
     return pcb; // retorna el proceso inicializado.
 }
 
@@ -686,6 +693,7 @@ void *poner_a_ejecutar(void *argumentos){
                 break;   
             case IO:
                 proceso->pc++;
+                proceso->cantidad_de_veces_que_estuvo_bloqueado_por_io++;
                 int milisegundos = deserializar_cant_segundos(paquete);
                 proceso->proxima_rafaga_io = milisegundos;
                 proceso->nombre_io_que_lo_bloqueo = deserializar_nombre_syscall_io(paquete);
@@ -762,7 +770,6 @@ void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado){
 }
 
 void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
-    intentar_iniciar();
     sacar_proceso_de_cola_de_estado(proceso,estadoInicial);
     cambiarEstado(proceso,estadoInicial,EXIT_ESTADO);
     int socket = iniciar_conexion_kernel_memoria();
@@ -771,6 +778,7 @@ void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
     crear_paquete(FINALIZAR_PROCESO,buffer,socket);
     op_code confirmacion = recibir_op_code(socket);
     cerrar_conexion(socket);
+    intentar_iniciar();
     sacar_proceso_de_cola_de_estado(proceso,EXIT_ESTADO);   
     listar_metricas_de_tiempo_y_estado(proceso); 
     log_info(kernel_logger,"## (<PID: %i>) - Finaliza el proceso",proceso->pid);
@@ -800,12 +808,14 @@ void liberar_proceso(struct pcb *proceso){
 
 void intentar_iniciar(){
     if(!list_is_empty(colaEstados[SUSP_READY])){
+        log_debug(kernel_debug_log,"POR HACER UN SEM POST DE INTENTAR INICIAR");
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
             actualizar_proximo_a_consultar(SUSP_READY);
         }
         sem_post(&INTENTAR_INICIAR_SUSP_READY);
     }
     else{
+        log_debug(kernel_debug_log,"ESTOY EN EL ELSE DE INTENTAR INICIAR");
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
             actualizar_proximo_a_consultar(NEW);
         }
@@ -832,4 +842,18 @@ void liberar_paquete(t_paquete *paquete){
    free(paquete->buffer->stream);
    free(paquete->buffer);
    free(paquete);
+}
+
+struct pcb *buscar_proceso_a_suspender(){
+    t_list_iterator *iterador = list_iterator_create(colaEstados[SUSP_BLOCKED]); //arranca apuntando a NULL, no a donde apunta a lista
+    while (list_iterator_has_next(iterador)) { //es true mientras haya un siguiente al cual avanzar.
+        struct pcb *proceso = list_iterator_next(iterador);
+        if (proceso->debe_ser_suspendido) { // comparo al pid que estoy apuntando con el pid que busco.
+            proceso->debe_ser_suspendido = false;
+            list_iterator_destroy(iterador); //delete del iterador.
+            return proceso;
+        }
+    }
+    list_iterator_destroy(iterador);
+    return NULL;
 }

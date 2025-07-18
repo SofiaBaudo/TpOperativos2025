@@ -149,6 +149,8 @@ struct pcb{
 	pthread_t hilo_al_bloquearse;
 	int proxima_rafaga_io; 
 	char* nombre_io_que_lo_bloqueo;
+	int cantidad_de_veces_que_estuvo_bloqueado_por_io;
+	bool debe_ser_suspendido;
 };
 
 struct parametros_de_ejecucion{

@@ -10,6 +10,7 @@ extern pthread_mutex_t mutex_lista_metricas_procesos;
 extern pthread_mutex_t mutex_paginas_en_swap;
 extern pthread_mutex_t mutex_lista_procesos_swap;
 extern pthread_mutex_t mutex_marcos;
+extern pthread_mutex_t mutex_swap;
 
 bool inicializar_mutex(void);
 

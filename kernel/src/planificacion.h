@@ -40,7 +40,7 @@ void intentar_iniciar();
 void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado);
 void enviar_proceso_a_memoria(struct pcb* proceso);
 void crear_hilo_de_ejecucion(struct pcb*proceso, struct instancia_de_cpu*cpu_aux);
-
+struct pcb *buscar_proceso_a_suspender();
 //CPU
 int buscar_cpu_libre(t_list *lista);
 struct instancia_de_cpu *obtener_cpu(int posicion);

@@ -37,7 +37,6 @@ void* manejar_cliente(void *socketCliente)
             log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", cliente); // Log obligatorio
             enviar_op_code(cliente, HANDSHAKE_ACCEPTED);
             manejar_cliente_kernel(cliente);
-            log_debug(logger_memoria,"Ya volvi de la funcion");
             break;
         case HANDSHAKE_CPU:
             log_debug(logger_memoria, "Se conecto CPU");
@@ -69,11 +68,9 @@ void manejar_cliente_kernel(int cliente) {
         switch (peticion_kernel){
             case INICIALIZAR_PROCESO_DESDE_NEW:{
                 t_paquete *proceso_paquete = recibir_paquete(cliente);
-                log_debug(logger_memoria, "Termine de recibir proceso");
                 int pid = deserializar_pid_memoria(proceso_paquete);
                 int tam_proceso = deserializar_tamanio_memoria(proceso_paquete);
                 char *path_pseudocodigo = deserializar_nombre_archivo_memoria(proceso_paquete);
-                log_warning(logger_memoria,"Antes de armar la ruta el nombre es: %s",path_pseudocodigo);
                 char *path_absoluto = string_from_format("%s%s%s", memoria_config.PATH_INSTRUCCIONES, "/", path_pseudocodigo);
                 log_debug(logger_memoria, "el pseudocodigo es: %s", path_absoluto);
                 if(inicializar_proceso(pid,tam_proceso,path_absoluto)){
@@ -87,7 +84,6 @@ void manejar_cliente_kernel(int cliente) {
                 }
             }
             case INICIALIZAR_PROCESO_SUSPENDIDO: {
-                log_debug(logger_memoria,"ESTOY EN CASO DESUSUSPENCION_PROCESO");
                 t_paquete *proceso_paquete = recibir_paquete(cliente);
                 int pid = deserializar_pid_memoria(proceso_paquete);
                 if (!proceso_paquete) {
@@ -95,10 +91,13 @@ void manejar_cliente_kernel(int cliente) {
                     enviar_op_code(cliente, RECHAZO_PROCESO);
                     break;
                 }
-                desuspender_proceso(pid);
-
-                //log_info(logger_memoria, "## PID: %d - Proceso Desuspendido - Tamaño: %d", pid, tam_proceso);
-                enviar_op_code(cliente, ACEPTAR_PROCESO);
+                int resultado = desuspender_proceso(pid);
+                if(resultado == 0){
+                    enviar_op_code(cliente, ACEPTAR_PROCESO);
+                }
+                else{
+                    enviar_op_code(cliente, RECHAZO_PROCESO);
+                }
                 break;
             }
             case FINALIZAR_PROCESO: {
@@ -111,10 +110,8 @@ void manejar_cliente_kernel(int cliente) {
             }
             case SUSPENDER_PROCESO: {
                 // Recibir el PID del proceso a suspender
-                log_debug(logger_memoria,"ESTOY EN CASO SUSPENCION_PROCESO");
                 t_paquete *proceso_paquete = recibir_paquete(cliente);
                 int pid = deserializar_pid_memoria(proceso_paquete);
-                log_warning(logger_memoria,"PROCESO POR SER SUSPENDIDO EN MEMORIA");
                 if (pid < 0) {
                     log_error(logger_memoria, "PID inválido recibido para suspensión: %d", pid);
                     enviar_op_code(cliente, RECHAZO_PROCESO);
@@ -125,22 +122,17 @@ void manejar_cliente_kernel(int cliente) {
                 if(resultado_suspension == 0){
                 log_debug(logger_memoria, "PROCESO SUSPENDIDO CORRECTAMENTE");
                 }
-	
                 enviar_op_code(cliente, SUSPENSION_CONFIRMADA); 
                 break;
             }
             case DUMP_MEMORY: {
                 t_paquete* paquete = recibir_paquete(cliente);
-                log_debug(logger_memoria, "Recibi paquete de kernel");
                 int pid = deserializar_pid_memoria(paquete);
                 log_info(logger_memoria, "## PID: <%i> - Memory Dump solicitado", pid);
-                log_debug(logger_memoria, "por entrar al dump_meme_proc");
                 bool dump_ok = dump_memoria_proceso(pid);
                 if (dump_ok) {
-                    log_debug(logger_memoria, "por enviar dump ok");
                     enviar_op_code(cliente, DUMP_ACEPTADO); // o DUMP_OK
                 } else {
-                    log_debug(logger_memoria, "por enviar dump no ok");
                     enviar_op_code(cliente, DUMP_RECHAZADO); // o DUMP_ERROR
                 }
                 break;
@@ -151,10 +143,10 @@ void manejar_cliente_kernel(int cliente) {
                 break;
         }
     }
-    log_debug(logger_memoria,"Ya sali del switch y estoy por cerrar la conexion");
     close(cliente);
     return;
 }
+
 
 void manejar_cliente_cpu(int cliente){
     while (1) {
@@ -195,17 +187,14 @@ void manejar_cliente_cpu(int cliente){
                     enviar_instruccion(cliente, "");
                     log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }
-                log_debug(logger_memoria,"YA MANDE LA INSTRUCCION Y ESTOY POR SALIR DEL FETCH");
                 break;
             }
             case ENVIO_PID_DIRFIS_DAT: { //READ_MEMORIA
                 // Recibir struct pedido de lectura de memoria
-                log_debug(logger_memoria,"Antes de deserializar las 3 cosas");
                 int pid = deserializar_pid_memoria(pedido);
                 int direccion_fisica = deserializar_dirFis(pedido);
                 char* tamanio_char = deserializar_dataIns(pedido);
                 int tamanio = atoi(tamanio_char);
-                log_debug(logger_memoria,"el tamanio: %i",tamanio); 
                 if (pedido == NULL) {             
                     log_error(logger_memoria, "Error al recibir paquete de READ_MEMORIA");
                     break;
@@ -213,7 +202,6 @@ void manejar_cliente_cpu(int cliente){
                 // Acceso real a memoria física: la dirección recibida es absoluta (offset global) 
                 char *valor_leido = malloc(tamanio);
                 int resultado_lectura = leer_memoria_fisica(direccion_fisica, valor_leido, tamanio);
-                log_debug(logger_memoria,"Sali de leer la memoria fisica");      
                 if (resultado_lectura != 0) {
                     log_error(logger_memoria, "Acceso fuera de rango en memoria física: offset %d, tamaño %d", direccion_fisica, tamanio);
                     strcpy(valor_leido, "ERROR_OUT_OF_BOUNDS");
@@ -298,18 +286,15 @@ void manejar_cliente_cpu(int cliente){
             }
             case ENVIO_PID_NROPAG_CONTENIDO_MARCO: { // ACTUALIZACION PAGINA
                 // Recibir pedido de actualización de página completa
-                log_debug(logger_memoria,"estoy antes de las deserializaciones");
                 int pid = deserializar_pid_memoria(pedido);
                 int nroPag = deserializar_nroPag(pedido);
                 int marco = deserializar_marco(pedido);
                 int tamPag = deserializar_tamPag(pedido);
                 void* contenido = deserializar_contenido(pedido);
-                log_debug(logger_memoria,"PID: %i, NROPAG: %i, MARCO: %i,TAMPAG: %i",pid,nroPag,marco,tamPag);
                 if (pedido == NULL) {
                     log_error(logger_memoria, "Error al recibir pedido de actualización de página completa");
                     break;
                 }
-
                 // Actualizar el contenido de la página
                 bool exito = actualizar_contenido_pagina_completa(marco,contenido,tamPag);
                 if(exito){
@@ -353,7 +338,7 @@ void manejar_cliente_cpu(int cliente){
                 log_debug(logger_memoria, "el numero de pid es %i", pid);
                 int nroPag = deserializar_nroPag(pedido);
                 log_debug(logger_memoria, "el numero de pagina es %i", nroPag);
-            
+
                 int marco = obtener_marco_de_pagina_logica(pid, nroPag);
                 log_debug(logger_memoria, "el marco es: %i", marco);
                 if (marco != -1) {
@@ -379,7 +364,6 @@ void manejar_cliente_cpu(int cliente){
                         log_error(logger_memoria, "Error al obtener contenido - PID: %d, Página: %d", pid, nroPag);
                     }
                 } else {
-                    log_debug(logger_memoria, "entre al else del if grande");
                     // Enviar puntero nulo si no se encuentra el marco
                     void* contenido_nulo = NULL;
                     send(cliente, &contenido_nulo, sizeof(void*), 0);

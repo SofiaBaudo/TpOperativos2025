@@ -75,13 +75,16 @@ int suspender_proceso(int pid){
     t_proceso_memoria* proc = buscar_proceso_en_memoria(pid);
     if (proc && proc->path_pseudocodigo) {
         pswap->path_pseudocodigo = strdup(proc->path_pseudocodigo);
-    } else {
+    } 
+    else {
         log_error(logger_memoria, "No se encontró el proceso %d en memoria", pid);
         pswap->path_pseudocodigo = NULL;
     }
 
     // Aquí usar semáforo para proteger acceso concurrente
+    pthread_mutex_lock(&mutex_swap);
     list_add(procesos_swap, pswap);
+    pthread_mutex_unlock(&mutex_swap);
 
     finalizar_proceso(pid);
 

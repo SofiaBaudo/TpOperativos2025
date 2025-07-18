@@ -14,7 +14,6 @@ t_tabla_paginas* iniciar_proceso_paginacion(int pid, int tam_proceso) {
         return NULL;
     }     
     if (!asignar_marcos_a_todas_las_paginas(tabla_raiz, 1)) {
-        log_debug(logger_memoria, "vacia a asignacion");
         destruir_tabla_y_marcos(tabla_raiz, 1);
         tabla_raiz = NULL;
     }
@@ -82,13 +81,9 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
         log_error(logger_memoria, "Valor inválido en cantidad_entradas: %d en nivel %d", tabla->cantidad_entradas, nivel_actual);
     }
 
-    log_debug(logger_memoria, "Tabla creada en nivel %d (%p) con %d entradas (restantes: %d)", nivel_actual, tabla, cantidad_entradas, *paginas_restantes);
-
-
     for (int i = 0; i < cantidad_entradas; i++) {
         tabla->entradas[i].nro_pagina = i;
         tabla->entradas[i].nro_marco = -1;
-        log_debug(logger_memoria, "Nivel %d - Entrada %d - paginas_restantes antes = %d", nivel_actual, i, *paginas_restantes);
         
         if (nivel_actual == memoria_config.CANTIDAD_NIVELES) {
             tabla->entradas[i].tabla_nivel_inferior = NULL;
@@ -127,7 +122,6 @@ t_tabla_paginas* crear_nivel_tabla(int nivel_actual, int* paginas_restantes) {
 // Asigna marcos a todas las páginas de último nivel de la estructura multinivel
 bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual) {
     int marcosLibres = contar_marcos_libres(); 
-    log_debug(logger_memoria, "MARCOSSSSSSSSSS LIBRES %i",marcosLibres);
     if (!tabla){
         log_debug(logger_memoria, "tabla vacia de asignar marcos");
         return false;
@@ -161,7 +155,6 @@ bool asignar_marco_a_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina_logica, 
     t_tabla_paginas* actual = tabla_raiz;
 
     for (int nivel = 1; nivel < niveles; nivel++) {
-        log_debug(logger_memoria, "entre al for de asignacion de marcos");
         int idx = (nro_pagina_logica / (int)pow(entradas, niveles-nivel)) % entradas;
         if (!actual->entradas[idx].tabla_nivel_inferior) return false;
         actual = actual->entradas[idx].tabla_nivel_inferior;

@@ -3,8 +3,9 @@
 
 #include <bibliotecas.h>
 #include <variables_globales_memoria.h>
-#include "inicializar_memoria.h"
-#include "procesos.h"
+#include <inicializar_memoria.h>
+#include <semaforos_memoria.h>
+#include <procesos.h>
 
 typedef struct {
     int pid;
