@@ -66,7 +66,7 @@ t_instruccion decode(char* instruccion_recibida){
     obtenerInsPartes = string_split(instruccion_recibida, " "); //te recibe el string tal como es si no lo encuentra
     instruccion.opcode = obtenerInsPartes[0];
     instruccion.param1 = obtenerInsPartes[1];
-    if(strcmp(instruccion.opcode, "GOTO") == 0 || strcmp(instruccion.opcode, "EXIT") == 0 || strcmp(instruccion.opcode, "DUMP MEMORY") == 0 || strcmp(instruccion.opcode, "NOOP") == 0 ){
+    if(strcmp(instruccion.opcode, "GOTO") == 0 || strcmp(instruccion.opcode, "EXIT") == 0 || strcmp(instruccion.opcode, "DUMP_MEMORY") == 0 || strcmp(instruccion.opcode, "NOOP") == 0 ){
         instruccion.param2 = " ";
     }  
     else{
