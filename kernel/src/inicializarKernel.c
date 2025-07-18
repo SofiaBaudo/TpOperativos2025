@@ -1,5 +1,13 @@
 #include <inicializarKernel.h>
 
+   pthread_t hilo_mediano_plazo_pmcp;
+   pthread_t hilo_plani_corto_plazo;
+   pthread_t hilo_plani_largo_plazo;
+   pthread_t hilo_dispatch;
+   pthread_t hilo_mediano_plazo;
+   pthread_t hilo_mediano_plazo_fifo;
+   pthread_t hilo_io;
+   pthread_t hilo_interrupt;
 
 void inicializar_kernel(char *archivo, int tamanio){
   printf("Kernel inicializado");
@@ -25,6 +33,51 @@ void inicializar_logs(){
         exit(EXIT_FAILURE);
     }
 }
+
+
+void inicializar_hilos_de_planificacion(){
+    pthread_create(&hilo_dispatch,NULL,atender_kernel_dispatch,NULL); //Creamos el hilo
+    pthread_create(&hilo_interrupt,NULL,atender_kernel_interrupt,NULL); //Creamos el hilo
+    pthread_create(&hilo_io,NULL,atender_kernel_io,NULL); //Creamos el hilo
+    pthread_create(&hilo_mediano_plazo,NULL,planificador_mediano_plazo,NULL);
+    
+    if(strcmp(ALGORITMO_INGRESO_A_READY,"FIFO")==0){
+        log_debug(kernel_debug_log,"ESTOY ACA EN EL DE FIFO LARGO PLAZO");
+        pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
+        pthread_create(&hilo_mediano_plazo_fifo,NULL,planificador_mediano_plazo_fifo,NULL);
+    }
+    else if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
+        pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_proceso_mas_chico_primero,NULL); //Creamos el hilo
+        pthread_create(&hilo_mediano_plazo_pmcp,NULL,planificador_mediano_plazo_proceso_mas_chico_primero,NULL);
+    }
+    else{
+        exit(EXIT_FAILURE);
+    }
+
+    if(strcmp(ALGORITMO_CORTO_PLAZO,"FIFO")==0){
+        log_debug(kernel_debug_log,"ESTOY ACA EN EL DE FIFO CORTO PLAZO");
+        pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_fifo,NULL);
+    }
+    else if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_SIN_DESALOJO")==0){
+        pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL);
+    }
+    else if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_CON_DESALOJO")==0){
+        pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_con_desalojo,NULL);
+    }
+    else{
+         exit(EXIT_FAILURE);
+    }
+
+    pthread_join(hilo_dispatch,NULL);
+    pthread_join(hilo_interrupt,NULL);
+    pthread_join(hilo_plani_largo_plazo,NULL);
+    pthread_join(hilo_mediano_plazo,NULL);
+    pthread_join(hilo_mediano_plazo_fifo,NULL);
+    pthread_join(hilo_plani_corto_plazo,NULL);
+    pthread_join(hilo_io,NULL);
+    }
+    
+
 
 void inicializar_configs(){
     config_kernel = crear_config("kernel.config");
