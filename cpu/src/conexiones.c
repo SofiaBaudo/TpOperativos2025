@@ -12,6 +12,7 @@ pthread_mutex_t mx_interrupcion;
 void* iniciar_conexion_kernel_dispatch(void *arg){
     int identificador_cpu = *((int*) arg);
     ultima_instruccion_fue_syscall_bloqueante = false;
+    log_debug(cpu_log_debug, "IP_KERNEL %i PUERTO_KERNEL_dispatch: %i", IP_KERNEL, PUERTO_KERNEL_DISPATCH);
     fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
     enviar_op_code(fd_conexion_kernel_dispatch, HANDSHAKE_CPU_DISPATCH);                    //avisa que es CPU.
     op_code respuesta = recibir_op_code(fd_conexion_kernel_dispatch);              //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
@@ -33,6 +34,7 @@ close(socket);
 void *iniciar_conexion_kernel_interrupt(void *arg){
     int identificador_cpu = *(int *)arg;
     free(arg);
+    log_debug(cpu_log_debug, "IP_KERNEL %i PUERTO_KERNEL_INTERRUPT: %i", IP_KERNEL, PUERTO_KERNEL_INTERRUPT);
     fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_INTERRUPT);
     hayInterrupcion = false;
     enviar_op_code(fd_conexion_kernel_interrupt, HANDSHAKE_CPU_INTERRUPT);                    //avisa que es CPU.
