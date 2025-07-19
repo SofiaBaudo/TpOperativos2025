@@ -210,11 +210,13 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
 void *planificador_mediano_plazo(){ 
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]); //se activa el planificador si llega un proceso a SUSP_BLOCKED
+        sem_wait(&UNO_A_LA_VEZ[SUSP_BLOCKED]);
         log_warning(kernel_debug_log,"SE SUSPENDIO UN PROCESO");
         //agregar semaforo de uno a la vez como vector
         pthread_mutex_lock(&mx_usar_cola_estado[SUSP_BLOCKED]);
         struct pcb *proceso = buscar_proceso_a_suspender();
         pthread_mutex_unlock(&mx_usar_cola_estado[SUSP_BLOCKED]);
+        if(proceso){
         int socket = iniciar_conexion_kernel_memoria();
         enviar_op_code(socket,SUSPENDER_PROCESO);
         t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
@@ -226,6 +228,8 @@ void *planificador_mediano_plazo(){
             intentar_iniciar(); //INTENTAMOS INICIAR EL PLANICADOR DE MEDIANO PLAZO 
             cerrar_conexion(socket);
         }
+        }
+        sem_post(&UNO_A_LA_VEZ[SUSP_BLOCKED]);
     }
 }
 
@@ -296,9 +300,11 @@ void frenar_y_restar_cronometros(t_list *lista){ //freno los cronometros de todo
     t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
     while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
         struct instancia_de_cpu *cpu_aux = list_iterator_next(aux);
+        if(cpu_aux->proceso_ejecutando){
         temporal_stop(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga);
         int a_restar = temporal_gettime(cpu_aux->proceso_ejecutando->duracion_ultima_rafaga); //es el tiempo que ejecuto.
         cpu_aux->proceso_ejecutando->proxima_estimacion -= a_restar; //a la estimacion le resto lo que ya ejecuto
+        }
     }
     list_iterator_destroy(aux);
     return;
