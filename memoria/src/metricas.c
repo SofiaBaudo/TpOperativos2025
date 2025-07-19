@@ -116,5 +116,10 @@ void destruir_metricas_proceso(int pid) {
 
 // Función auxiliar para actualizar métricas de acceso a tabla de páginas
 void actualizar_metricas_acceso_tabla_paginas(int pid) {
-    incrementar_metrica_proceso(pid, ACCESO_TABLA);
+    tipo_metrica *metrica = 0;
+    for (int i=0; i<6;i++){
+    metrica = i;    
+    incrementar_metrica_proceso(pid,i);
+    }
+
 }
