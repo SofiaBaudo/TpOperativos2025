@@ -80,6 +80,7 @@ void manejar_cliente_kernel(int cliente) {
                     enviar_op_code(cliente, RECHAZO_PROCESO);
                     break;
                 }
+                incrementar_metrica_proceso(pid,SUBIDAS_MEMORIA);
             }
             case INICIALIZAR_PROCESO_SUSPENDIDO: {
                 t_paquete *proceso_paquete = recibir_paquete(cliente);
@@ -96,6 +97,7 @@ void manejar_cliente_kernel(int cliente) {
                 else{
                     enviar_op_code(cliente, RECHAZO_PROCESO);
                 }
+                incrementar_metrica_proceso(pid,SUBIDAS_MEMORIA);
                 break;
             }
             case FINALIZAR_PROCESO: {
@@ -121,6 +123,7 @@ void manejar_cliente_kernel(int cliente) {
                 log_debug(logger_memoria, "PROCESO SUSPENDIDO CORRECTAMENTE");
                 }
                 enviar_op_code(cliente, SUSPENSION_CONFIRMADA); 
+                incrementar_metrica_proceso(pid,BAJADAS_SWAP);
                 break;
             }
             case DUMP_MEMORY: {
@@ -185,6 +188,7 @@ void manejar_cliente_cpu(int cliente){
                     enviar_instruccion(cliente, "");
                     log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }
+                incrementar_metrica_proceso(pid,INSTRUCCIONES_SOLICITADAS);
                 break;
             }
             case ENVIO_PID_DIRFIS_DAT: { //READ_MEMORIA
@@ -209,6 +213,7 @@ void manejar_cliente_cpu(int cliente){
                 
                 t_buffer* buffer_valor_leido = crear_buffer_char_asterisco(valor_leido);
                 crear_paquete(ENVIO_VALOR_LEIDO,buffer_valor_leido,cliente);
+                incrementar_metrica_proceso(pid,LECTURAS_MEMORIA);
                 break;
             }
             case WRITE_MEMORIA: {
@@ -229,6 +234,7 @@ void manejar_cliente_cpu(int cliente){
                     log_error(logger_memoria, "Acceso fuera de rango en memoria física (escritura): offset %d, tamaño %d", direccion_fisica, tamanio);
                 }
                 enviar_op_code(cliente,INSTRUCCION_TERMINADA);
+                incrementar_metrica_proceso(pid,ESCRITURAS_MEMORIA);
                 break;
             }
             case ENVIO_PID_NROPAG_CONTENIDO_MARCO: { // ACTUALIZACION PAGINA

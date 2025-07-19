@@ -38,7 +38,6 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
         list_add(procesos_en_memoria, nuevo_proceso);
         pthread_mutex_unlock(&mutex_procesos_en_memoria);
         crear_metricas_proceso(pid);
-        log_debug(logger_memoria, "metricas creadas");
         return true;
     } else {
         if (tabla_raiz){
