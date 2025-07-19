@@ -1,14 +1,16 @@
-//Listado de metricas por proceso
+// Listado de metricas por proceso
 #include <metricas.h>
 
-t_list* lista_metricas_procesos;     // Lista que contiene las métricas de cada proceso
+t_list *lista_metricas_procesos; // Lista que contiene las métricas de cada proceso
 
-void inicializar_metricas_procesos() {
+void inicializar_metricas_procesos()
+{
     lista_metricas_procesos = list_create();
 }
 
-void crear_metricas_proceso(int pid) {
-    t_metricas* nuevas_metricas = malloc(sizeof(t_metricas));
+void crear_metricas_proceso(int pid)
+{
+    t_metricas *nuevas_metricas = malloc(sizeof(t_metricas));
     nuevas_metricas->pid = pid;
     nuevas_metricas->cant_acceso_tabla_pagina = 0;
     nuevas_metricas->instrucciones_solicitadas = 0;
@@ -24,12 +26,15 @@ void crear_metricas_proceso(int pid) {
 
 // Función para buscar las métricas de un proceso específico -> no se si tiene ucho sentido
 
-t_metricas* buscar_metricas_proceso(int pid) {
+t_metricas *buscar_metricas_proceso(int pid)
+{
     pthread_mutex_lock(&mutex_lista_metricas_procesos);
-    t_metricas* resultado = NULL;
-    for (int i = 0; i < list_size(lista_metricas_procesos); i++) {
-        t_metricas* metricas = list_get(lista_metricas_procesos, i);
-        if (metricas->pid == pid) {
+    t_metricas *resultado = NULL;
+    for (int i = 0; i < list_size(lista_metricas_procesos); i++)
+    {
+        t_metricas *metricas = list_get(lista_metricas_procesos, i);
+        if (metricas->pid == pid)
+        {
             resultado = metricas;
             break;
         }
@@ -39,70 +44,78 @@ t_metricas* buscar_metricas_proceso(int pid) {
 }
 
 // Función para incrementar una métrica específica de un proceso
-void incrementar_metrica_proceso(int pid, tipo_metrica metrica) {
-    t_metricas* metricas_proceso = NULL;
+void incrementar_metrica_proceso(int pid, tipo_metrica metrica)
+{
+    t_metricas *metricas_proceso = NULL;
     // Buscar métricas dentro del mutex
-    for (int i = 0; i < list_size(lista_metricas_procesos); i++) {
+    for (int i = 0; i < list_size(lista_metricas_procesos); i++)
+    {
         pthread_mutex_lock(&mutex_lista_metricas_procesos);
-        t_metricas* metricas = list_get(lista_metricas_procesos, i);
+        t_metricas *metricas = list_get(lista_metricas_procesos, i);
         pthread_mutex_unlock(&mutex_lista_metricas_procesos);
-        if (metricas->pid == pid) {
+        if (metricas->pid == pid)
+        {
             metricas_proceso = metricas;
             break;
         }
     }
 
-    if (metricas_proceso == NULL) {
+    if (metricas_proceso == NULL)
+    {
         log_error(logger_memoria, "No se encontraron métricas para el proceso PID: %d", pid);
         return;
     }
-    
-    switch(metrica) {
-        case ACCESO_TABLA:
-            metricas_proceso->cant_acceso_tabla_pagina++;
-            break;
-        case INSTRUCCIONES_SOLICITADAS:
-            metricas_proceso->instrucciones_solicitadas++;
-            break;
-        case BAJADAS_SWAP:
-            metricas_proceso->bajadas_swap++;
-            break;
-        case SUBIDAS_MEMORIA:
-            metricas_proceso->cant_subidas_memoria_principal++;
-            break;
-        case LECTURAS_MEMORIA:
-            metricas_proceso->cant_lecturas_memoria++;
-            break;
-        case ESCRITURAS_MEMORIA:
-            metricas_proceso->cant_escrituras_memoria++;
-            break;
-        default:
-            log_warning(logger_memoria, "Tipo de métrica desconocido: %d", metrica);
-            break;
+
+    switch (metrica)
+    {
+    case ACCESO_TABLA:
+        metricas_proceso->cant_acceso_tabla_pagina++;
+        break;
+    case INSTRUCCIONES_SOLICITADAS:
+        metricas_proceso->instrucciones_solicitadas++;
+        break;
+    case BAJADAS_SWAP:
+        metricas_proceso->bajadas_swap++;
+        break;
+    case SUBIDAS_MEMORIA:
+        metricas_proceso->cant_subidas_memoria_principal++;
+        break;
+    case LECTURAS_MEMORIA:
+        metricas_proceso->cant_lecturas_memoria++;
+        break;
+    case ESCRITURAS_MEMORIA:
+        metricas_proceso->cant_escrituras_memoria++;
+        break;
+    default:
+        log_warning(logger_memoria, "Tipo de métrica desconocido: %d", metrica);
+        break;
     }
 }
 
 // Función para destruir las métricas de un proceso
-void destruir_metricas_proceso(int pid) {
+void destruir_metricas_proceso(int pid)
+{
     pthread_mutex_lock(&mutex_lista_metricas_procesos);
-    for (int i = 0; i < list_size(lista_metricas_procesos); i++) {
-        t_metricas* metricas = list_get(lista_metricas_procesos, i);
-        if (metricas == NULL) {
-        log_error(logger_memoria, "No se encontraron métricas para el proceso PID: %d", pid);
-        return;
+    for (int i = 0; i < list_size(lista_metricas_procesos); i++)
+    {
+        t_metricas *metricas = list_get(lista_metricas_procesos, i);
+        if (metricas == NULL)
+        {
+            log_error(logger_memoria, "No se encontraron métricas para el proceso PID: %d", pid);
+            return;
         }
-        if (metricas->pid == pid) {
+        if (metricas->pid == pid)
+        {
             // Mostrar métricas antes de destruir
             log_info(logger_memoria, "## PID: <%d> - Proceso Destruido - Metricas - Acc.T.Pag: <%d>; Inst.Sol.: <%d>; SWAP: <%d>; Mem.Prin.: <%d>; Lec.Mem.: <%d>; Esc.Mem.: <%d>",
-                metricas->pid,
-                metricas->cant_acceso_tabla_pagina,
-                metricas->instrucciones_solicitadas,
-                metricas->bajadas_swap,
-                metricas->cant_subidas_memoria_principal,
-                metricas->cant_lecturas_memoria,
-                metricas->cant_escrituras_memoria
-            );
-            
+                     metricas->pid,
+                     metricas->cant_acceso_tabla_pagina,
+                     metricas->instrucciones_solicitadas,
+                     metricas->bajadas_swap,
+                     metricas->cant_subidas_memoria_principal,
+                     metricas->cant_lecturas_memoria,
+                     metricas->cant_escrituras_memoria);
+
             // Remover de la lista y liberar memoria
             list_remove(lista_metricas_procesos, i);
             free(metricas);
@@ -115,11 +128,12 @@ void destruir_metricas_proceso(int pid) {
 }
 
 // Función auxiliar para actualizar métricas de acceso a tabla de páginas
-void actualizar_metricas_acceso_tabla_paginas(int pid) {
-    tipo_metrica *metrica = 0;
-    for (int i=0; i<6;i++){
-    metrica = i;    
-    incrementar_metrica_proceso(pid,i);
+void actualizar_metricas_acceso_tabla_paginas(int pid)
+{
+    tipo_metrica metrica;
+    for (int i = 0; i < 6; i++)
+    {
+        metrica = i;
+        incrementar_metrica_proceso(pid, metrica);
     }
-
 }
