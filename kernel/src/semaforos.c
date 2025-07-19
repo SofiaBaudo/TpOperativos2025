@@ -7,7 +7,7 @@ pthread_mutex_t mx_identificador_del_proceso;
 pthread_mutex_t mx_avisar_que_entro_el_primero;
 pthread_mutex_t mx_proximo_a_consultar;
 pthread_mutex_t mx_usar_recurso[2];
-
+pthread_mutex_t mx_proceso_ejecutando_cpu;
 //SEMAFOROS
 
 //sem_t INGRESO_DEL_PRIMERO; //POR SI ES NECESARIO.
@@ -25,6 +25,7 @@ void inicializar_sincronizacion() {
     pthread_mutex_init(&mx_identificador_del_proceso, NULL);
     pthread_mutex_init(&mx_avisar_que_entro_el_primero,NULL);
     pthread_mutex_init(&mx_proximo_a_consultar,NULL);
+    pthread_mutex_init(&mx_proceso_ejecutando_cpu,NULL);
     for(int i=0; i<2; i++){
         pthread_mutex_init(&mx_usar_recurso[i],NULL);
     }

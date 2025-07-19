@@ -125,7 +125,8 @@ void manejar_cliente_kernel(int cliente) {
             }
             case DUMP_MEMORY: {
                 t_paquete* paquete = recibir_paquete(cliente);
-                int pid = deserializar_pid_memoria(paquete);
+                int pid = deserializar_pid_memoria(paquete); 
+                //log obligatorio
                 log_info(logger_memoria, "## PID: <%i> - Memory Dump solicitado", pid);
                 bool dump_ok = dump_memoria_proceso(pid);
                 if (dump_ok) {
@@ -168,7 +169,9 @@ void manejar_cliente_cpu(int cliente){
                 // Log obligatorio de obtención de instrucción
                 if (instruccion != NULL) {
                     log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
-                } else {
+                } 
+                else {
+                    //instruccion nula
                     log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: ", pid, pc);
                 }
 
@@ -177,7 +180,8 @@ void manejar_cliente_cpu(int cliente){
                     t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
                     crear_paquete(MANDAR_INSTRUCCION,buffer,cliente);
                     free(instruccion);
-                }else{
+                }
+                else{
                     enviar_instruccion(cliente, "");
                     log_error(logger_memoria, "Se envió instrucción a CPU: PID %d, PC %d, Instr: ", pid, pc);
                 }
@@ -200,18 +204,11 @@ void manejar_cliente_cpu(int cliente){
                     log_error(logger_memoria, "Acceso fuera de rango en memoria física: offset %d, tamaño %d", direccion_fisica, tamanio);
                     strcpy(valor_leido, "ERROR_OUT_OF_BOUNDS");
                     break; //charlarlo con chicas
-                } //else {
-                    //valor_leido[tamanio] = '\0'; // Por si es string, para debug
-                //}
-                
-                // Log obligatorio: acceso a espacio de usuario
+                }
                 log_info(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio);
                 
-                // Enviar valor leído a la CPU
                 t_buffer* buffer_valor_leido = crear_buffer_char_asterisco(valor_leido);
-                usleep(2000000);
                 crear_paquete(ENVIO_VALOR_LEIDO,buffer_valor_leido,cliente);
-                //enviar_valor_leido(cliente, valor_leido, tamanio);
                 break;
             }
             case WRITE_MEMORIA: {
@@ -234,49 +231,6 @@ void manejar_cliente_cpu(int cliente){
                 enviar_op_code(cliente,INSTRUCCION_TERMINADA);
                 break;
             }
-            case ACCESO_TABLA_PAGINAS: {
-                // Recibir pedido de acceso a tabla de páginas
-                t_pedido_acceso_tabla_paginas* pedido = recibir_pedido_acceso_tabla_paginas(cliente);
-                if (pedido == NULL) {
-                    log_error(logger_memoria, "Error al recibir pedido de acceso a tabla de páginas");
-                    break;
-                }
-
-                // Obtener el número de marco navegando la tabla multinivel
-                //int marco = obtener_marco_de_pagina_logica(pid, pagina_fisica);
-                
-                // Enviar el número de marco a la CPU
-                //enviar_numero_marco(cliente, marco);
-
-                free(pedido);
-                break;
-            }
-            case LEER_PAGINA_COMPLETA: {
-                // Recibir pedido de lectura de página completa
-                t_pedido_leer_pagina_completa* pedido = recibir_pedido_leer_pagina_completa(cliente);
-                if (pedido == NULL) {
-                    log_error(logger_memoria, "Error al recibir pedido de lectura de página completa");
-                    break;
-                }
-
-                // Obtener el contenido completo de la página
-                void* contenido = obtener_contenido_pagina_completa(pedido->marco, memoria_config.TAM_PAGINA);
-                
-                if (contenido != NULL) {
-                    // Enviar el contenido a la CPU
-                    enviar_contenido_pagina(cliente, contenido, memoria_config.TAM_PAGINA);
-                    free(contenido);
-                } else {
-                    log_error(logger_memoria, "Error al obtener contenido de página completa - Marco: %d", pedido->marco);
-                    // Enviar una página vacía en caso de error
-                    void* pagina_vacia = calloc(1, memoria_config.TAM_PAGINA);
-                    enviar_contenido_pagina(cliente, pagina_vacia, memoria_config.TAM_PAGINA);
-                    free(pagina_vacia);
-                }
-
-                free(pedido);
-                break;
-            }
             case ENVIO_PID_NROPAG_CONTENIDO_MARCO: { // ACTUALIZACION PAGINA
                 // Recibir pedido de actualización de página completa
                 int pid = deserializar_pid_memoria(pedido);
@@ -296,7 +250,6 @@ void manejar_cliente_cpu(int cliente){
                 else{
                     enviar_op_code(cliente,ACTUALIZACION_FALLIDA);
                 }
-                //destruir_pedido_actualizar_pagina_completa(pedido);
                 free(contenido); 
                 free(pedido->buffer->stream);
                 free(pedido->buffer);
@@ -306,17 +259,12 @@ void manejar_cliente_cpu(int cliente){
             case ENVIO_PID_Y_ENTRADANIVEL: {//hablar de cambiar el nombre
                 // Recibir pedido con PID y entrada de nivel para navegación de tabla de páginas
                 // Deserializar PID y entrada de nivel
-                //int offset = 0;
                 int pid = deserializar_pid_memoria(pedido);
                 int entradaNivel = deserializar_entradaNivel(pedido);
-                
-                // NOTA: CPU está enviando entrada de nivel, pero necesitamos página lógica
-                // Por compatibilidad, interpretamos entradaNivel como número de página lógica
                 int marco = obtener_marco_de_pagina_logica(pid, entradaNivel);
                 
                 // Enviar el marco de vuelta a CPU
                 enviar_entero(cliente,marco);
-                log_debug(logger_memoria, "PID: %d - Enviado marco: %d para página: %d", pid, marco, entradaNivel);
                 break;
             }
             case ENVIO_PID_NROPAG: { //hablar de cambiar el nombre

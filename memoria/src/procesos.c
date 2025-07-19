@@ -37,8 +37,6 @@ bool inicializar_proceso(int pid, int tam_proceso, char *path_pseudocodigo){
         pthread_mutex_lock(&mutex_procesos_en_memoria);
         list_add(procesos_en_memoria, nuevo_proceso);
         pthread_mutex_unlock(&mutex_procesos_en_memoria);
-
-        log_info(logger_memoria, "Proceso %d inicializado correctamente con %d marcos. Path pseudocódigo: %s", pid, marcos_necesarios, path_pseudocodigo);
         crear_metricas_proceso(pid);
         log_debug(logger_memoria, "metricas creadas");
         return true;
@@ -158,7 +156,5 @@ bool dump_memoria_proceso(int pid) {
         log_error(logger_memoria, "DUMP_MEMORY: Error al escribir archivo %s (escribió %zu de %d bytes)", filename, written, tamanio);
         return false;
     }
-
-    log_debug(logger_memoria, "PID: %d - Dump de memoria exitoso: %s", pid, nombre_archivo);
     return true;
 }

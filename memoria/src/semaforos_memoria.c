@@ -9,6 +9,7 @@ pthread_mutex_t mutex_marcos;
 pthread_mutex_t mutex_swap;
 
 // Inicializa todos los mutex/semaforos globales del sistema de memoria
+
 bool inicializar_mutex(void) {
     if (pthread_mutex_init(&mutex_procesos_en_memoria, NULL) != 0) {
         return false;

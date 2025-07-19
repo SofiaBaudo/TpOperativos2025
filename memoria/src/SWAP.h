@@ -26,9 +26,7 @@ void inicializar_swap();
 int suspender_proceso(int pid);
 size_t buscar_espacio_libre_swap(size_t tamanio);
 int escribir_en_swap(void* buffer, size_t tamanio, size_t offset);
-
 int desuspender_proceso(int pid);
 int leer_de_swap(void* buffer, size_t tamanio, size_t offset);
-
 
 #endif

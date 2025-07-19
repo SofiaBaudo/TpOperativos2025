@@ -39,7 +39,6 @@ bool inicializar_memoria(void) {
     //inicializo swap
     inicializar_swap(); //ver el bool q devuelve swap
     
-    mostrar_resumen_sistema();
     log_debug(logger_memoria, "Sistema inicializado correctamente");
 
     return true;
@@ -88,19 +87,4 @@ bool inicializar_logger() {
     
     log_debug(logger_memoria, "Logger inicializado correctamente");
     return true; 
-}
-
-void mostrar_resumen_sistema(void) {
-    log_debug(logger_memoria, "=== RESUMEN DEL SISTEMA ===");
-    log_debug(logger_memoria, "Memoria total: %d KB", memoria_config.TAM_MEMORIA / 1024);
-    log_debug(logger_memoria, "Tamaño página: %d bytes", memoria_config.TAM_PAGINA);
-    log_debug(logger_memoria, "Cantidad marcos: %d", memoria_config.TAM_MEMORIA / memoria_config.TAM_PAGINA);
-    log_debug(logger_memoria, "Niveles paginación: %d", memoria_config.CANTIDAD_NIVELES);
-    log_debug(logger_memoria, "Entradas por tabla: %d", memoria_config.ENTRADAS_POR_TABLA);
-    log_debug(logger_memoria, "Puerto servidor: %d", memoria_config.PUERTO_ESCUCHA);
-    log_debug(logger_memoria, "Retardo memoria: %d ms", memoria_config.RETARDO_MEMORIA);
-    log_debug(logger_memoria, "Path SWAP: %s", memoria_config.PATH_SWAPFILE);
-    log_debug(logger_memoria, "Retardo SWAP: %d ms", memoria_config.RETARDO_SWAP);
-    log_debug(logger_memoria, "Path dump: %s", memoria_config.DUMP_PATH);
-    log_debug(logger_memoria, "==========================");
 }

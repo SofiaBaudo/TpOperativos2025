@@ -153,19 +153,33 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
 /*EL PROCESO ARRANCA CON UNA ESTIMACION INICIAL, POR ESO EN LOS PLANIFICADORES NO SE CALCULA 
 LA SIGUIENTE ESTIMACION, SINO QUE SE CALCULA CUANDO TERMINA DE EJECUTAR, SI ES QUE NO SE FINALIZA LA
 EJECUCION DEL PROCESO.*/
+/*
+void mostrar_lista(t_list* lista){
+    t_list_iterator *aux = list_iterator_create(lista); //arranca apuntando a NULL, no a donde apunta a lista
 
+    while (list_iterator_has_next(aux)) { //es true mientras haya un siguiente al cual avanzar.
+        struct pcb*proceso = list_iterator_next(aux);
+        log_debug(kernel_debug_log,"EL PROCESO ES: %i",proceso->pid);
+    }
+    list_iterator_destroy(lista);
+}
+*/
 void *planificador_corto_plazo_sjf_con_desalojo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]); //se activa cuando hay un proceso en la cola de ready.
         sem_wait(&CPUS_LIBRES); // se activa cuando hay una cpu libre
         sem_wait(&REPLANIFICAR); // avisa en el caso de que se haya replanificado (si se desaloja un proceso)
+        log_debug(kernel_debug_log,"ENTRE AL PLANI DEL DESALOJO");
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas); //busco la cpu libre.
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         struct pcb *proceso = obtener_copia_primer_proceso_de(READY); //obtengo una copia del primer proceso, sin sacarlo
+        log_debug(kernel_debug_log,"LA COPIA QUE OBTUVE ES DEL PROCESO: %i", proceso->pid);
         if(pos_cpu!=-1){ // si hay una cpu libre, pongo a ejecutar normal
+            log_debug(kernel_debug_log,"ENCONTRE UNA CPU LIBRE");
             struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu); //obtengo la cpu
             proceso = sacar_primero_de_la_lista(READY); //saco el proceso de la cola de READY
+            log_debug(kernel_debug_log,"EL PROCESO QUE ESTOY POR PASAR A EXEC ES: %i", proceso->pid);
             cambiarEstado(proceso,READY,EXEC); //Cambio su estado a EXECUTE
             crear_hilo_de_ejecucion(proceso,cpu_aux); //creamos un hilo de ejecucion enviando los parametros
         }
@@ -188,6 +202,7 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
             sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]); // //Porque todavia no desalojamos nada, simplemente dimos el aviso, // el desalojo se hace cuando se esta ejecutando el anterior proceso
             }
         }
+        //mostrar_lista(colaEstados[READY]);
         sem_post(&CPUS_LIBRES); 
     }
 }
@@ -516,7 +531,7 @@ void cambiarEstado (struct pcb* proceso,Estado estadoAnterior, Estado estadoNuev
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
     char *string_estado_anterior = cambiar_a_string(estadoAnterior);
     log_info(kernel_logger,"## (<PID: %i>) Pasa del estado <%s> al estado <%s>", proceso->pid,string_estado_anterior,string_estado_nuevo);
-    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
+    pthread_mutex_lock(&mx_usar_cola_estado[estadoNuevo]);
     list_add(colaEstados[estadoNuevo],proceso); 
     pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
     proceso->metricas_de_estado[estadoNuevo]++;
@@ -528,7 +543,7 @@ void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado est
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
     char *string_estado_anterior = cambiar_a_string(estadoAnterior);
     log_info(kernel_logger,"## (<PID: %i>) Pasa del estado <%s> al estado <%s>", proceso->pid,string_estado_anterior,string_estado_nuevo);
-    pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
+    pthread_mutex_lock(&mx_usar_cola_estado[estadoNuevo]);
     list_add_sorted(colaEstados[estadoNuevo],proceso,comparador); 
     pthread_mutex_unlock(&mx_usar_cola_estado[estadoNuevo]);
     proceso->metricas_de_estado[estadoNuevo]++;
@@ -654,7 +669,9 @@ void *poner_a_ejecutar(void *argumentos){
     struct pcb* proceso = args->proceso;
     struct instancia_de_cpu* cpu_en_la_que_ejecuta = args->cpu_aux;
     free(argumentos);
+    //pthread_mutex_lock(&mx_proceso_ejecutando_cpu);
     cpu_en_la_que_ejecuta->proceso_ejecutando = proceso; //asigno un proceso a la cpu
+    //pthread_mutex_unlock(&mx_proceso_ejecutando_cpu);
     proceso->duracion_ultima_rafaga = temporal_create(); //creo una tiempo de rafaga en el proceso
     bool bloqueante = false; 
     while(!bloqueante){ //mientras el bloqueante sea falso.
@@ -715,6 +732,7 @@ void *poner_a_ejecutar(void *argumentos){
                 bloqueante = true; 
                 break;   
             case IO:
+                liberar_cpu(cpu_en_la_que_ejecuta);
                 proceso->pc++;
                 proceso->cantidad_de_veces_que_estuvo_bloqueado_por_io++;
                 int milisegundos = deserializar_cant_segundos(paquete);
@@ -727,12 +745,11 @@ void *poner_a_ejecutar(void *argumentos){
                 if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
                     log_warning(kernel_debug_log,"adentro del IF de io");
                     finalizar_proceso(proceso,EXEC);
-                    liberar_cpu(cpu_en_la_que_ejecuta);
+                    //liberar_cpu(cpu_en_la_que_ejecuta);
                 }
                 else{
                     log_info(kernel_logger,"## (<PID: %i>) - Bloqueado por IO: <%s>",proceso->pid,proceso->nombre_io_que_lo_bloqueo);
                     temporal_stop(proceso->duracion_ultima_rafaga);
-                    liberar_cpu(cpu_en_la_que_ejecuta);
                     proceso->proxima_estimacion = calcular_proxima_estimacion(proceso); 
                     sacar_proceso_de_cola_de_estado(proceso,EXEC);
                     cambiarEstado(proceso,EXEC,BLOCKED); //BLOQUEAMOS EL PROCESO, 
@@ -744,7 +761,6 @@ void *poner_a_ejecutar(void *argumentos){
                     struct instancia_de_io *io_aux = list_get(ios_conectados,pos);
                     pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
                     sem_post(io_aux->hay_procesos_esperando); //AVISO QUE HAY UNA IO ESPERANDO A EJECUTAR
-                    log_debug(kernel_debug_log, "TERMINE DE HACER EL ELSE");
                 }
                 bloqueante = true;
                 break;
@@ -778,10 +794,15 @@ struct pcb* buscar_proceso_bloqueado_por_io(t_list *lista, char *nombre){
 
 void liberar_cpu(struct instancia_de_cpu *cpu){
     cpu->puede_usarse = true;
+    //pthread_mutex_lock(&mx_proceso_ejecutando_cpu);
     cpu->proceso_ejecutando = NULL;
-    sem_post(&CPUS_LIBRES);
+    //pthread_mutex_unlock(&mx_proceso_ejecutando_cpu);
     if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_CON_DESALOJO")==0){
+        log_debug(kernel_debug_log,"ESTOY A PUNTO DE REPLANIFICAR");
         sem_post(&REPLANIFICAR);
+    }
+    else{
+        sem_post(&CPUS_LIBRES);
     }
 }
 
@@ -789,7 +810,7 @@ void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado){
     sacar_proceso_de_cola_de_estado(proceso_desalojado,EXEC);
     log_debug(kernel_debug_log,"Se desaloja de la cola EXECUTE al proceso con id: %i",proceso_desalojado->pid);
     cambiarEstadoOrdenado(proceso_desalojado,EXEC,READY,menor_por_estimacion);
-    //transicionar_a_ready(proceso_desalojado,EXEC);
+    sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]);
 }
 
 void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
@@ -800,13 +821,9 @@ void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
     enviar_op_code(socket,FINALIZAR_PROCESO);
     crear_paquete(FINALIZAR_PROCESO,buffer,socket);
     op_code confirmacion = recibir_op_code(socket);
-    log_debug(kernel_debug_log,"POR CERRAR CONEXION CON MEMORIA"); 
     cerrar_conexion(socket);
-    log_debug(kernel_debug_log,"ANTES DE INTENTAR INICIAR");  
-    intentar_iniciar();
-    log_debug(kernel_debug_log,"PASE EL INTENTAR INICIAR");  
+    intentar_iniciar(); 
     sacar_proceso_de_cola_de_estado(proceso,EXIT_ESTADO); 
-    log_debug(kernel_debug_log,"TERMINE DE SACAR EL PROCESO DE LA COLA DE EXIT");  
     listar_metricas_de_tiempo_y_estado(proceso); 
     log_info(kernel_logger,"## (<PID: %i>) - Finaliza el proceso",proceso->pid);
     liberar_proceso(proceso); //free de todos los punteros, lo demas se va con el free (proceso) 
@@ -814,7 +831,6 @@ void finalizar_proceso(struct pcb *proceso, Estado estadoInicial){
 
 void listar_metricas_de_tiempo_y_estado(struct pcb *proceso){
     Estado estado_actual;
-    log_debug(kernel_debug_log,"ESTOY EN LAS METRICAS");
     for(int i=0; i<7; i++){
         estado_actual = i;
         char *estado_string = cambiar_a_string(estado_actual);

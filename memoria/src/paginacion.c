@@ -137,23 +137,6 @@ bool asignar_marcos_a_todas_las_paginas(t_tabla_paginas* tabla, int nivel_actual
     }
     return true;
 }
-
-// Asigna un marco físico a una página lógica específica
-bool asignar_marco_a_pagina(t_tabla_paginas* tabla_raiz, int nro_pagina_logica, int nro_marco) {
-    int niveles = memoria_config.CANTIDAD_NIVELES;
-    int entradas = memoria_config.ENTRADAS_POR_TABLA;
-    t_tabla_paginas* actual = tabla_raiz;
-
-    for (int nivel = 1; nivel < niveles; nivel++) {
-        int idx = (nro_pagina_logica / (int)pow(entradas, niveles-nivel)) % entradas;
-        if (!actual->entradas[idx].tabla_nivel_inferior) return false;
-        actual = actual->entradas[idx].tabla_nivel_inferior;
-    }
-    int idx_final = nro_pagina_logica % entradas;
-    actual->entradas[idx_final].nro_marco = nro_marco;
-    return true;
-}
-
 // -------------------- FINALIZACIÓN Y LIBERACIÓN DE TABLAS --------------------
 
 // Libera recursivamente la estructura de tablas de páginas y los marcos asociados
@@ -181,8 +164,6 @@ void destruir_tabla_y_marcos(t_tabla_paginas* tabla, int nivel_actual) { // OJO 
 
     free(tabla->entradas);
     free(tabla);
-
-    log_debug(logger_memoria, "Nivel %d destruido correctamente", nivel_actual);
 }
 
 // -------------------- FUNCIONES PARA ACCESO A TABLA DE PÁGINAS --------------------
@@ -198,7 +179,6 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
         t_proceso_memoria* proc = list_get(procesos_en_memoria, i);
         if (proc->pid == pid) {
             proceso = proc;
-            log_debug(logger_memoria, "EL PROCESO ES %d", proceso->pid);
             break;
         }
     }
@@ -229,7 +209,6 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
         
         // Actualizar métricas
         actualizar_metricas_acceso_tabla_paginas(pid);
-        usleep(2000000);
         // Calcular índice para este nivel
         int idx = (nro_pagina_logica / (int)pow(entradas, niveles-nivel)) % entradas;
         if (idx >= actual->cantidad_entradas) {
@@ -245,7 +224,6 @@ int obtener_marco_de_pagina_logica(int pid, int nro_pagina_logica) {
         }
         else { //es el ultimo nivel
             marco = actual->entradas[idx].nro_marco;
-            log_debug(logger_memoria, "el valor de idx es %i", idx);
             if (marco == -1) {
             log_error(logger_memoria, "el marco es -1");
             return -1;

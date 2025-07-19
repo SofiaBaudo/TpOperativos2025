@@ -4,7 +4,7 @@
 #include "bibliotecas.h"
 #include "variables_globales_memoria.h"
 #include "inicializar_memoria.h"
-#include "comunicaciones_memoria.h"
+#include "instrucciones_memoria.h"
 #include "procesos.h"
 
 void iniciar_servidor_memoria();

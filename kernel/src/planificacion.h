@@ -25,6 +25,7 @@ void *poner_a_ejecutar(void *argumentos);
 void finalizar_proceso(struct pcb*proceso, Estado estadoInicial);
 void liberar_proceso(struct pcb *proceso);
 void gestionar_metrica_de_tiempo(struct pcb* proceso, Estado estadoInicial, Estado estadoNuevo);
+//void mostrar_lista(t_list* lista);
 
 //CAMBIO Y TRANSICION DE ESTADOS
 struct pcb *obtener_copia_primer_proceso_de(Estado estado);

@@ -206,7 +206,6 @@ void mandar_syscall(t_instruccion instruccion){
 //Chequear Interrupcion
 void check_interrupt(void){
     if(hayInterrupcion && !ultima_instruccion_fue_syscall_bloqueante){ //recibio una interrupcion
-        pc--;
         t_buffer *buffer = crear_buffer_cpu(pid, pc);
         crear_paquete(DESALOJO_ACEPTADO, buffer,fd_conexion_kernel_dispatch); 
         tengo_que_solicitar_pid_y_pc = true;

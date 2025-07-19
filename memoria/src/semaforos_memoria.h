@@ -4,6 +4,7 @@
 #include "bibliotecas.h"
 
 // Declaración de todos los mutex del sistema
+
 extern pthread_mutex_t mutex_procesos_en_memoria;
 extern pthread_mutex_t memoria_usuario_mutex;
 extern pthread_mutex_t mutex_lista_metricas_procesos;

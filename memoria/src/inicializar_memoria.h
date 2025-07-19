@@ -36,7 +36,4 @@ bool inicializar_logger(void);
 bool inicializar_listas_globales(void);
 bool inicializar_swap_sistema(void);
 
-// Utilidades q no hacen falta pero lo dejo xq queda lindo jeje
-void mostrar_resumen_sistema(void);
-
 #endif

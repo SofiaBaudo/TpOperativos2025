@@ -30,7 +30,6 @@ bool inicializar_memoria_fisica(void) {
     // PASO 4: Inicializar cada marco
     for (int i = 0; i < cantidad_marcos; i++) {
         marcos[i].numero_marco = i;
-        log_debug(logger_memoria, "EL NUM DE marco es %i", marcos[i].numero_marco);
         marcos[i].pid_propietario = -1;  // Libre
         marcos[i].ocupado = false;
         marcos[i].direccion_fisica = memoria_usuario + (i * tam_pagina);
@@ -177,5 +176,3 @@ t_list* obtener_marcos_proceso(int pid) {
     recolectar_marcos_tabla(proc->tabla_paginacion_raiz, 1, lista_marcos);
     return lista_marcos;
 }
-
-

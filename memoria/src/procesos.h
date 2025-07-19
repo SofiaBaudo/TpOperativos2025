@@ -2,7 +2,7 @@
 #define PROCESOS_H
 
 #include "bibliotecas.h"
-#include "comunicaciones_memoria.h"
+#include "instrucciones_memoria.h"
 #include "paginacion.h"
 #include "memoria_fisica.h"
 #include "inicializar_memoria.h"

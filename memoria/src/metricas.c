@@ -23,6 +23,7 @@ void crear_metricas_proceso(int pid) {
 }
 
 // Función para buscar las métricas de un proceso específico -> no se si tiene ucho sentido
+
 t_metricas* buscar_metricas_proceso(int pid) {
     pthread_mutex_lock(&mutex_lista_metricas_procesos);
     t_metricas* resultado = NULL;
@@ -79,7 +80,6 @@ void incrementar_metrica_proceso(int pid, tipo_metrica metrica) {
             log_warning(logger_memoria, "Tipo de métrica desconocido: %d", metrica);
             break;
     }
-    //pthread_mutex_unlock(&mutex_lista_metricas_procesos);
 }
 
 // Función para destruir las métricas de un proceso

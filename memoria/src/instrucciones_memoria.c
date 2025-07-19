@@ -1,5 +1,11 @@
 #include <instrucciones_memoria.h>
 
+void enviar_instruccion(int socket_destino, char* instruccion) {
+    t_buffer *buffer = buffer_nombre_de_instruccion(instruccion);
+    crear_paquete(MANDAR_INSTRUCCION,buffer,socket_destino);
+    return;
+}
+
 t_list* generar_instrucciones_proceso(int pid, char* path_pseudocodigo) {
     FILE* archivo = fopen(path_pseudocodigo, "r");
     if (!archivo) {

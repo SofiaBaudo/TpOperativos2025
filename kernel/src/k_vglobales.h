@@ -54,7 +54,7 @@ extern pthread_mutex_t mx_avisar_que_entro_el_primero;
 extern pthread_mutex_t mx_proximo_a_consultar;
 extern pthread_mutex_t mx_usar_cola_estado[7];
 extern pthread_mutex_t mx_usar_recurso[2];
-
+extern pthread_mutex_t mx_proceso_ejecutando_cpu;
 //SEMAFOROS
 //extern sem_t INGRESO_DEL_PRIMERO;
 extern sem_t INTENTAR_INICIAR_NEW;

@@ -10,6 +10,7 @@ int usarCache(int pid, int numPag, char *instruccion, void* contenido){
     NodosCache *aux = cache;
     int numMarco;
     if(estaEnCache(numPag, pid)){
+        usleep(RETARDO_CACHE*1000);
         for(int i = 0; i < ENTRADAS_CACHE; i++){
             if(aux->info.numPag == numPag){
                 aux->info.bitdeUso = 1;
@@ -20,6 +21,7 @@ int usarCache(int pid, int numPag, char *instruccion, void* contenido){
     }
     else{
         agregarPagCache(numPag, pid, instruccion);
+        //usleep(RETARDO_CACHE*1000);
         imprimirCache();                                                                    
     }  
    numMarco = conseguirMarcoCache(pid, numPag);
