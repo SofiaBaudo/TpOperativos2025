@@ -17,23 +17,17 @@ int traduccion(int direccion, int pid, char *instruccion, void *contenido){ //te
         }
     }
     else{
-        log_debug(cpu_log_debug, "no esta habilitada la cache");
         int tlbrespuesta = -1;
         if(ENTRADAS_TLB != 0){
-                log_debug(cpu_log_debug, "entre al if de que hay entradas");
                 tlbrespuesta = buscarTlb(numPag, pid);
-                log_debug(cpu_log_debug, "la respuesta de si se encontro es %i", tlbrespuesta);
         }
         if(tlbrespuesta != -1){
                 marco = tlbrespuesta;
-                imprimirTLB();
         }
         else{
                 marco = navegarNiveles(numPag, pid);
-                log_debug(cpu_log_debug,"YA NAVEGUE LOS NIVELES.");
                 if(ENTRADAS_TLB!= 0){
                 agregarEntradaATLB(numPag, marco);
-                imprimirTLB();
                 }                
         }
         }
@@ -71,14 +65,14 @@ int buscarTlb(int numPag, int pid){
     NodoEntradasTLB *aux = listaTlb;
    for(int i = 0; i < ENTRADAS_TLB; i++){  
         if(aux->info.numPag == numPag ){
-            log_error(cpu_logger, "PID: <%d> - TLB HIT - Pagina: <%d>", pid, aux->info.numPag);
+            log_info(cpu_logger, "PID: <%d> - TLB HIT - Pagina: <%d>", pid, aux->info.numPag);
             log_info(cpu_logger,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", pid, numPag, aux->info.numMarco);
             modificarReferencia(numPag);
             return aux->info.numMarco;
         }
         aux = aux->sgte;
    }
-    log_error(cpu_logger,"PID: <%d> - TLB MISS - Pagina: <%d>", pid, numPag);
+    log_info(cpu_logger,"PID: <%d> - TLB MISS - Pagina: <%d>", pid, numPag);
     return -1;
 }
 void agregarEntradaATLB(int numPag, int numMarco){

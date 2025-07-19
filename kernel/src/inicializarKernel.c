@@ -42,7 +42,6 @@ void inicializar_hilos_de_planificacion(){
     pthread_create(&hilo_mediano_plazo,NULL,planificador_mediano_plazo,NULL);
     
     if(strcmp(ALGORITMO_INGRESO_A_READY,"FIFO")==0){
-        log_debug(kernel_debug_log,"ESTOY ACA EN EL DE FIFO LARGO PLAZO");
         pthread_create(&hilo_plani_largo_plazo,NULL,planificador_largo_plazo_fifo,NULL); //Creamos el hilo
         pthread_create(&hilo_mediano_plazo_fifo,NULL,planificador_mediano_plazo_fifo,NULL);
     }
@@ -55,18 +54,16 @@ void inicializar_hilos_de_planificacion(){
     }
 
     if(strcmp(ALGORITMO_CORTO_PLAZO,"FIFO")==0){
-        log_debug(kernel_debug_log,"ESTOY ACA EN EL DE FIFO CORTO PLAZO");
         pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_fifo,NULL);
     }
     else if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_SIN_DESALOJO")==0){
-        log_debug(kernel_debug_log,"ESTOY EN EL DE CORTO PLAZO SIN DESALOJO");
         pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL);
     }
     else if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_CON_DESALOJO")==0){
         pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_con_desalojo,NULL);
     }
     else{
-         exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     pthread_join(hilo_dispatch,NULL);

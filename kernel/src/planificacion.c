@@ -19,7 +19,6 @@ void crear_proceso(int tamanio,char *ruta_archivo) { //
 
 void *planificador_largo_plazo_fifo(){
     esperar_enter_por_pantalla(); //espera a un enter para poder empezar
-    log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO");
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]); // inicializado en 0, cuando llega algo a NEW, se activa.
         sem_wait(&INTENTAR_INICIAR_NEW); //activa el planificador si se suspende un proceso, finaliza un proceso o se pone a ejecutar.
@@ -44,7 +43,6 @@ void *planificador_largo_plazo_fifo(){
 
 void *planificador_largo_plazo_proceso_mas_chico_primero(){
     esperar_enter_por_pantalla();
-    log_debug(kernel_debug_log,"INICIANDO PLANIFICADOR DE LARGO PLAZO TMCP");
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[NEW]);// inicializado en 0, cuando llega algo a NEW, se activa.
         sem_wait(&INTENTAR_INICIAR_NEW); //que los demas esperen a que uno entre
@@ -59,7 +57,6 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
             bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_DESDE_NEW);
             if(respuesta){
                 primer_proceso = sacar_primero_de_la_lista_de_sin_mutex(NEW); //saco el primer proceso de la lista de NEW
-                log_debug(kernel_debug_log,"EL PROCESO QUE ACABO DE SACAR Y ESTOY POR PASAR A READY ES: %i",primer_proceso->pid);
                 transicionar_a_ready(primer_proceso,NEW); // lo transiciono a READY
                 actualizar_proximo_a_consultar(NEW); //actualizo el proximo proceso a consultar
                 if(!list_is_empty(colaEstados[NEW])){ //si la cola de NEW no esta vacía, intento iniciarla  
@@ -71,7 +68,6 @@ void *planificador_largo_plazo_proceso_mas_chico_primero(){
             }
         }
         else{
-            log_debug(kernel_debug_log,"El ultimo proceso en entrar no es el mas chico");
             sem_post(&CANTIDAD_DE_PROCESOS_EN[NEW]);  //aviso que el proceso sigue en new
         }
         pthread_mutex_unlock(&mx_usar_cola_estado[NEW]);
@@ -117,15 +113,12 @@ void *planificador_corto_plazo_fifo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]); //se activa cuando hay un proceso en la cola de ready.
         sem_wait(&CPUS_LIBRES); //se activa cuando hay una cpu libre
-        log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]); //semaforo que hace que no se use el recurso de la cpu dos veces al mismo tiempo.
         int pos_cpu = buscar_cpu_libre(cpus_conectadas); //busco la posicion de la cpu libre.
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu); //agarro la cpu libre
-        log_debug(kernel_debug_log,"La cpu libre es: %i",cpu_aux->id_cpu);
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         struct pcb* proceso = sacar_primero_de_la_lista(READY); //saco el primer proceso de la cola de READY
         cambiarEstado(proceso,READY,EXEC); //le cambio el estado a EXECUTE
-        log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
         crear_hilo_de_ejecucion(proceso,cpu_aux); // pongo a ejecutar el proceso en la CPU.
     }
 }   
@@ -138,14 +131,12 @@ void *planificador_corto_plazo_sjf_sin_desalojo(){
       while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]); //se activa cuando hay un proceso en la cola de ready.
         sem_wait(&CPUS_LIBRES); //se activa cuando hay una cpu libre
-        log_debug(kernel_debug_log,"PLANI DE CORTO PLAZO INICIADO");
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]); //semaforo que hace que no se use el recurso de la cpu dos veces al mismo tiempo.
         int pos_cpu = buscar_cpu_libre(cpus_conectadas); //busco la posicion de la cpu libre.
         struct instancia_de_cpu *cpu_aux = list_get(cpus_conectadas,pos_cpu); //agarro la cpu libre
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         struct pcb* proceso = sacar_primero_de_la_lista(READY); //Saco el proceso de la cola de READY
         cambiarEstado(proceso,READY,EXEC); //Cambio su estado a EXECUTE
-        log_debug(kernel_debug_log,"El proceso %i pasa a ejecutar en la cpu %i",proceso->pid,cpu_aux->id_cpu);
         crear_hilo_de_ejecucion(proceso,cpu_aux); //Creo el hilo donde va a estar ejecutando el proceso con su respectiva CPU.
     }
 }
@@ -169,17 +160,13 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[READY]); //se activa cuando hay un proceso en la cola de ready.
         sem_wait(&CPUS_LIBRES); // se activa cuando hay una cpu libre
         sem_wait(&REPLANIFICAR); // avisa en el caso de que se haya replanificado (si se desaloja un proceso)
-        log_debug(kernel_debug_log,"ENTRE AL PLANI DEL DESALOJO");
         pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
         int pos_cpu = buscar_cpu_libre(cpus_conectadas); //busco la cpu libre.
         pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
         struct pcb *proceso = obtener_copia_primer_proceso_de(READY); //obtengo una copia del primer proceso, sin sacarlo
-        log_debug(kernel_debug_log,"LA COPIA QUE OBTUVE ES DEL PROCESO: %i", proceso->pid);
         if(pos_cpu!=-1){ // si hay una cpu libre, pongo a ejecutar normal
-            log_debug(kernel_debug_log,"ENCONTRE UNA CPU LIBRE");
             struct instancia_de_cpu *cpu_aux = obtener_cpu(pos_cpu); //obtengo la cpu
             proceso = sacar_primero_de_la_lista(READY); //saco el proceso de la cola de READY
-            log_debug(kernel_debug_log,"EL PROCESO QUE ESTOY POR PASAR A EXEC ES: %i", proceso->pid);
             cambiarEstado(proceso,READY,EXEC); //Cambio su estado a EXECUTE
             crear_hilo_de_ejecucion(proceso,cpu_aux); //creamos un hilo de ejecucion enviando los parametros
         }
@@ -195,7 +182,6 @@ void *planificador_corto_plazo_sjf_con_desalojo(){
                 sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]); //Porque todavia no desalojamos nada, simplemente dimos el aviso, // el desalojo se hace cuando se esta ejecutando el anterior proceso
             }
             else{
-            log_debug(kernel_debug_log,"No se desaloja");
             pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
             reanudar_cronometros(cpus_conectadas,list_size(cpus_conectadas)); //reanudo los cronometros
             pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
@@ -211,7 +197,6 @@ void *planificador_mediano_plazo(){
     while(1){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_BLOCKED]); //se activa el planificador si llega un proceso a SUSP_BLOCKED
         sem_wait(&UNO_A_LA_VEZ[SUSP_BLOCKED]);
-        log_warning(kernel_debug_log,"SE SUSPENDIO UN PROCESO");
         //agregar semaforo de uno a la vez como vector
         pthread_mutex_lock(&mx_usar_cola_estado[SUSP_BLOCKED]);
         struct pcb *proceso = buscar_proceso_a_suspender();
@@ -221,10 +206,8 @@ void *planificador_mediano_plazo(){
         enviar_op_code(socket,SUSPENDER_PROCESO);
         t_buffer *buffer = mandar_pid_a_memoria(proceso->pid);
         crear_paquete(SUSPENDER_PROCESO,buffer,socket); //ENVIO A MEMORIA QUE QUIERO SUSPENDER EL PROCESO
-        log_warning(kernel_debug_log,"PAQUETE ENVIADO A MEMORIA");
         op_code respuesta = recibir_op_code(socket);
         if(respuesta == SUSPENSION_CONFIRMADA){ //SI SE SUSPENDIO
-            log_debug(kernel_debug_log,"ESTOY POR INTENTAR INICIAR UN PROCESO");
             intentar_iniciar(); //INTENTAMOS INICIAR EL PLANICADOR DE MEDIANO PLAZO 
             cerrar_conexion(socket);
         }
@@ -238,9 +221,7 @@ void *planificador_mediano_plazo_fifo(){
         sem_wait(&CANTIDAD_DE_PROCESOS_EN[SUSP_READY]);
         sem_wait(&INTENTAR_INICIAR_SUSP_READY);
         sem_wait(&UNO_A_LA_VEZ[SUSP_READY]);
-        log_debug(kernel_debug_log,"ESTOY EN EL PLANI DE MEDIANO PLAZO FIFO");
         struct pcb* primer_proceso = obtener_copia_primer_proceso_de(SUSP_READY); //no lo sacamos de la lista todavia pero obtenemos una referencia
-        log_debug(kernel_debug_log,"PIDIENDOLE A MEMORIA INGRESAR UN PROCESO SUSPENDIDO");
         bool respuesta = consultar_si_puede_entrar(primer_proceso,INICIALIZAR_PROCESO_SUSPENDIDO); //Darle una vuelta de tuerca para que memoria sepa que es un proceso suspendido 
         if (respuesta == true){
             primer_proceso = sacar_primero_de_la_lista(SUSP_READY); //Una vez que tenemos la confirmacion de memoria ahi si lo sacamos de la lista
@@ -387,7 +368,6 @@ int buscar_en_lista(t_list *lista, int pid) {
     }
 
     list_iterator_destroy(aux); // destruyo el iterador creado por mas que no haya encontrado el proceso que queriamos.
-    log_debug(kernel_debug_log,"El proceso con PID %d no se encuentra en la lista\n", pid);
     return -1;
 }
 
@@ -545,7 +525,6 @@ void cambiarEstado (struct pcb* proceso,Estado estadoAnterior, Estado estadoNuev
 }
 
 void cambiarEstadoOrdenado(struct pcb* proceso,Estado estadoAnterior, Estado estadoNuevo,bool (*comparador)(void *, void *)){
-    log_debug(kernel_debug_log,"CAMBIANDO ESTADO ORDENADAMENTE");
     char *string_estado_nuevo = cambiar_a_string(estadoNuevo);
     char *string_estado_anterior = cambiar_a_string(estadoAnterior);
     log_info(kernel_logger,"## (<PID: %i>) Pasa del estado <%s> al estado <%s>", proceso->pid,string_estado_anterior,string_estado_nuevo);
@@ -596,7 +575,6 @@ bool consultar_si_puede_entrar(struct pcb *proceso,op_code operacion){
 
 void actualizar_proximo_a_consultar(Estado estadoInicial){
     struct pcb *primer_proceso_actualizado = obtener_copia_primer_proceso_de_sin_mutex(estadoInicial);
-    log_debug(kernel_debug_log,"YA SALI DE ACA DEL QUE NO TIENE MUTEX");
     if(primer_proceso_actualizado!=NULL){
         pthread_mutex_lock(&mx_proximo_a_consultar);
         proximo_a_consultar = primer_proceso_actualizado;
@@ -649,7 +627,6 @@ void mandar_paquete_a_cpu(struct pcb *proceso,struct instancia_de_cpu *cpu){
 }
 
 op_code manejar_dump(struct pcb *aux,struct instancia_de_cpu* cpu_en_la_que_ejecuta){
-    log_debug(kernel_debug_log,"ESTOY ACA POR EL DUMP");
     cambiarEstado(aux,EXEC,BLOCKED);
     //sem_post(&CANTIDAD_DE_PROCESOS_EN[BLOCKED]);
     int socket = iniciar_conexion_kernel_memoria();
@@ -693,7 +670,7 @@ void *poner_a_ejecutar(void *argumentos){
         switch(motivo_de_devolucion){
             case DESALOJO_ACEPTADO:
                 temporal_stop(proceso->duracion_ultima_rafaga);
-                log_error(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
+                log_info(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
                 liberar_cpu(cpu_en_la_que_ejecuta);
                 proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
                 desalojar_proceso_de_cpu(proceso);
@@ -720,7 +697,6 @@ void *poner_a_ejecutar(void *argumentos){
             case DUMP_MEMORY:
                 liberar_paquete(paquete);
                 temporal_stop(proceso->duracion_ultima_rafaga);
-                log_error(kernel_debug_log, "ESTOY ACA");
                 proceso->pc++;
                 sacar_proceso_de_cola_de_estado(proceso,EXEC);
                 int respuesta = manejar_dump(proceso,cpu_en_la_que_ejecuta); //esta funcion manda el proceso a BLOCKED y tambien libera la cpu
@@ -747,9 +723,7 @@ void *poner_a_ejecutar(void *argumentos){
                 pthread_mutex_lock(&mx_usar_recurso[REC_IO]);
                 int pos = buscar_IO_solicitada(ios_conectados,proceso->nombre_io_que_lo_bloqueo);
                 pthread_mutex_unlock(&mx_usar_recurso[REC_IO]);
-                log_debug(kernel_debug_log,"TERMINE DE BUSCAR EL NOMBRE");
                 if(pos == -1){ //quiere decir que no hay ninguna syscall con ese nombre
-                    log_warning(kernel_debug_log,"adentro del IF de io");
                     finalizar_proceso(proceso,EXEC);
                     //liberar_cpu(cpu_en_la_que_ejecuta);
                 }
@@ -804,7 +778,6 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
     cpu->proceso_ejecutando = NULL;
     //pthread_mutex_unlock(&mx_proceso_ejecutando_cpu);
     if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_CON_DESALOJO")==0){
-        log_debug(kernel_debug_log,"ESTOY A PUNTO DE REPLANIFICAR");
         sem_post(&REPLANIFICAR);
     }
     else{
@@ -814,7 +787,6 @@ void liberar_cpu(struct instancia_de_cpu *cpu){
 
 void desalojar_proceso_de_cpu(struct pcb *proceso_desalojado){
     sacar_proceso_de_cola_de_estado(proceso_desalojado,EXEC);
-    log_debug(kernel_debug_log,"Se desaloja de la cola EXECUTE al proceso con id: %i",proceso_desalojado->pid);
     cambiarEstadoOrdenado(proceso_desalojado,EXEC,READY,menor_por_estimacion);
     sem_post(&CANTIDAD_DE_PROCESOS_EN[READY]);
 }
@@ -841,7 +813,7 @@ void listar_metricas_de_tiempo_y_estado(struct pcb *proceso){
         estado_actual = i;
         char *estado_string = cambiar_a_string(estado_actual);
         if(proceso->metricas_de_estado[i]!=0){ //que haya estado alguna vez en ese estado
-        log_warning(kernel_logger,"## (<PID: %i>) - Metricas de estado: %s <cantidad: %i> <tiempo: %ld>",proceso->pid,estado_string,proceso->metricas_de_estado[i],temporal_gettime(proceso->metricas_de_tiempo[i]));
+        log_info(kernel_logger,"## (<PID: %i>) - Metricas de estado: %s <cantidad: %i> <tiempo: %ld>",proceso->pid,estado_string,proceso->metricas_de_estado[i],temporal_gettime(proceso->metricas_de_tiempo[i]));
         }
     }
 }
@@ -858,7 +830,6 @@ void liberar_proceso(struct pcb *proceso){
 
 void intentar_iniciar(){
     if(!list_is_empty(colaEstados[SUSP_READY])){
-        log_debug(kernel_debug_log,"POR HACER UN SEM POST DE INTENTAR INICIAR");
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
             pthread_mutex_lock(&mx_usar_cola_estado[SUSP_READY]);
             actualizar_proximo_a_consultar(SUSP_READY);
@@ -867,7 +838,6 @@ void intentar_iniciar(){
         sem_post(&INTENTAR_INICIAR_SUSP_READY);
     }
     else{
-        log_debug(kernel_debug_log,"ESTOY EN EL ELSE DE INTENTAR INICIAR");
         if(strcmp(ALGORITMO_INGRESO_A_READY,"PMCP")==0){
             pthread_mutex_lock(&mx_usar_cola_estado[NEW]);
             actualizar_proximo_a_consultar(NEW);

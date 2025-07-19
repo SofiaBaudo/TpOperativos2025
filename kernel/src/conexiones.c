@@ -52,9 +52,7 @@ void* manejar_kernel_dispatch(void *socket_dispatch){
            pthread_mutex_lock(&mx_usar_recurso[REC_CPU]);
            list_add(cpus_conectadas,aux);
            pthread_mutex_unlock(&mx_usar_recurso[REC_CPU]);
-           log_debug(kernel_debug_log,"Se agrego a la lista la cpu con id: %i ", aux->id_cpu); //%i espera un entero
            int tamanio_lista = list_size(cpus_conectadas);
-           log_debug(kernel_debug_log,"La lista tiene %i cpus",tamanio_lista);
            sem_post(&CPUS_LIBRES);
            //acá tendriamos que esperar otro opcode que puede ser una syscall o alguna otra cosa
            break;
@@ -106,7 +104,6 @@ void* manejar_kernel_interrupt(void *socket_interrupt){
         enviar_op_code(interrupt, HANDSHAKE_ACCEPTED);    
         recv(interrupt, &id, sizeof(int), 0);
         struct instancia_de_cpu *cpu_aux = buscar_ultima_cpu_conectada();
-        log_debug(kernel_debug_log,"INTERRUPT CONECTADO PARA LA CPU DE ID: %i",cpu_aux->id_cpu);
         cpu_aux->socket_interrupt = interrupt;
         //buscar la cpu con el id
         //aux->socket_interrupt = interrupt;
@@ -236,7 +233,6 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 liberar_io(io_aux); //LIBERO LA IO
                 break;  
                 default:
-                log_debug(kernel_debug_log,"Entre al default de IO");
             }
         }
     return NULL;
@@ -254,7 +250,6 @@ int iniciar_conexion_kernel_memoria(){ //aca tendriamos que mandar el proceso co
     enviar_op_code(fd_kernel_memoria, HANDSHAKE_KERNEL); //avisa que es Kernel.
     op_code respuesta = recibir_op_code(fd_kernel_memoria); //recibe un entero que devuelve el kernel cuandola conexion esta hecha.
    if (respuesta == HANDSHAKE_ACCEPTED){
-       log_info(kernel_logger, "Conexion con memoria establecida correctamente");
        op_code esperar_a_memoria = recibir_op_code(fd_kernel_memoria);
        return fd_kernel_memoria; // en realidad tendriamos que devolver si se puede o no iniciar cierto proceso
    }
@@ -297,7 +292,6 @@ bool solicitar_permiso_a_memoria(int socket,struct pcb* proceso,op_code operacio
 }
 
 int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
-    log_debug(kernel_debug_log,"EL nombre a buscar es: %s",nombre_io);
     if (list_is_empty(lista)) {
         log_debug(kernel_debug_log, "La lista no tiene ninguna instancia de IO\n");
         return -1;
@@ -316,7 +310,6 @@ int buscar_IO_solicitada(t_list *lista, char* nombre_io) {
     }
 
     list_iterator_destroy(iterador);
-    log_debug(kernel_debug_log, "La instancia de IO con nombre %s no se encuentra en la lista\n", nombre_io);
     return -1;
 }
 

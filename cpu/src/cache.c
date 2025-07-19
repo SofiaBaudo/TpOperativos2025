@@ -21,8 +21,7 @@ int usarCache(int pid, int numPag, char *instruccion, void* contenido){
     }
     else{
         agregarPagCache(numPag, pid, instruccion);
-        //usleep(RETARDO_CACHE*1000);
-        imprimirCache();                                                                    
+        //usleep(RETARDO_CACHE*1000);                                                               
     }  
    numMarco = conseguirMarcoCache(pid, numPag);
 return numMarco;
@@ -172,13 +171,9 @@ int bitModificado(char *instruccion){
 }
 void algoritmoClock(int pid, char *instruccion, int nroPag, void* contenido){
     while(1){
-        log_debug(cpu_log_debug,"el bit de uso es %i", punteroCache->info.bitdeUso);
         if(punteroCache->info.bitdeUso == 0){
             if(punteroCache->info.bitModificado == 1){
-                log_debug(cpu_log_debug, "entre al if de modificado = 1");
-                log_debug(cpu_log_debug, "EL NUMERO DE PAGINA ES %i", nroPag);
                 int marco = conseguirMarcoCache(pid, nroPag);
-                log_debug(cpu_log_debug, "el marco es: %i",marco);
                 t_buffer *buffer = crear_buffer_pid_numPag_contenido_marco(pid, punteroCache->info.numPag, punteroCache->info.contenido, marco, tamPag);
                 crear_paquete(ENVIO_PID_NROPAG_CONTENIDO_MARCO, buffer, fd_conexion_dispatch_memoria);
                 op_code respuesta = recibir_op_code(fd_conexion_dispatch_memoria);

@@ -21,15 +21,11 @@ int pc;
 void* ejecutar_instrucciones(void* arg){
     //hacer un semaforo donde se verifica que llega un proceso. espera que llegue un proceso --> (pensar bien donde)
     //int cpu_id = *(int *)arg;
-    log_debug(cpu_log_debug,"INICIANDO CICLO");
     t_instruccion instru;
     char *instruccionEntera;
-    log_debug(cpu_log_debug, "EL VALOR DE TENGO QUE SOLICITAR PID Y PC ES: %i", tengo_que_solicitar_pid_y_pc);
     if(tengo_que_solicitar_pid_y_pc){
         obtenerDelKernelPcPid(); 
-        log_debug(cpu_log_debug, "EL PC DEL KERNEL ES %i", pc);
     } 
-    log_debug(cpu_log_debug, "POR HACER EL FETCH CON PC: %i", pc);
     instruccionEntera = fetch(pid,pc); 
     instru = decode(instruccionEntera);
     execute(instru, pid);
@@ -54,10 +50,8 @@ char* fetch(int pid,int pc){
     log_info(cpu_logger,"## PID: <%d> - FETCH - Program Counter: <%d>",pid, pc);
     t_buffer *buffer = crear_buffer_cpu(pid, pc);
     crear_paquete(FETCH_INSTRUCCION, buffer, fd_conexion_dispatch_memoria);
-    log_debug(cpu_log_debug, "ENVIE EL PAQUETE CON pc %i", pc);
     t_paquete *paquete = recibir_paquete(fd_conexion_dispatch_memoria);
     char *instruccion_recibida = deserializar_nombre_instruccion(paquete);
-    log_debug(cpu_log_debug, "la instrucciones %s", instruccion_recibida);
     return instruccion_recibida;
 }
 
@@ -164,12 +158,9 @@ void mandar_syscall(t_instruccion instruccion){
     tengo_que_solicitar_pid_y_pc = true;
     log_debug(cpu_log_debug, "la instruccion es %s", instruccion.opcode);
     if(strcmp(instruccion.opcode, "INIT_PROC") == 0){
-        log_debug(cpu_log_debug, "entre al if");
         int tamanio = atoi(instruccion.param2);
         t_buffer *buffer = crear_buffer_instruccion_init_proc(instruccion.param1, tamanio, &pid, &pc);
         crear_paquete(INIT_PROC,buffer,fd_conexion_kernel_dispatch);
-        log_debug(cpu_log_debug, "termine de mandar el paquete");
-        log_debug(cpu_log_debug, "el opcode es %s", instruccion.param1);
         pc++;
         recibir_op_code(fd_conexion_kernel_dispatch);
         return;
