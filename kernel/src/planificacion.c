@@ -687,7 +687,7 @@ void *poner_a_ejecutar(void *argumentos){
         switch(motivo_de_devolucion){
             case DESALOJO_ACEPTADO:
                 temporal_stop(proceso->duracion_ultima_rafaga);
-                log_info(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
+                log_error(kernel_logger,"## (<PID: %i>) - DESALOJADO POR ALGORITMO SJF/SRT",proceso->pid);
                 liberar_cpu(cpu_en_la_que_ejecuta);
                 proceso->proxima_estimacion = calcular_proxima_estimacion(proceso);
                 desalojar_proceso_de_cpu(proceso);

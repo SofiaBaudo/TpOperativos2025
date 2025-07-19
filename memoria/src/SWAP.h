@@ -7,6 +7,7 @@
 #include <semaforos_memoria.h>
 #include <procesos.h>
 
+
 typedef struct {
     int pid;
     size_t offset_swap;      // Donde empieza el bloque del proceso en swapfile.bin

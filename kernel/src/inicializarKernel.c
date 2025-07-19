@@ -59,6 +59,7 @@ void inicializar_hilos_de_planificacion(){
         pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_fifo,NULL);
     }
     else if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_SIN_DESALOJO")==0){
+        log_debug(kernel_debug_log,"ESTOY EN EL DE CORTO PLAZO SIN DESALOJO");
         pthread_create(&hilo_plani_corto_plazo,NULL,planificador_corto_plazo_sjf_sin_desalojo,NULL);
     }
     else if(strcmp(ALGORITMO_CORTO_PLAZO,"SJF_CON_DESALOJO")==0){

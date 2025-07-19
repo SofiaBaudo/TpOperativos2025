@@ -217,8 +217,8 @@ void *esperar_io_proceso(void *instancia_de_io) { //el aux
                 //SI SE DESCONECTA LA IO, TENEMOS QUE FINALIZAR TODOS LOS PROCESOS QUE ESTEN CON LA IO CORRESPONDIENTE.
                 proceso->nombre_io_que_lo_bloqueo = NULL;
                 io_conectada = false;
-                posicion = buscar_io_especifica(ios_conectados,io_aux->socket_io_para_comunicarse);
-                list_remove(ios_conectados,posicion); //SACO LA IO DE LA LISTA
+                int posicion_io = buscar_io_especifica(ios_conectados,io_aux->socket_io_para_comunicarse);
+                list_remove(ios_conectados,posicion_io); //SACO LA IO DE LA LISTA
                 if(posicion ==-1){                   
                     finalizar_proceso(proceso,SUSP_BLOCKED);
                 }

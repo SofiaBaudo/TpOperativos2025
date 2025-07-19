@@ -6,7 +6,7 @@ t_list* huecos_swap;
 // Inicializa el archivo swapfile.bin y las estructuras administrativas necesarias
 void inicializar_swap(){
     // Abrir el archivo swapfile.bin existente en modo lectura/escritura binario
-    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "rb+");
+    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "r+b");
     if (swapfile == NULL) {
         perror("No se pudo abrir el archivo swapfile.bin");
         exit(EXIT_FAILURE);
@@ -112,7 +112,7 @@ size_t buscar_espacio_libre_swap(size_t tamanio) {
     }
 
     // 2. Si no hay hueco, escribir al final del archivo
-    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "rb+");
+    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "r+b");
     if (swapfile == NULL) {
         perror("No se pudo abrir el archivo swapfile.bin");
         return (size_t)-1;
@@ -126,7 +126,7 @@ size_t buscar_espacio_libre_swap(size_t tamanio) {
 
 int escribir_en_swap(void* buffer, size_t tamanio, size_t offset) {
     // Abre el archivo swapfile.bin en modo lectura/escritura
-    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "rb+");
+    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "r+b");
     
     if (swapfile == NULL) {
         perror("No se pudo abrir el archivo swapfile.bin");
@@ -217,7 +217,7 @@ int desuspender_proceso(int pid) {
 
 // Lee datos desde swapfile.bin al buffer indicado
 int leer_de_swap(void* buffer, size_t tamanio, size_t offset) {
-    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "rb");
+    FILE* swapfile = fopen(memoria_config.PATH_SWAPFILE, "r+b");
     if (!swapfile) {
         perror("No se pudo abrir el archivo swapfile.bin para leer");
         return -1;

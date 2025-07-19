@@ -211,8 +211,7 @@ void algoritmoClock(int pid, char *instruccion, int nroPag, void* contenido){
             punteroCache->info.bitdeUso = 0;
         }
         punteroCache = punteroCache->sgte;
-    }  
-    punteroCache = punteroCache->sgte; 
+    }
 }
 t_buffer *crear_buffer_pid_numPag_contenido_marco(int pid, int nroPag, void* contenido, int marco, int tamPag) {
 
@@ -244,7 +243,7 @@ void algoritmoClockM(int pid, char *instruccion, int nroPag, void*contenido){
             punteroCache->info.bitModificado = bitModificado(instruccion);
             punteroCache->info.contenido = contenido;
             punteroCache->info.numPag = nroPag;
-            punteroCache = punteroCache->sgte;
+            //punteroCache = punteroCache->sgte;
             break;
         }
         else if(punteroCache->info.bitdeUso == 0 && punteroCache->info.bitModificado == 1){
@@ -258,7 +257,7 @@ void algoritmoClockM(int pid, char *instruccion, int nroPag, void*contenido){
             punteroCache->info.bitModificado = bitModificado(instruccion);
             punteroCache->info.contenido = contenido;
             punteroCache->info.numPag = nroPag;
-            punteroCache = punteroCache->sgte;
+            //punteroCache = punteroCache->sgte;
             break;
         }
         else{
@@ -306,8 +305,7 @@ void imprimirCache() {
     NodosCache *aux = cache;
     log_info(cpu_logger, "Estado actual de la caché:");
     for (int i = 0; i < ENTRADAS_CACHE; i++) {
-        log_info(cpu_logger, "Frame %d: Pag %d, Uso %d, Mod %d",
-                 i, aux->info.numPag, aux->info.bitdeUso, aux->info.bitModificado);
+        log_info(cpu_logger, "Frame %d: Pag %d, Uso %d, Mod %d", i, aux->info.numPag, aux->info.bitdeUso, aux->info.bitModificado);
         aux = aux->sgte;
     }
 }
