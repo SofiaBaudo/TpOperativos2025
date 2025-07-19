@@ -9,8 +9,7 @@ bool tengo_que_solicitar_pid_y_pc;
 bool hayInterrupcion;
 bool ultima_instruccion_fue_syscall_bloqueante;
 pthread_mutex_t mx_interrupcion;
-void* iniciar_conexion_kernel_dispatch(void *arg){
-    int identificador_cpu = *((int*) arg);
+void* iniciar_conexion_kernel_dispatch(int identificador_cpu){
     ultima_instruccion_fue_syscall_bloqueante = false;
     log_debug(cpu_log_debug, "IP_KERNEL %i PUERTO_KERNEL_dispatch: %i", IP_KERNEL, PUERTO_KERNEL_DISPATCH);
     fd_conexion_kernel_dispatch = crear_conexion(IP_KERNEL,PUERTO_KERNEL_DISPATCH);
@@ -31,9 +30,7 @@ close(socket);
 }
 //Iniciar conexion Kernel
 
-void *iniciar_conexion_kernel_interrupt(void *arg){
-    int identificador_cpu = *(int *)arg;
-    free(arg);
+void *iniciar_conexion_kernel_interrupt( int dentificador_cpu){
     log_debug(cpu_log_debug, "IP_KERNEL %i PUERTO_KERNEL_INTERRUPT: %i", IP_KERNEL, PUERTO_KERNEL_INTERRUPT);
     fd_conexion_kernel_interrupt = crear_conexion(IP_KERNEL,PUERTO_KERNEL_INTERRUPT);
     hayInterrupcion = false;
@@ -97,6 +94,8 @@ void* inicializar_memoria(void* arg){
 
 void* inicializar_kernel(void* arg){   
     int id = *(int *)arg;
+    int* valor_id = malloc(sizeof(int));
+    *valor_id = id;
     tengo_que_solicitar_pid_y_pc = true;
     t_log* logger;
     char archivo_log_cpu[50];
@@ -108,11 +107,8 @@ void* inicializar_kernel(void* arg){
         printf("No se pudo crear el archivo de log para la CPU %d\n", id);
         exit(1);
     }
-    pthread_t hilo_cliente_kernel;
-    int* valor_id = malloc(sizeof(int));
-    *valor_id = id;
-    iniciar_conexion_kernel_dispatch(valor_id);
-    iniciar_conexion_kernel_interrupt(valor_id);
+    iniciar_conexion_kernel_dispatch(id);
+    iniciar_conexion_kernel_interrupt(id);
     while(1){
        ejecutar_instrucciones(NULL);
     }
