@@ -36,5 +36,5 @@ make
 ## 📩 Consultas
 Por cualquier consulta, por favor contactar a cualquiera de los integrantes: 
 - [Jeremías Olschansky](https://github.com/JeremiasOlschansky) y [Federico Cancelleri](https://github.com/fcancelleri) (Kernel & IO):
-- [Camilia Hernández Greco](https://github.com/chernandezgreco) (Memoria):
+- [Camila Hernández Greco](https://github.com/chernandezgreco) (Memoria):
 - [Sofía Baudo](https://github.com/SofiaBaudo) (CPU): 
